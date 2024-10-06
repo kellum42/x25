@@ -1,193 +1,174 @@
 import * as React from "react"
 import type { HeadFC, PageProps } from "gatsby"
+import {wrapper, header} from '../components/index.module.css'
 
-const pageStyles = {
-  color: "#232129",
-  padding: 96,
-  fontFamily: "-apple-system, Roboto, sans-serif, serif",
-}
-const headingStyles = {
-  marginTop: 0,
-  marginBottom: 64,
-  maxWidth: 320,
-}
-const headingAccentStyles = {
-  color: "#663399",
-}
-const paragraphStyles = {
-  marginBottom: 48,
-}
-const codeStyles = {
-  color: "#8A6534",
-  padding: 4,
-  backgroundColor: "#FFF4DB",
-  fontSize: "1.25rem",
-  borderRadius: 4,
-}
-const listStyles = {
-  marginBottom: 96,
-  paddingLeft: 0,
-}
-const doclistStyles = {
-  paddingLeft: 0,
-}
-const listItemStyles = {
-  fontWeight: 300,
-  fontSize: 24,
-  maxWidth: 560,
-  marginBottom: 30,
-}
-
-const linkStyle = {
-  color: "#8954A8",
-  fontWeight: "bold",
-  fontSize: 16,
-  verticalAlign: "5%",
-}
-
-const docLinkStyle = {
-  ...linkStyle,
-  listStyleType: "none",
-  display: `inline-block`,
-  marginBottom: 24,
-  marginRight: 12,
-}
-
-const descriptionStyle = {
-  color: "#232129",
-  fontSize: 14,
-  marginTop: 10,
-  marginBottom: 0,
-  lineHeight: 1.25,
-}
-
-const docLinks = [
-  {
-    text: "TypeScript Documentation",
-    url: "https://www.gatsbyjs.com/docs/how-to/custom-configuration/typescript/",
-    color: "#8954A8",
-  },
-  {
-    text: "GraphQL Typegen Documentation",
-    url: "https://www.gatsbyjs.com/docs/how-to/local-development/graphql-typegen/",
-    color: "#8954A8",
-  }
-]
-
-const badgeStyle = {
-  color: "#fff",
-  backgroundColor: "#088413",
-  border: "1px solid #088413",
-  fontSize: 11,
-  fontWeight: "bold",
-  letterSpacing: 1,
-  borderRadius: 4,
-  padding: "4px 6px",
-  display: "inline-block",
-  position: "relative" as "relative",
-  top: -2,
-  marginLeft: 10,
-  lineHeight: 1,
-}
-
-const links = [
-  {
-    text: "Tutorial",
-    url: "https://www.gatsbyjs.com/docs/tutorial/getting-started/",
-    description:
-      "A great place to get started if you're new to web development. Designed to guide you through setting up your first Gatsby site.",
-    color: "#E95800",
-  },
-  {
-    text: "How to Guides",
-    url: "https://www.gatsbyjs.com/docs/how-to/",
-    description:
-      "Practical step-by-step guides to help you achieve a specific goal. Most useful when you're trying to get something done.",
-    color: "#1099A8",
-  },
-  {
-    text: "Reference Guides",
-    url: "https://www.gatsbyjs.com/docs/reference/",
-    description:
-      "Nitty-gritty technical descriptions of how Gatsby works. Most useful when you need detailed information about Gatsby's APIs.",
-    color: "#BC027F",
-  },
-  {
-    text: "Conceptual Guides",
-    url: "https://www.gatsbyjs.com/docs/conceptual/",
-    description:
-      "Big-picture explanations of higher-level Gatsby concepts. Most useful for building understanding of a particular topic.",
-    color: "#0D96F2",
-  },
-  {
-    text: "Plugin Library",
-    url: "https://www.gatsbyjs.com/plugins",
-    description:
-      "Add functionality and customize your Gatsby site or app with thousands of plugins built by our amazing developer community.",
-    color: "#8EB814",
-  },
-  {
-    text: "Build and Host",
-    url: "https://www.gatsbyjs.com/cloud",
-    badge: true,
-    description:
-      "Now you’re ready to show the world! Give your Gatsby site superpowers: Build and host on Gatsby Cloud. Get started for free!",
-    color: "#663399",
-  },
-]
+// TODO:
+//  - Get popup on budget cards working
+//  - Ensure it looks good on mobile
+// - Break out budget card to its own file
 
 const IndexPage: React.FC<PageProps> = () => {
   return (
-    <main style={pageStyles}>
-      <h1 style={headingStyles}>
-        Congratulations
-        <br />
-        <span style={headingAccentStyles}>— you just made a Gatsby site! 🎉🎉🎉</span>
-      </h1>
-      <p style={paragraphStyles}>
-        Edit <code style={codeStyles}>src/pages/index.tsx</code> to see this page
-        update in real-time. 😎
-      </p>
-      <ul style={doclistStyles}>
-        {docLinks.map(doc => (
-          <li key={doc.url} style={docLinkStyle}>
-            <a
-              style={linkStyle}
-              href={`${doc.url}?utm_source=starter&utm_medium=ts-docs&utm_campaign=minimal-starter-ts`}
-            >
-              {doc.text}
-            </a>
-          </li>
-        ))}
-      </ul>
-      <ul style={listStyles}>
-        {links.map(link => (
-          <li key={link.url} style={{ ...listItemStyles, color: link.color }}>
-            <span>
-              <a
-                style={linkStyle}
-                href={`${link.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter-ts`}
-              >
-                {link.text}
-              </a>
-              {link.badge && (
-                <span style={badgeStyle} aria-label="New Badge">
-                  NEW!
-                </span>
-              )}
-              <p style={descriptionStyle}>{link.description}</p>
-            </span>
-          </li>
-        ))}
-      </ul>
-      <img
-        alt="Gatsby G Logo"
-        src="data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2a10 10 0 110 20 10 10 0 010-20zm0 2c-3.73 0-6.86 2.55-7.75 6L14 19.75c3.45-.89 6-4.02 6-7.75h-5.25v1.5h3.45a6.37 6.37 0 01-3.89 4.44L6.06 9.69C7 7.31 9.3 5.63 12 5.63c2.13 0 4 1.04 5.18 2.65l1.23-1.06A7.959 7.959 0 0012 4zm-8 8a8 8 0 008 8c.04 0 .09 0-8-8z' fill='%23639'/%3E%3C/svg%3E"
-      />
-    </main>
+    <div>
+      <div className={header}>
+        <img style={{ height: "32px" }} src={'/img/logo-compact-craft.svg'} />
+      </div>
+      <div className={wrapper}>
+        <h1 className="text-dark fw-bold my-1 fs-2">My Budgets</h1>
+        <div className="row g-6 g-xl-9">
+          
+
+        <div className="col-sm-6 col-xl-4">
+										{/* begin::Card */} 
+										<div className="card h-100">
+											{/* begin::Card header */} 
+											<div className="card-header flex-nowrap border-0 pt-9">
+												{/* begin::Card title */} 
+												<div className="card-title m-0">
+													{/* begin::Icon */} 
+													<div className="symbol symbol-45px w-45px bg-light me-5">
+														<img src="/img/twitch.svg" alt="image" className="p-3" />
+													</div>
+													{/* end::Icon */} 
+													{/* begin::Title */} 
+													<a href="#" className="fs-4 fw-semibold text-hover-primary text-gray-600 m-0">Twitch Posts</a>
+													{/* end::Title */} 
+												</div>
+												{/* end::Card title */} 
+												{/* begin::Card toolbar */} 
+												<div className="card-toolbar m-0">
+													{/* begin::Menu */} 
+													<button type="button" className="btn btn-clean btn-sm btn-icon btn-icon-primary btn-active-light-primary me-n3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+														{/* begin::Svg Icon | path: icons/duotune/general/gen024.svg */} 
+														<span className="svg-icon svg-icon-3 svg-icon-primary">
+															<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+																<g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+																	<rect x="5" y="5" width="5" height="5" rx="1" fill="currentColor"></rect>
+																	<rect x="14" y="5" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
+																	<rect x="5" y="14" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
+																	<rect x="14" y="14" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
+																</g>
+															</svg>
+														</span>
+														{/* end::Svg Icon */} 
+													</button>
+													{/* begin::Menu 3 */} 
+													<div className="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3" data-kt-menu="true">
+														{/* begin::Heading */} 
+														<div className="menu-item px-3">
+															<div className="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Payments</div>
+														</div>
+														{/* end::Heading */} 
+														{/* begin::Menu item */} 
+														<div className="menu-item px-3">
+															<a href="#" className="menu-link px-3">Create Invoice</a>
+														</div>
+														{/* end::Menu item */} 
+														{/* begin::Menu item */} 
+														<div className="menu-item px-3">
+															<a href="#" className="menu-link flex-stack px-3">Create Payment
+															<i className="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" aria-label="Specify a target name for future usage and reference" data-kt-initialized="1"></i></a>
+														</div>
+														{/* end::Menu item */} 
+														{/* begin::Menu item */} 
+														<div className="menu-item px-3">
+															<a href="#" className="menu-link px-3">Generate Bill</a>
+														</div>
+														{/* end::Menu item */} 
+														{/* begin::Menu item */} 
+														<div className="menu-item px-3" data-kt-menu-trigger="hover" data-kt-menu-placement="right-end">
+															<a href="#" className="menu-link px-3">
+																<span className="menu-title">Subscription</span>
+																<span className="menu-arrow"></span>
+															</a>
+															{/* begin::Menu sub */} 
+															<div className="menu-sub menu-sub-dropdown w-175px py-4">
+																{/* begin::Menu item */} 
+																<div className="menu-item px-3">
+																	<a href="#" className="menu-link px-3">Plans</a>
+																</div>
+																{/* end::Menu item */} 
+																{/* begin::Menu item */} 
+																<div className="menu-item px-3">
+																	<a href="#" className="menu-link px-3">Billing</a>
+																</div>
+																{/* end::Menu item */} 
+																{/* begin::Menu item */} 
+																<div className="menu-item px-3">
+																	<a href="#" className="menu-link px-3">Statements</a>
+																</div>
+																{/* end::Menu item */} 
+																{/* begin::Menu separator */} 
+																<div className="separator my-2"></div>
+																{/* end::Menu separator */} 
+																{/* begin::Menu item */} 
+																<div className="menu-item px-3">
+																	<div className="menu-content px-3">
+																		{/* begin::Switch */} 
+																		<label className="form-check form-switch form-check-custom form-check-solid">
+																			{/* begin::Input */} 
+																			<input className="form-check-input w-30px h-20px" type="checkbox" value="1" checked="checked" name="notifications" />
+																			{/* end::Input */} 
+																			{/* end::Label */} 
+																			<span className="form-check-label text-muted fs-6">Recuring</span>
+																			{/* end::Label */} 
+																		</label>
+																		{/* end::Switch */} 
+																	</div>
+																</div>
+																{/* end::Menu item */} 
+															</div>
+															{/* end::Menu sub */} 
+														</div>
+														{/* end::Menu item */} 
+														{/* begin::Menu item */} 
+														<div className="menu-item px-3 my-1">
+															<a href="#" className="menu-link px-3">Settings</a>
+														</div>
+														{/* end::Menu item */} 
+													</div>
+													{/* end::Menu 3 */} 
+													{/* end::Menu */} 
+												</div>
+												{/* end::Card toolbar */} 
+											</div>
+											{/* end::Card header */} 
+											{/* begin::Card body */} 
+											<div className="card-body d-flex flex-column px-9 pt-6 pb-8">
+												{/* begin::Heading */} 
+												<div className="fs-2tx fw-bold mb-3">$500.00</div>
+												{/* end::Heading */} 
+												{/* begin::Stats */} 
+												<div className="d-flex align-items-center flex-wrap mb-5 mt-auto fs-6">
+													{/* SVG file not found: icons/duotune/arrows/Up-right.svg */} 
+													{/* begin::Number */} 
+													<div className="fw-bold text-danger me-2">+40.5%</div>
+													{/* end::Number */} 
+													{/* begin::Label */} 
+													<div className="fw-semibold text-gray-400">more impressions</div>
+													{/* end::Label */} 
+												</div>
+												{/* end::Stats */} 
+												{/* begin::Indicator */} 
+												<div className="d-flex align-items-center fw-semibold">
+													<span className="badge bg-light text-gray-700 px-3 py-2 me-2">0.5%</span>
+													<span className="text-gray-400 fs-7">MRR</span>
+													<i className="fas fa-exclamation-circle fs-7 ms-2" data-bs-toggle="tooltip" aria-label="Recurring" data-kt-initialized="1"></i>
+												</div>
+												{/* end::Indicator */} 
+											</div>
+											{/* end::Card body */} 
+										</div>
+										{/* end::Card */} 
+									</div>
+    
+
+        </div>
+      </div>
+    </div>
   )
 }
 
 export default IndexPage
 
-export const Head: HeadFC = () => <title>Home Page</title>
+export const Head: HeadFC = () => <title>Custom Title</title>
