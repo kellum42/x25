@@ -1,12 +1,9 @@
-.wrapper {
-    padding-left: 100px;
-}
 .header {
     display: flex;
     justify-content: space-between;
     align-items: stretch;
     position: relative;
     z-index: 2;
-    height: 90px;
+    /* height: 90px; */
     padding:20px 30px
 }

@@ -28071,7 +28071,7 @@ html:not([data-theme=dark]) .theme-light-bg-body {
 }
 
 .menu-sub {
-  display: none;
+  /* display: none; */
   padding: 0;
   margin: 0;
   list-style: none;
@@ -28188,7 +28188,7 @@ html:not([data-theme=dark]) .theme-light-bg-body {
 }
 
 .menu-sub-dropdown {
-  display: none;
+  /* display: none; */
   border-radius: 0.475rem;
   background-color: var(--kt-menu-dropdown-bg-color);
   box-shadow: var(--kt-menu-dropdown-box-shadow);
