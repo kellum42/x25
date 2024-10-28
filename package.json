@@ -20,6 +20,7 @@
     "gatsby": "^5.13.7",
     "gatsby-omni-font-loader": "^2.0.2",
     "react": "^18.2.0",
+    "react-datepicker": "^7.5.0",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0"
   },

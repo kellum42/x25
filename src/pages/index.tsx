@@ -1,18 +1,19 @@
 import * as React from "react"
 import type { HeadFC, PageProps } from "gatsby"
-import {header} from '../components/index.module.css'
-import BudgetCard from '../components/budget-card.tsx'
+// import {header} from '../components/index.module.css'
+import BudgetCard from '../components/budget-card'
 
 // TODO:
 //  - Get popup on budget cards working
 //  - Ensure it looks good on mobile
 
 const IndexPage: React.FC<PageProps> = () => {
+
   return (
     <div className="d-flex flex-column flex-root">
       <div className="page d-flex flex-row flex-column-fluid">
         <div className="wrapper d-flex flex-column flex-row-fluid">
-          <div className={header}>
+          <div className="header" style={{ padding: "20px" }}>
             <img style={{ height: "32px" }} src={'/img/logo-compact-craft.svg'} />
           </div>
 
@@ -37,8 +38,8 @@ const IndexPage: React.FC<PageProps> = () => {
                 </div>
 
                 <div className="row g-6 g-xl-9">
-                  <BudgetCard title="2024 Kellum Budget"/>
-                  <BudgetCard title="2024 Kellum Budget"/>
+                  <BudgetCard title="2024 Kellum Budget" />
+                  <BudgetCard title="2024 Kellum Budget" />
                 </div>
               </div>
             </div>
