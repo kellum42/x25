@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
-enum BudgetLineItemFrequency { Once = "Once", Weekly = "weekly", Biweekly = "Bi-Weekly", Monthly = "Monthly" }
-enum WeeklyBudgetLineItemDays {
+export enum BudgetLineItemFrequency { Once = "Once", Weekly = "weekly", Biweekly = "Bi-Weekly", Monthly = "Monthly" }
+export enum WeeklyBudgetLineItemDays {
   Monday = "Monday",
   Tuesday = "Tuesday",
   Wednesday = "Wednesday",
@@ -12,27 +12,30 @@ enum WeeklyBudgetLineItemDays {
 }
 
 type BaseBudgetLineItem = {
-  id: Number;
-  groupId?: Number;
+  id: number;
+  groupId?: number;
   name: String;
-  amount: Number;
+  amount: number;
   type: "income" | "expense";
   frequency: BudgetLineItemFrequency;
 }
 type OneTimeBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Once,
-  date: Number
+  date: Date
 }
 type WeeklyBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Weekly | BudgetLineItemFrequency.Biweekly,
   day: WeeklyBudgetLineItemDays,
-  starts: Date
+  starts: Date,
+  ends: Date | -1
 }
 type MonthlyBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Monthly,
-  dates: [Number]
+  dates: number[],
+  starts: Date,
+  ends: Date | -1
 }
-type BudgetLineItem = OneTimeBudgetLineItem | WeeklyBudgetLineItem | MonthlyBudgetLineItem;
+export type BudgetLineItem = OneTimeBudgetLineItem | WeeklyBudgetLineItem | MonthlyBudgetLineItem;
 
 type BudgetDetailsResponse = {
   title: string,
@@ -57,22 +60,24 @@ export const useBudgetDetails = (slug: String) => {
       startingBalance: 20,
       startDate: new Date("10-15-2024"),
       budgetLineItems: [
-        {
-          id: 1,
-          name: "Car Insurance",
-          amount: 198.65,
-          frequency: BudgetLineItemFrequency.Monthly,
-          dates: [22],
-          type: "expense"
-        },
-        {
-          id: 2,
-          name: "Apple Music",
-          amount: 18.29,
-          frequency: BudgetLineItemFrequency.Monthly,
-          type: "expense",
-          dates: [26]
-        },
+        // {
+        //   id: 1,
+        //   name: "Car Insurance",
+        //   amount: 198.65,
+        //   frequency: BudgetLineItemFrequency.Monthly,
+        //   dates: [22],
+        //   type: "expense",
+        //   ends: -1
+        // },
+        // {
+        //   id: 2,
+        //   name: "Apple Music",
+        //   amount: 18.29,
+        //   frequency: BudgetLineItemFrequency.Monthly,
+        //   type: "expense",
+        //   dates: [26],
+        //   ends: -1
+        // },
         {
           id: 3,
           name: "Rahni Paycheck",
@@ -80,7 +85,8 @@ export const useBudgetDetails = (slug: String) => {
           frequency: BudgetLineItemFrequency.Biweekly,
           type: "income",
           day: WeeklyBudgetLineItemDays.Friday,
-          starts: new Date()
+          starts: new Date(),
+          ends: -1
         }
       ]
     }
