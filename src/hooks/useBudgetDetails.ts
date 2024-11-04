@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import { getSampleBudgetLineItems } from '../utils/mockData';
+
 export enum BudgetLineItemFrequency { Once = "Once", Weekly = "weekly", Biweekly = "Bi-Weekly", Monthly = "Monthly" }
 export enum WeeklyBudgetLineItemDays {
   Monday = "Monday",
@@ -46,9 +48,10 @@ type BudgetDetailsResponse = {
 }
 
 
-export const useBudgetDetails = (slug: String) => {
+export const useBudgetDetails = (slug: String): BudgetDetailsResponse | null => {
 
   const [data, setData] = useState<BudgetDetailsResponse | null>(null)
+
 
   useEffect(() => {
 
@@ -59,43 +62,10 @@ export const useBudgetDetails = (slug: String) => {
       slug: "2024-kellum-family-vacation",
       startingBalance: 20,
       startDate: new Date("10-15-2024"),
-      budgetLineItems: [
-        // {
-        //   id: 1,
-        //   name: "Car Insurance",
-        //   amount: 198.65,
-        //   frequency: BudgetLineItemFrequency.Monthly,
-        //   dates: [22],
-        //   type: "expense",
-        //   ends: -1
-        // },
-        // {
-        //   id: 2,
-        //   name: "Apple Music",
-        //   amount: 18.29,
-        //   frequency: BudgetLineItemFrequency.Monthly,
-        //   type: "expense",
-        //   dates: [26],
-        //   ends: -1
-        // },
-        {
-          id: 3,
-          name: "Rahni Paycheck",
-          amount: 3101.30,
-          frequency: BudgetLineItemFrequency.Biweekly,
-          type: "income",
-          day: WeeklyBudgetLineItemDays.Friday,
-          starts: new Date(),
-          ends: -1
-        }
-      ]
+      budgetLineItems: getSampleBudgetLineItems()
     }
     setData(response);
   }, []);
 
-  return {
-    budgetLineItems: data?.budgetLineItems,
-    ...data
-    // details: { slug: data?.slug, title: data?.title }
-  }
+  return data;
 }

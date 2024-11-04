@@ -1,157 +1,186 @@
-import * as React from "react"
+import React, { FC, useState, useEffect } from "react"
 import type { PageProps } from "gatsby"
 import Chart from "react-apexcharts";
-
-import { useBudgetDetails } from "../../hooks/useBudgetDetails"
-import { getTheme } from "../../utils/theme";
+import {
+  autoUpdate,
+  flip,
+  FloatingNode,
+  offset,
+  shift,
+  useClick,
+  useDismiss,
+  useFloating,
+  useFloatingNodeId,
+  useInteractions,
+} from "@floating-ui/react";
 import { ApexOptions } from "apexcharts";
+import dayjs, { Dayjs } from 'dayjs'
 
-const BudgetDetailsChart: React.FC = () => {
+import { BudgetLineItem, useBudgetDetails } from "../../hooks/useBudgetDetails"
+import { getTheme } from "../../utils/theme";
+import { calculateBalance, getBudgetDetailsChartOptions } from "../../utils/budget";
+
+type BudgetDetailsChartProps = {
+  startingDate: Date,
+  startingBalance: number,
+  budgetLineItems: [BudgetLineItem]
+}
+
+const BudgetDetailsChart: FC<BudgetDetailsChartProps> = (props) => {
+  const [span, setSpan] = useState<"1D" | "1W" | "1M" | "1Y">("1M");
+  const [chartData, setChartData] = useState<number[]>([]);
+  const [chartLabels, setChartLabels] = useState<string[]>([]);
+  const [menuIsOpen, setMenuIsOpen] = React.useState(false);
+
+  const { startingDate, startingBalance, budgetLineItems } = props;
   const theme = getTheme("light");
+  const nodeId = useFloatingNodeId();
+  const selectedDay = new Date();
 
-  const options: ApexOptions = {
-    series: [{
-      name: 'Net Profit',
-      data: [30, 30, 43, 43, 34, 34, 26, 26, 47, 47]
-    }],
-    chart: {
-      fontFamily: 'inherit',
-      type: 'area',
-      height: '300',
-      toolbar: {
-        show: false
-      },
-      zoom: {
-        enabled: false
-      },
-      sparkline: {
-        enabled: true
-      }
-    },
-    plotOptions: {},
-    legend: {
-      show: false
-    },
-    dataLabels: {
-      enabled: false
-    },
-    fill: {
-      type: 'solid',
-      opacity: 0.075
-    },
-    stroke: {
-      curve: 'smooth',
-      show: true,
-      width: 3,
-      colors: [theme.primary]
-    },
-    xaxis: {
-      categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false
-      },
-      labels: {
-        show: false,
-        style: {
-          colors: theme["grey-500"],
-          fontSize: '12px',
-        }
-      },
-      crosshairs: {
-        show: false,
-        position: 'front',
-        stroke: {
-          color: theme["grey-200"],
-          width: 1,
-          dashArray: 3
-        }
-      },
-      tooltip: {
-        enabled: true,
-        formatter: undefined,
-        offsetY: 0,
-        style: {
-          fontSize: '12px'
+  const { floatingStyles, refs, context } = useFloating<HTMLButtonElement>({
+    nodeId,
+    open: menuIsOpen,
+    onOpenChange: setMenuIsOpen,
+    placement: "bottom-start",
+    middleware: [
+      offset({ mainAxis: 4, alignmentAxis: 0 }),
+      flip(),
+      shift()
+    ],
+    whileElementsMounted: autoUpdate
+  });
+
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+
+  const {
+    getReferenceProps,
+    getFloatingProps,
+  } = useInteractions([click, dismiss]);
+
+  const options: ApexOptions = getBudgetDetailsChartOptions("light");
+
+  const getChartData = (): { series: number[], xaxis: string[] } => {
+    if ( span === "1D" ){
+      const previousDay = new Date(selectedDay);
+      previousDay.setDate(selectedDay.getDate() - 1);
+
+      const selectedDayBalance = calculateBalance(startingDate, startingBalance, budgetLineItems, selectedDay );
+      const previousDayBalance = calculateBalance(startingDate, startingBalance, budgetLineItems, previousDay);
+
+      if ( typeof selectedDayBalance === 'string' || typeof previousDayBalance === 'string' ){
+        // error
+        return { series: [], xaxis: [] };
+      } else {
+        return {
+          series: [previousDayBalance, selectedDayBalance],
+          xaxis: []
         }
       }
-    },
-    yaxis: {
-      min: 0,
-      max: 60,
-      labels: {
-        show: false,
-        style: {
-          colors: theme["grey-500"],
-          fontSize: '12px'
-        }
-      }
-    },
-    states: {
-      normal: {
-        filter: {
-          type: 'none',
-          value: 0
-        }
-      },
-      hover: {
-        filter: {
-          type: 'none',
-          value: 0
-        }
-      },
-      active: {
-        allowMultipleDataPointsSelection: false,
-        filter: {
-          type: 'none',
-          value: 0
-        }
-      }
-    },
-    tooltip: {
-      style: {
-        fontSize: '12px'
-      },
-      // y: {
-      //   formatter: function (val: string) {
-      //     return "$" + val + " sales"
-      //   }
-      // }
-    },
-    colors: [theme.primary],
-    markers: {
-      colors: [theme["primary-light"]],
-      strokeColors: [theme.primary],
-      strokeWidth: 3
     }
-  };
+    return { series: [], xaxis: []}
+  }
+  
+
+  useEffect(() => {
+    // set options.xaxis.categories, options.series.data
+    const { series, xaxis } = getChartData();
+    if ( options.series ){
+      options.series = [{
+        name: 'Net Profit',
+        data: series
+      }];
+    }
+    
+    if ( options.xaxis ){
+      options.xaxis.categories = xaxis
+    }
+    
+  }, [span]);
+
+  useEffect(() => {
+    //  compute original
+    
+  }, []);
+
   return (
     <div className="mixed-chart">
+      <div className="p-8 pb-0">
+        <div className="symbol symbol-45px">
+          <div className="symbol-label">
+            <FloatingNode id={nodeId}>
+              {/* <BudgetCardMenuButton /> */}
+              <button
+                ref={refs.setReference}
+                {...getReferenceProps()}
+                // tabIndex={
+                //   !isNested ? undefined : parent.activeIndex === item.index ? 0 : -1
+                // }
+                // role={isNested ? "menuitem" : undefined}
+                data-open={menuIsOpen ? "" : undefined}
+                // data-nested={isNested ? "" : undefined}
+                //data-focus-inside={hasFocusInside ? "" : undefined}
+                // className={isNested ? "MenuItem" : "RootMenu"}
+
+                // onFocus(event: React.FocusEvent<HTMLButtonElement>) {
+                //     props.onFocus?.(event);
+                //     setHasFocusInside(false);
+                //     parent.setHasFocusInside(true);
+                // }
+
+                //)}
+                type="button"
+                className="btn btn-clean btn-sm btn-icon btn-icon-primary btn-active-light-primary text-gray-500 fw-bold" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
+              >
+                { span }
+              </button>
+              {menuIsOpen && (
+                <div
+                  ref={refs.setFloating}
+                  {...getFloatingProps()}
+                  style={{ ...floatingStyles, backgroundColor: theme["kt-symbol-label-bg"] }}
+                  className="menu menu-column menu-sub-dropdown menu-sub menu-rounded menu-state-bg-light-primary fw-semibold w-100px py-3"
+                  data-kt-menu="true"
+                >
+                  {/* begin::Menu item */}
+                  <div className="menu-item px-3">
+                    <p className={"menu-link p-3 m-0 text-gray-500 " + ( span === "1D" ? "fw-bold text-gray-700" : "")}>1 Day</p>
+                    <p className={"menu-link p-3 m-0 text-gray-500 " + ( span === "1W" ? "fw-bold text-gray-700" : "")}>1 Week</p>
+                    <p className={"menu-link p-3 m-0 text-gray-500 " + ( span === "1M" ? "fw-bold text-gray-700" : "")}>1 Month</p>
+                    <p className={"menu-link p-3 m-0 text-gray-500 " + ( span === "1Y" ? "fw-bold text-gray-700" : "")}>1 Year</p>
+                  </div>
+                  {/* end::Menu item */}
+                </div>
+              )}
+            </FloatingNode>
+          </div>
+        </div>
+      </div>
+
       <Chart
         options={options}
         series={options.series}
         type="area"
-        width="500"
+        height="250"
       />
     </div>
-												
+
   )
 }
 
 const BudgetDetailsPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
-  const { budgetLineItems, ...details } = useBudgetDetails(slug);
+  const budget = useBudgetDetails(slug);
 
   // console.log(budgetLineItems[0].frequency);
 
   return (
     <div>
-      <h1>Hey it worked! {slug}</h1>
-      <BudgetDetailsChart />
-      {/* {budgetLineItems?.map((x, i) =>
-        <p>{x.frequency}</p>
-      )} */}
+      { budget &&
+      <div>
+        <h1>Hey it worked! {slug}</h1>
+        <BudgetDetailsChart startingBalance={budget.startingBalance} budgetLineItems={budget.budgetLineItems} startDate={budget.startDate} />
+      </div>
+    }
     </div>
   )
 }
