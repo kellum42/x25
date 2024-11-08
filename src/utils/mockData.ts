@@ -1,3 +1,5 @@
+import dayjs, { Dayjs } from 'dayjs'
+
 import {
   BudgetLineItem,
   BudgetLineItemFrequency,
@@ -13,7 +15,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -23,7 +25,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -33,7 +35,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -43,7 +45,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -53,7 +55,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -63,7 +65,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -73,7 +75,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -83,7 +85,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -93,7 +95,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -103,7 +105,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [23],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -113,7 +115,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [24],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -123,7 +125,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [25],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -133,7 +135,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [26],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -141,7 +143,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       name: "Verizon",
       amount: 189.92,
       frequency: BudgetLineItemFrequency.Once,
-      date: new Date(2024, 7, 27),
+      date: dayjs('2024-08-27'),
       type: "expense",
     },
     {
@@ -149,7 +151,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       name: "Verizon",
       amount: 167.4,
       frequency: BudgetLineItemFrequency.Once,
-      date: new Date(2024, 8, 27),
+      date: dayjs('2024-09-27'),
       type: "expense",
     },
     {
@@ -159,7 +161,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [27],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -169,7 +171,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [27],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -179,7 +181,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [28],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -189,7 +191,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [1],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -199,8 +201,8 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [1],
       type: "expense",
-      starts: new Date(2024, 1, 1),
-      ends: new Date(2024, 8, 30)
+      starts: dayjs('2024-01-01'),
+      ends: dayjs('2024-09-30')
     },
     {
       id: 1,
@@ -209,8 +211,8 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [1],
       type: "expense",
-      starts: new Date(2024, 8, 15),
-      ends: new Date(2024, 9, 15)
+      starts: dayjs('2024-09-15'),
+      ends: dayjs('2024-10-15')
     },
     {
       id: 1,
@@ -219,8 +221,8 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [1],
       type: "expense",
-      starts: new Date(2024, 1, 1),
-      ends: new Date(2024, 8, 2)
+      starts: dayjs('2024-01-01'),
+      ends: dayjs('2024-09-02')
     },
     {
       id: 1,
@@ -229,8 +231,8 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [1],
       type: "expense",
-      starts: new Date(2024, 8, 3),
-      ends: new Date(2024, 9, 2)
+      starts: dayjs('2024-09-03'),
+      ends: dayjs('2024-10-02')
     },
     {
       id: 1,
@@ -239,7 +241,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [1],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -249,7 +251,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [1],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -259,7 +261,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [2],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -269,7 +271,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [2],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -279,7 +281,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [5],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -289,7 +291,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [8],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -299,7 +301,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [9],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -309,7 +311,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [14],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -319,7 +321,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [15],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -329,7 +331,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [22],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -339,7 +341,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [22],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -349,7 +351,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [22],
       type: "expense",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -359,7 +361,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Monthly,
       dates: [10, 25],
       type: "income",
-      starts: new Date(2024, 1, 1),
+      starts: dayjs('2024-01-01'),
       ends: -1
     },
     {
@@ -369,7 +371,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       frequency: BudgetLineItemFrequency.Biweekly,
       day: WeeklyBudgetLineItemDays.Thursday,
       type: "income",
-      starts: new Date(2024, 7, 30),
+      starts: dayjs('2024-08-30'),
       ends: -1
     },
     {
@@ -377,7 +379,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
       name: "Rahni Paycheck Adjustment",
       amount: 331.99,
       frequency: BudgetLineItemFrequency.Once,
-      date: new Date(2024, 8, 13),
+      date: dayjs('2024-09-13'),
       type: "expense"
     }
   ]

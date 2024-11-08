@@ -1,10 +1,13 @@
+import dayjs from 'dayjs'
+
 import {
   daysTillFirstOccurrence,
   calculateBalance,
-  getWeekNumber
+  calculateBalanceOverPeriod
 } from "../../utils/budget";
 import { BudgetLineItem, BudgetLineItemFrequency, WeeklyBudgetLineItemDays } from "../../hooks/useBudgetDetails";
 import { getSampleBudgetLineItems } from "../../utils/mockData";
+import { sampleBudgetTwoItems } from '../../utils/sample-budget-two';
 
 
 test('it gives 18 days between April 27th and a monthly bill due on May 15th', () => {
@@ -15,11 +18,11 @@ test('it gives 18 days between April 27th and a monthly bill due on May 15th', (
     frequency: BudgetLineItemFrequency.Monthly,
     dates: [15],
     type: "expense",
-    starts: new Date(2024, 1, 1),
+    starts: dayjs('2024-01-01'),
     ends: -1
   };
-  const offset = daysTillFirstOccurrence(bill, new Date(2024, 3, 27), 0);
-  expect( offset ).toBe( 18 );
+  const offset = daysTillFirstOccurrence(bill, dayjs('2024-04-27'), 0);
+  expect(offset).toBe(18);
 });
 
 test('it gives 5 days till allowance if today is Friday, and 2 days till allowance if today is Monday. Given payday is every Wednesday.', () => {
@@ -30,14 +33,14 @@ test('it gives 5 days till allowance if today is Friday, and 2 days till allowan
     frequency: BudgetLineItemFrequency.Weekly,
     day: WeeklyBudgetLineItemDays.Wednesday,
     type: "income",
-    starts: new Date(2020, 1, 1),
+    starts: dayjs('2020-01-01'),
     ends: -1
   };
-  const offset = daysTillFirstOccurrence(allowance, new Date(2024, 10, 1)); // Friday
-  expect( offset ).toBe( 5 );
+  const offset = daysTillFirstOccurrence(allowance, dayjs('2024-10-04')); // Friday
+  expect(offset).toBe(5);
 
-  const _offset = daysTillFirstOccurrence(allowance, new Date(2024, 9, 28)); // Monday
-  expect( _offset ).toBe( 2 );
+  const _offset = daysTillFirstOccurrence(allowance, dayjs('2024-09-30')); // Monday
+  expect(_offset).toBe(2);
 });
 
 test('it gives error for OneTimeBudgetLineItems', () => {
@@ -47,43 +50,61 @@ test('it gives error for OneTimeBudgetLineItems', () => {
     amount: 3000,
     frequency: BudgetLineItemFrequency.Once,
     type: "income",
-    date: new Date(2024, 5, 15)
+    date: dayjs('2024-05-15')
   };
-  const offset = daysTillFirstOccurrence(bonus, new Date(2024, 10, 1));
-  expect( typeof offset ).toBe('string');
+  const offset = daysTillFirstOccurrence(bonus, dayjs('2024-10-01'));
+  expect(typeof offset).toBe('string');
 })
 
 test('it gives $5358.26 for the balance.', () => {
   const budgetLineItems: BudgetLineItem[] = getSampleBudgetLineItems();
 
-  // Test week by week.
+  const monthBalance = calculateBalance(dayjs('2024-08-23'), 5346.14, budgetLineItems, dayjs('2024-10-10')); // entire span
+  expect(monthBalance).toBe(5358.26);
 
-  // const firstWeekBalance = calculateBalance(new Date(2024, 7, 23), 5346.14, budgetLineItems, new Date(2024, 7, 29)); // first week
-  // expect( firstWeekBalance ).toBe( 5776.80 );
-
-  // const secondWeekBalance = calculateBalance(new Date(2024, 7, 30), 5776.80, budgetLineItems, new Date(2024, 8, 5)); // second week
-  // expect( secondWeekBalance ).toBe( 3812.42 );
-
-  // const thirdWeekBalance = calculateBalance(new Date(2024, 8, 6), 3812.42, budgetLineItems, new Date(2024, 8, 12)); // third week
-  // expect( thirdWeekBalance ).toBe( 5310.37 );
-
-  // const fourthWeekBalance = calculateBalance(new Date(2024, 8, 13), 5310.37, budgetLineItems, new Date(2024, 8, 19)); // fourth week
-  // expect( fourthWeekBalance ).toBe( 5574.06 );
-
-  // const fifthWeekBalance = calculateBalance(new Date(2024, 8, 20), 5574.06, budgetLineItems, new Date(2024, 8, 26)); // fifth week
-  // expect( fifthWeekBalance ).toBe( 6509.76 );
-
-  // const sixthWeekBalance = calculateBalance(new Date(2024, 8, 27), 6509.76, budgetLineItems, new Date(2024, 9, 3)); // sixth week
-  // expect( sixthWeekBalance ).toBe( 4560.31 );
-
-  // const seventhWeekBalance = calculateBalance(new Date(2024, 9, 4), 4560.31, budgetLineItems, new Date(2024, 9, 10)); // seventh week
-  // expect( seventhWeekBalance ).toBe( 5358.26 );
-
-  const monthBalance = calculateBalance(new Date(2024, 7, 23), 5346.14, budgetLineItems, new Date(2024, 9, 10)); // entire span
-  expect( monthBalance ).toBe( 5358.26 );
+  const Jan25ThruMar25Balance = calculateBalance(dayjs('2025-01-01'), 6135.26, budgetLineItems, dayjs('2025-02-28')); // entire span
+  expect(Jan25ThruMar25Balance).toBe(9387.12);
 })
 
-test('it give the correct week numbers', () => {
-  expect( getWeekNumber( new Date(2023,9,23) ) ).toBe( 43 );
-  expect( getWeekNumber( new Date( 2022, 1, 23 ) ) ).toBe( 8 );
+test( 'it calculates daily periods and balances correctly for sample budget #2', () => {
+
+  const d_data = calculateBalanceOverPeriod( dayjs('2024-3-1'), 2000, sampleBudgetTwoItems, dayjs('2024-5-16'), '1D' );
+  expect( d_data.periods ).toEqual([ '5/16/24 12:00am', '5/16/24 11:59pm' ]);
+  expect( d_data.balances ).toEqual([ 10718.29 ,  10718.29 ]);
 });
+
+test('it calculates weekly periods and balances correctly for sample budget #2.', () => {
+
+  const w_data = calculateBalanceOverPeriod(dayjs("2024-3-1"), 2000, sampleBudgetTwoItems, dayjs("2024-5-15"), "1W");
+  expect(w_data.periods).toEqual(['Fri 5/10/24', 'Sat 5/11/24', 'Sun 5/12/24', 'Mon 5/13/24', 'Tue 5/14/24', 'Wed 5/15/24', 'Thu 5/16/24']);
+  expect(w_data.balances).toEqual([11218.29, 10718.29, 10718.29, 10718.29, 10718.29, 10718.29, 10718.29]);
+});
+
+test('it calculates monthly periods and balances correctly for sample budget #2', () => {
+
+  const m_data = calculateBalanceOverPeriod(dayjs("2024-3-1"), 2000, sampleBudgetTwoItems, dayjs("2024-5-15"), "1M");
+  expect(m_data.periods).toEqual(['5/1/24', '5/8/24', '5/15/24', '5/23/24', '5/31/24']);
+  expect(m_data.balances).toEqual([8634.20, 8116.99, 10718.29, 10218.29, 12801.30]);
+});
+
+test('it calculates yearly periods and balances correctly for sample budget #2', () => {
+
+  const y_data = calculateBalanceOverPeriod(dayjs("2024-3-1"), 2000, sampleBudgetTwoItems, dayjs("2024-5-15"), "1Y");
+  expect(y_data.periods).toEqual(['Jan \'24', 'Feb \'24', 'Mar \'24', 'Apr \'24', 'May \'24', 'Jun \'24', 'Jul \'24', 'Aug \'24', 'Sep \'24', 'Oct \'24', 'Nov \'24', 'Dec \'24', 'Jan \'25']);
+  expect(y_data.balances).toEqual([null, null, 2000, 4467.10, 8634.20, 12301.3, 16468.40, 20635.50, 27403.90, 31571.00, 35738.10, 39405.20, 43572.30]);
+});
+
+test('it calculates yearly periods and balances correctly for sample budget #2 when it doesn\'t start on the first of the month', () => {
+
+  // start on 3/18 to test the offset.
+  const yoffset_data = calculateBalanceOverPeriod(dayjs("2024-3-18"), 2000, sampleBudgetTwoItems, dayjs("2024-5-15"), "1Y");
+  expect(yoffset_data.periods).toEqual(['Jan \'24', 'Feb \'24', 'Mar \'24', 'Mar \'24', 'Apr \'24', 'May \'24', 'Jun \'24', 'Jul \'24', 'Aug \'24', 'Sep \'24', 'Oct \'24', 'Nov \'24', 'Dec \'24', 'Jan \'25']);
+  expect(yoffset_data.balances).toEqual([null, null, null, 2000, 3483.01, 7650.11, 11317.21, 15484.31, 19651.41, 26419.81, 30586.91, 34754.01, 38421.11, 42588.21]);
+});
+
+// Issue came up when testing.
+// Was getting negative numbers.
+test( 'it returns null for all datapoints when the selected date is before the budget starts', () => {
+  const { balances } = calculateBalanceOverPeriod( dayjs("10-15-2024"), 5000, getSampleBudgetLineItems(), dayjs( '2024-05-15' ), "1M" );
+  expect( balances ).toEqual([ null, null, null, null, null ]);
+})

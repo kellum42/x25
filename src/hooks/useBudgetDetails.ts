@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import dayjs, { Dayjs } from 'dayjs'
 
 import { getSampleBudgetLineItems } from '../utils/mockData';
 
@@ -23,19 +24,19 @@ type BaseBudgetLineItem = {
 }
 type OneTimeBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Once,
-  date: Date
+  date: Dayjs
 }
 type WeeklyBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Weekly | BudgetLineItemFrequency.Biweekly,
   day: WeeklyBudgetLineItemDays,
-  starts: Date,
-  ends: Date | -1
+  starts: Dayjs
+  ends: Dayjs | -1
 }
 type MonthlyBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Monthly,
   dates: number[],
-  starts: Date,
-  ends: Date | -1
+  starts: Dayjs,
+  ends: Dayjs | -1
 }
 export type BudgetLineItem = OneTimeBudgetLineItem | WeeklyBudgetLineItem | MonthlyBudgetLineItem;
 
@@ -43,7 +44,7 @@ type BudgetDetailsResponse = {
   title: string,
   slug: string,
   startingBalance: number,
-  startDate: Date,
+  startDate: Dayjs,
   budgetLineItems: BudgetLineItem[]
 }
 
@@ -60,8 +61,8 @@ export const useBudgetDetails = (slug: String): BudgetDetailsResponse | null => 
     const response: BudgetDetailsResponse = {
       title: "2024 Kellum Family Vacation",
       slug: "2024-kellum-family-vacation",
-      startingBalance: 20,
-      startDate: new Date("10-15-2024"),
+      startingBalance: 5000,
+      startDate: dayjs("10-15-2024"),
       budgetLineItems: getSampleBudgetLineItems()
     }
     setData(response);
