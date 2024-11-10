@@ -1,0 +1,21 @@
+.budgetddp .fc {
+    justify-content: space-between;
+    flex-direction: row-reverse;
+}
+.budgetddp .budgetddp-date-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.budgetddp .budgetddp-buttons {
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+}
+@media (max-width: 575px) {
+  .budgetddp .fc {
+    flex-direction: column;
+    align-items: center;
+    row-gap: 15px;
+  }
+}

@@ -40,7 +40,7 @@ type MonthlyBudgetLineItem = BaseBudgetLineItem & {
 }
 export type BudgetLineItem = OneTimeBudgetLineItem | WeeklyBudgetLineItem | MonthlyBudgetLineItem;
 
-type BudgetDetailsResponse = {
+export type BudgetDetailsResponse = {
   title: string,
   slug: string,
   startingBalance: number,

@@ -16,7 +16,6 @@ dayjs.extend(isBetween);
 dayjs.extend(isoWeek);
 
 
-
 export const calculateBalance = (startDate: Dayjs, startingAmount: number, items: BudgetLineItem[], endDate?: Dayjs): number | string => {
   //  If endDate is null, set to today.
   //  If endDate is before startDate, return error
@@ -173,7 +172,7 @@ export const calculateBalanceOverPeriod = (budgetStartDate: Dayjs, startingBalan
     const initialBalance = calculateBalance(budgetStartDate, startingBalance, lineItems, friday.subtract(1, 'day'));
     _balance = (typeof initialBalance === 'number') ? initialBalance : null;
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       const calculatedBalance = calculateBalance(_balance ? friday.add(i, 'day') : budgetStartDate, _balance ?? startingBalance, lineItems, friday.add(i, 'day'));
 
       if (typeof calculatedBalance === 'string') {
@@ -192,7 +191,8 @@ export const calculateBalanceOverPeriod = (budgetStartDate: Dayjs, startingBalan
     // TODO: - Maybe incorporate start time inbetween datapoints.
 
     let datapoints: number[] = date.daysInMonth() >= 30 ? [1, 8, 15, 23] : [1, 7, 14, 21];
-    datapoints.push(date.daysInMonth());
+    // datapoints.push(date.daysInMonth());
+    datapoints.push( date.daysInMonth() + 1 );
 
     // calculate initial balance
     const initialBalance = calculateBalance(budgetStartDate, startingBalance, lineItems, date.set('date', -1));
@@ -384,4 +384,9 @@ export const getBudgetDetailsChartOptions = (series?: (number | null)[], xaxisLa
 export const numberOrNull = ( a: number | string ): number | null => {
   // return typeof a === 'number' ? a : null;
   return typeof a === 'string' ? null : a;
+}
+
+export const getFriday = ( from: Dayjs ): Dayjs => {
+  const daysFromFriday = ( from.day() + 2) % 7;
+  return from.subtract( daysFromFriday, 'day' );
 }
