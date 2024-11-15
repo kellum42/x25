@@ -20,7 +20,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
     },
     {
       id: 1,
-      name: "Travis food, drink, and entertianment",
+      name: "Travis food, drink, and entertainment",
       amount: 125,
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,
@@ -30,7 +30,7 @@ export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
     },
     {
       id: 1,
-      name: "Rahni food, drink, and entertianment",
+      name: "Rahni food, drink, and entertainment",
       amount: 125,
       frequency: BudgetLineItemFrequency.Weekly,
       day: WeeklyBudgetLineItemDays.Friday,

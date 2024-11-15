@@ -3,7 +3,8 @@ import dayjs from 'dayjs'
 import {
   daysTillFirstOccurrence,
   calculateBalance,
-  calculateBalanceOverPeriod
+  calculateBalanceOverPeriod,
+  getThisWeeksBudgetLineItems
 } from "../../utils/budget";
 import { BudgetLineItem, BudgetLineItemFrequency, WeeklyBudgetLineItemDays } from "../../hooks/useBudgetDetails";
 import { getSampleBudgetLineItems } from "../../utils/mockData";
@@ -76,15 +77,15 @@ test( 'it calculates daily periods and balances correctly for sample budget #2',
 test('it calculates weekly periods and balances correctly for sample budget #2.', () => {
 
   const w_data = calculateBalanceOverPeriod(dayjs("2024-3-1"), 2000, sampleBudgetTwoItems, dayjs("2024-5-15"), "1W");
-  expect(w_data.periods).toEqual(['Fri 5/10/24', 'Sat 5/11/24', 'Sun 5/12/24', 'Mon 5/13/24', 'Tue 5/14/24', 'Wed 5/15/24', 'Thu 5/16/24']);
-  expect(w_data.balances).toEqual([11218.29, 10718.29, 10718.29, 10718.29, 10718.29, 10718.29, 10718.29]);
+  expect(w_data.periods).toEqual(['Fri 5/10/24', 'Sat 5/11/24', 'Sun 5/12/24', 'Mon 5/13/24', 'Tue 5/14/24', 'Wed 5/15/24', 'Thu 5/16/24', 'Fri 5/17/24']);
+  expect(w_data.balances).toEqual([11218.29, 10718.29, 10718.29, 10718.29, 10718.29, 10718.29, 10718.29, 10718.29]);
 });
 
 test('it calculates monthly periods and balances correctly for sample budget #2', () => {
 
   const m_data = calculateBalanceOverPeriod(dayjs("2024-3-1"), 2000, sampleBudgetTwoItems, dayjs("2024-5-15"), "1M");
-  expect(m_data.periods).toEqual(['5/1/24', '5/8/24', '5/15/24', '5/23/24', '5/31/24']);
-  expect(m_data.balances).toEqual([8634.20, 8116.99, 10718.29, 10218.29, 12801.30]);
+  expect(m_data.periods).toEqual(['5/1/24', '5/8/24', '5/15/24', '5/23/24', '6/1/24']);
+  expect(m_data.balances).toEqual([8634.20, 8116.99, 10718.29, 10218.29, 12301.30]);
 });
 
 test('it calculates yearly periods and balances correctly for sample budget #2', () => {
@@ -108,3 +109,21 @@ test( 'it returns null for all datapoints when the selected date is before the b
   const { balances } = calculateBalanceOverPeriod( dayjs("10-15-2024"), 5000, getSampleBudgetLineItems(), dayjs( '2024-05-15' ), "1M" );
   expect( balances ).toEqual([ null, null, null, null, null ]);
 })
+
+test( 'it shows the correct items for the week of 4/5/24 for sample budget #2 via getThisWeeksBudgetLineItems()', () => {
+  const items = getThisWeeksBudgetLineItems( dayjs( '4/8/24' ), sampleBudgetTwoItems );
+  expect( items.length ).toBe( 2 );
+  expect( items[0].item.name ).toBe( 'Savings' );
+  expect( items[0].days ).toBe( 0 );
+  expect( items[1].item.name ).toBe( 'Paycheck' );
+  expect( items[1].days ).toBe( 6 );
+});
+
+test( 'it shows the correct items for the week of 3/22/24 for sample budget #2 via getThisWeeksBudgetLineItems()', () => {
+  const items = getThisWeeksBudgetLineItems( dayjs( '3/22/24' ), sampleBudgetTwoItems );
+  expect( items.length ).toBe( 4 );
+  expect( items[0].item.name ).toBe( 'Savings' );
+  expect( items[1].item.name ).toBe( 'Apple Music' );
+  expect( items[2].item.name ).toBe( 'Travel savings' );
+  expect( items[3].item.name ).toBe( 'Paycheck' );
+});

@@ -2,6 +2,8 @@ import { ApexOptions } from "apexcharts";
 import dayjs, { Dayjs } from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 
 import {
@@ -14,7 +16,8 @@ import { getTheme } from "./theme";
 // needed to use day.js plugins
 dayjs.extend(isBetween);
 dayjs.extend(isoWeek);
-
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
 
 export const calculateBalance = (startDate: Dayjs, startingAmount: number, items: BudgetLineItem[], endDate?: Dayjs): number | string => {
   //  If endDate is null, set to today.
@@ -252,6 +255,60 @@ export const calculateBalanceOverPeriod = (budgetStartDate: Dayjs, startingBalan
   return { periods, balances };
 }
 
+type CurrentBudgetDetailsLineItem = {
+  days: number,
+  item: BudgetLineItem
+}
+
+export const getThisWeeksBudgetLineItems = ( date: Dayjs, lineItems: BudgetLineItem[] ): CurrentBudgetDetailsLineItem[] => {
+  const friday = getFriday( date );
+  let currentItems: CurrentBudgetDetailsLineItem[] = [];
+  lineItems.forEach(( item, i ) => {
+    if ( item.frequency === BudgetLineItemFrequency.Once ){
+      if ( item.date.isBetween( friday, date, "day", "[]" ) ) {
+        currentItems.push({ days: item.date.diff( friday, "date" ), item });
+      }
+
+    } else if ( item.frequency === BudgetLineItemFrequency.Monthly ){
+      item.dates.forEach(( _, j ) => {
+        const days = daysTillFirstOccurrence( item, friday, j );
+        if ( typeof days === 'number' ){
+          if ( days < 7 && budgetLineItemIsActive( date, item ) ){
+            currentItems.push({ days, item });
+          }
+        } else {
+          console.log( "GOT ERROR: %s, item: %s", days, item.name );
+        }
+      })
+    } else {
+      const days = daysTillFirstOccurrence( item, friday );
+      if ( typeof days === 'number' ){
+        if ( days < 7 && budgetLineItemIsActive( date, item )){
+          currentItems.push( { days, item });
+        }
+
+      } else {
+        console.log( "GOT ERROR: %s, item: %s", days, item.name );
+      }
+    }
+  })
+  currentItems.sort(( a, b) => {
+    if ( a.days < b.days ){ return -1; }
+    else if ( a.days > b.days ){ return 1; }
+    else { return 0; }
+  });
+  return currentItems;
+}
+
+
+const budgetLineItemIsActive = ( date: Dayjs, item: BudgetLineItem ): boolean => {
+  if ( item.frequency === BudgetLineItemFrequency.Once ){
+    return false;
+  } else {
+    return item.starts.isSameOrBefore( date, 'day' ) && ( item.ends === -1 || item.ends.isSameOrAfter( date, 'day' ));
+  }
+}
+
 
 export const getBudgetDetailsChartOptions = (series?: (number | null)[], xaxisLabels?: string[] | null, themeStyle?: "light" | "dark"): ApexOptions => {
   const theme = getTheme(themeStyle ?? "light");
@@ -390,3 +447,4 @@ export const getFriday = ( from: Dayjs ): Dayjs => {
   const daysFromFriday = ( from.day() + 2) % 7;
   return from.subtract( daysFromFriday, 'day' );
 }
+

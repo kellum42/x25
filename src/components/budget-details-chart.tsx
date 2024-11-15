@@ -26,14 +26,15 @@ dayjs.extend(CustomParseFormat)
 
 type BudgetDetailsChartProps = {
   date: Dayjs,
-  budget: BudgetDetailsResponse
+  budget: BudgetDetailsResponse,
+  friday: Dayjs
 }
 
 export const BudgetDetailsChart: FC<BudgetDetailsChartProps> = (props) => {
   const [span, setSpan] = useState<"1D" | "1W" | "1M" | "1Y">("1W");
   const [menuIsOpen, setMenuIsOpen] = React.useState(false);
 
-  const { date, budget } = props;
+  const { date, budget, friday } = props;
   const { startDate, startingBalance, budgetLineItems } = budget;
   const theme = getTheme("light");
   const nodeId = useFloatingNodeId();
