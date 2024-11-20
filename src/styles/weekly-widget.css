@@ -1,0 +1,11 @@
+.x25-line-item-list .line-item {
+    border-top-width: 1px;
+    border-top-style: dashed;
+    border-top-color: var(--kt-border-color);
+}
+.x25-line-item-list .line-item-wrapper .newday + .line-item {
+    border-top: none;
+}
+.x25-line-item-list .line-item .line-item-badges {
+    column-gap: 15px;
+}

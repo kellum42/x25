@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs'
 
+import { saveBudget } from '../utils/localStorage';
 import { getSampleBudgetLineItems } from '../utils/mockData';
 
 export enum BudgetLineItemFrequency { Once = "Once", Weekly = "weekly", Biweekly = "Bi-Weekly", Monthly = "Monthly" }
@@ -15,12 +16,14 @@ export enum WeeklyBudgetLineItemDays {
 }
 
 type BaseBudgetLineItem = {
-  id: number;
+  id: string;
   groupId?: number;
   name: String;
   amount: number;
   type: "income" | "expense";
   frequency: BudgetLineItemFrequency;
+  vers?: Record<string, number>,
+  adjs?: Record<string, number>
 }
 type OneTimeBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Once,
@@ -40,7 +43,8 @@ type MonthlyBudgetLineItem = BaseBudgetLineItem & {
 }
 export type BudgetLineItem = OneTimeBudgetLineItem | WeeklyBudgetLineItem | MonthlyBudgetLineItem;
 
-export type BudgetDetailsResponse = {
+export type Budget = {
+  id: string,
   title: string,
   slug: string,
   startingBalance: number,
@@ -48,17 +52,44 @@ export type BudgetDetailsResponse = {
   budgetLineItems: BudgetLineItem[]
 }
 
+export type UseBudgetDetails = {
+  budget: Budget | null,
+  verifyAmount: ( date: Dayjs, item: BudgetLineItem, amount: number ) => void
+}
 
-export const useBudgetDetails = (slug: String): BudgetDetailsResponse | null => {
 
-  const [data, setData] = useState<BudgetDetailsResponse | null>(null)
+export const useBudgetDetails = (slug: string): UseBudgetDetails => {
 
+  const [data, setData] = useState<Budget | null>(null)
+
+  // const saveLocally = () => {
+  //   localStorage.setItem( slug, JSON.stringify( data ));
+  // }
+
+  const verifyAmount = ( date: Dayjs, item: BudgetLineItem, amount: number ) => {
+    // Save --> setData?
+    const format = "YYYY-MMM-DD";
+    const dateString = date.format( format );
+    if ( item.vers ){
+      item.vers[dateString] = amount;
+    } else {
+      item.vers = { [dateString]: amount }
+    }
+    
+    setData( prevData => prevData ? ({
+      ...prevData,
+      budgetLineItems: prevData.budgetLineItems.map(( _item ) => (
+        item.id === _item.id ? item : _item
+      ))
+    }) : null );
+  }
 
   useEffect(() => {
 
     // query budget based on slug.
 
-    const response: BudgetDetailsResponse = {
+    const response: Budget = {
+      id: "15",
       title: "2024 Kellum Family Vacation",
       slug: "2024-kellum-family-vacation",
       startingBalance: 5000,
@@ -68,5 +99,13 @@ export const useBudgetDetails = (slug: String): BudgetDetailsResponse | null => 
     setData(response);
   }, []);
 
-  return data;
+  useEffect( () => {  
+    // save data.
+    // TODO: - Do something with error on save.
+    if ( data ){
+      saveBudget( data )
+    }
+  }, [data]);
+
+  return { budget: data, verifyAmount };
 }
