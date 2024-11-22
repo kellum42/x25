@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect } from "react"
+import React, { FC, useState, useContext } from "react"
 // import type { PageProps } from "gatsby"
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
@@ -15,15 +15,16 @@ import {
   useInteractions,
 } from "@floating-ui/react";
 import dayjs, { Dayjs } from 'dayjs'
-import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-import CustomParseFormat from 'dayjs/plugin/customParseFormat';
+// import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+// import CustomParseFormat from 'dayjs/plugin/customParseFormat';
 // import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isBetween from 'dayjs/plugin/isBetween';
 
-import { BudgetDetailsResponse, BudgetLineItem } from "../../hooks/useBudgetDetails";
+// import { BudgetDetailsResponse, BudgetLineItem } from "../../hooks/useBudgetDetails";
 import { getTheme } from "../../utils/theme";
 import { calculateBalanceOver } from "../../utils/budget";
+import { BudgetContext } from "../../contexts/budgetContext";
 
 // dayjs.extend(LocalizedFormat);
 // dayjs.extend(CustomParseFormat)
@@ -31,19 +32,34 @@ import { calculateBalanceOver } from "../../utils/budget";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
-type ChartWidgetProps = {
-  date: Dayjs,
-  budget: BudgetDetailsResponse,
-}
+// type ChartWidgetProps = {
+//   date: Dayjs,
+//   budget: BudgetDetailsResponse,
+// }
 
 type ChartWidgetSpan = "1M" | "3M" | "1Y" 
 
-export const ChartWidget: FC<ChartWidgetProps> = (props) => {
+export const ChartWidget: FC = () => {
+  
+  const _context = useContext( BudgetContext );
+
+  if ( !_context ){
+    throw new Error( "Calling Budget Context from outside of provider." );
+  }
+
+  const { budget, date } = _context;
+
+  if ( !budget ){
+    return <></>;
+  }
+
+  const { startingBalance, startDate, budgetLineItems } = budget;
+
   const [span, setSpan] = useState<ChartWidgetSpan>("1Y");
   const [menuIsOpen, setMenuIsOpen] = React.useState(false);
 
-  const { date, budget } = props;
-  const { startDate, startingBalance, budgetLineItems } = budget;
+  // const { date, budget } = props;
+  // const { startDate, startingBalance, budgetLineItems } = budget;
   const theme = getTheme("light");
   const nodeId = useFloatingNodeId();
   const format = "M/D/YY";

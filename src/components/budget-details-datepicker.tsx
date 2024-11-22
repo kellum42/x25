@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, SetStateAction, forwardRef } from "react"
+import React, { FC, useState, useEffect, SetStateAction, forwardRef, useContext } from "react"
 import dayjs, { Dayjs } from "dayjs"
 import DatePicker from "react-datepicker";
 
@@ -7,17 +7,26 @@ import "../styles/budget-details-datepicker.css"
 import "react-datepicker/dist/react-datepicker.css"
 
 import { getFriday } from "../utils/budget"
+import { BudgetContext } from "../contexts/budgetContext";
 
-type BudgetDetailsDatePickerProps = {
-  date: Dayjs,
-  setDate: React.Dispatch<SetStateAction<Dayjs>>
-}
+// type BudgetDetailsDatePickerProps = {
+//   date: Dayjs,
+//   setDate: React.Dispatch<SetStateAction<Dayjs>>
+// }
 
 // TODO: - Take what I need from fc.css, and remove it.
 
-export const BudgetDetailsDatePicker: FC<BudgetDetailsDatePickerProps> = (props) => {
-  const { setDate, date } = props;
+export const BudgetDetailsDatePicker: FC = () => {
+  // const { setDate, date } = props;
   const format = "MMM D";
+
+  const context = useContext( BudgetContext );
+
+  if ( !context ){
+    throw new Error( "Calling Budget Context from outside of provider." );
+  }
+
+  const { date, setDate } = context;
   
   const changeWeek = ( to: "prev" | "next" ) => {
     setDate( to === "next" ? date.add( 7, "day" ) : date.subtract( 7, "day" ) );

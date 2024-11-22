@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import dayjs from 'dayjs'
 
 import {
@@ -144,7 +144,11 @@ test( 'it shows the correct items for the week of 3/22/24 for sample budget #2 v
 test( 'it adds verifications', () => {
   const { result } = renderHook<UseBudgetDetails, { slug:string }>( () => useBudgetDetails("test") );
   const { budget, verifyAmount } = result.current;
+  expect( budget!.budgetLineItems[5].vers).toBe( undefined );
+
   const item = budget!.budgetLineItems[5];
-  verifyAmount( dayjs( "05-15-2025"), item, 25 );
+  act(() => {
+    verifyAmount( dayjs( "05-15-2025"), item, 25 );
+  });
   expect( budget?.budgetLineItems[5].vers![ "2025-May-15" ]).toBe( 25 );
 });

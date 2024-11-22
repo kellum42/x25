@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode, createContext } from 'react';
 import dayjs, { Dayjs } from 'dayjs'
 
-import { saveBudget } from '../utils/localStorage';
+import { saveBudget, getBudget } from '../utils/localStorage';
 import { getSampleBudgetLineItems } from '../utils/mockData';
 
 export enum BudgetLineItemFrequency { Once = "Once", Weekly = "weekly", Biweekly = "Bi-Weekly", Monthly = "Monthly" }
@@ -54,26 +54,31 @@ export type Budget = {
 
 export type UseBudgetDetails = {
   budget: Budget | null,
-  verifyAmount: ( date: Dayjs, item: BudgetLineItem, amount: number ) => void
+  verifyAmount: ( date: Dayjs, item: BudgetLineItem, amount: number|null ) => void,
+  isVerified: ( item: BudgetLineItem, date: Dayjs ) => boolean
 }
 
-
 export const useBudgetDetails = (slug: string): UseBudgetDetails => {
+  const verifyFormat = "YYYY-MMM-DD";
 
   const [data, setData] = useState<Budget | null>(null)
 
-  // const saveLocally = () => {
-  //   localStorage.setItem( slug, JSON.stringify( data ));
-  // }
-
-  const verifyAmount = ( date: Dayjs, item: BudgetLineItem, amount: number ) => {
+  // Also unverifies.
+  const verifyAmount = ( date: Dayjs, item: BudgetLineItem, amount: number | null ) => {
     // Save --> setData?
-    const format = "YYYY-MMM-DD";
-    const dateString = date.format( format );
+    // const format = "YYYY-MMM-DD";
+    const dateString = date.format( verifyFormat );
     if ( item.vers ){
-      item.vers[dateString] = amount;
+      if ( amount === null ){
+        delete item.vers[dateString];
+
+      } else {
+        item.vers[dateString] = amount;
+      }
     } else {
-      item.vers = { [dateString]: amount }
+      if ( amount !== null ){
+        item.vers = { [dateString]: amount };
+      }
     }
     
     setData( prevData => prevData ? ({
@@ -84,18 +89,21 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }) : null );
   }
 
+  const isVerified = ( item: BudgetLineItem, date: Dayjs ): boolean => {
+    return ( item.vers !== undefined && date.format( verifyFormat ) in item.vers );
+  }
+
   useEffect(() => {
-
     // query budget based on slug.
-
-    const response: Budget = {
-      id: "15",
-      title: "2024 Kellum Family Vacation",
-      slug: "2024-kellum-family-vacation",
-      startingBalance: 5000,
-      startDate: dayjs("10-15-2024"),
-      budgetLineItems: getSampleBudgetLineItems()
-    }
+    // const response: Budget = {
+    //   id: "15",
+    //   title: "2024 Kellum Family Vacation",
+    //   slug: "2024-kellum-family-vacation",
+    //   startingBalance: 5000,
+    //   startDate: dayjs("10-15-2024"),
+    //   budgetLineItems: getSampleBudgetLineItems()
+    // }
+    const response = getBudget( slug );
     setData(response);
   }, []);
 
@@ -107,5 +115,5 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }
   }, [data]);
 
-  return { budget: data, verifyAmount };
+  return { budget: data, verifyAmount, isVerified };
 }

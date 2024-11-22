@@ -1,4 +1,5 @@
-import { Budget } from "../hooks/useBudgetDetails"
+import dayjs from "dayjs";
+import { Budget, BudgetLineItemFrequency } from "../hooks/useBudgetDetails"
 
 const budgetsKey = "x25__budgets";
 const intialUseKey = "x25__initialuse";
@@ -18,6 +19,22 @@ export const getBudgets = (): (Record<string, Budget> | string) => {
   } else {
     try {
       const budgets: Record<string, Budget> = JSON.parse(_budgets);
+      // Parse dayjs.
+      Object.entries( budgets ).forEach(([ _id, _budget ]) => {
+        budgets[_id] = {
+          ..._budget,
+          startDate: dayjs( _budget.startDate ),
+          budgetLineItems: _budget.budgetLineItems.map(( _item, _ ) => {
+            if ( _item.frequency === BudgetLineItemFrequency.Once ){
+              _item.date = dayjs( _item.date );
+            } else {
+              _item.starts = dayjs( _item.starts );
+              _item.ends = _item.ends === -1 ? -1 : dayjs( _item.ends );
+            }
+            return _item;
+          })
+        }
+      });
       return budgets;
 
     } catch (e) {
@@ -33,6 +50,19 @@ export const getBudgets = (): (Record<string, Budget> | string) => {
   }
 }
 
+export const getBudget = (slug: string): Budget | null => {
+  const budgets = getBudgets();
+  let budget = null;
+  if ( typeof budgets !== "string" ){
+    Object.entries( budgets ).forEach(([ _, _budget ]) => {
+      if ( slug === _budget.slug ){
+        budget = _budget;
+      }
+    })
+  }
+  return budget;
+}
+
 export const saveBudget = (budget: Budget): string|undefined => {
   const budgets = getBudgets();
 
@@ -42,6 +72,7 @@ export const saveBudget = (budget: Budget): string|undefined => {
     return "Error occurred saving  budget. Please try again later.";
   }
 
-  budgets[budget.id] = budget;
-  localStorage.setItem(budgetsKey, JSON.stringify(budget));
+  budgets[ budget.id ] = budget;
+  localStorage.setItem( budgetsKey, JSON.stringify( budgets ));
+  localStorage.setItem( intialUseKey, "initial" );
 }

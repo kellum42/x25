@@ -229,7 +229,7 @@ export const calculateBalanceOver = ( dates: Dayjs[], startingBalance: number, s
       balances.push( startingBalance );
 
     } else if ( _date.isAfter( startdate, 'day' )){
-
+      // console.log( dates, startdate );
       // Account for if budget started between the last date and this one.
       if ( addStartDate && i !== 0 && startdate.isBetween( dates[i - 1], _date, 'day', "()" ) ){
         returnDates.push( startdate );

@@ -1,7 +1,8 @@
-import React, { FC, useState, useEffect, createContext, ReactNode } from "react"
+import React, { FC, useState, useEffect, createContext, ReactNode, useContext } from "react"
 import type { PageProps } from "gatsby"
 import dayjs, { Dayjs } from "dayjs"
 
+import { BudgetContext, BudgetContextProvider } from "../../contexts/budgetContext"
 import { useBudgetDetails, UseBudgetDetails } from "../../hooks/useBudgetDetails"
 import { ChartWidget } from "../../components/widgets/chart-widget"
 import { Layout } from "../../components/layout"
@@ -13,43 +14,14 @@ import { numberOrNull } from "../../utils/util"
 // TODO: Add context provider to easily pass variables between components.
 
 
+const BudgetDashboard: React.FC = () => {
+  const context = useContext( BudgetContext );
 
-// const BudgetContext = createContext<UseBudgetDetails|undefined>( undefined );
-
-// const BudgetContextProvider: React.FC<{slug: string, children: ReactNode}> = ({ slug, children }) => {
-//   const details = useBudgetDetails( slug );
-//   return (
-//     <BudgetContext.Provider value={{ ...details }}>
-//       { children }
-//     </BudgetContext.Provider>
-//   )
-// }
-
-const BudgetDashboardPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
-  const { budget, verifyAmount } = useBudgetDetails(slug);
-  const [date, setDate] = useState<Dayjs>( dayjs( "15-Oct-2024") )
-  const friday = getFriday( date );
-
-  const weekStartingBalance = (): number|null => { 
-    if ( budget ){
-      if ( date.isSame( budget.startDate, 'day' ) ){
-        return budget.startingBalance;
-      
-      } else if ( date.isAfter( budget.startDate, 'day' )){
-        return numberOrNull( calculateBalance( budget.startDate, budget.startingBalance, budget.budgetLineItems, friday )); 
-      
-      }
-    }
-    return null;
+  if ( !context ){
+    throw new Error( "Calling Budget Context from outside of provider." );
   }
 
-  // return (
-    // <Layout>
-    //   <BudgetContextProvider slug={}>
-    //     <div></div>
-    //   </BudgetContextProvider>
-    // </Layout>
-  // )
+  const { budget } = context;
 
   return (
     <Layout>
@@ -57,15 +29,9 @@ const BudgetDashboardPage: React.FC<PageProps & { slug: string }> = ({ slug }) =
         <div>
           <h1 className="text-dark fw-bold my-1 fs-2">{budget.title}</h1>
           <div className="mt-8">
-            <BudgetDetailsDatePicker date={date} setDate={setDate} />
-            <ChartWidget budget={budget} date={date} />
-            <WeeklyWidget 
-              lineItems={budget.budgetLineItems} 
-              startdate={budget.startDate} 
-              date={friday} 
-              weekStartingBalance={weekStartingBalance()} 
-              verifyAmount={verifyAmount}
-            />
+            <BudgetDetailsDatePicker />
+            <ChartWidget />
+            <WeeklyWidget />
           </div>
         </div>
       }
@@ -73,4 +39,14 @@ const BudgetDashboardPage: React.FC<PageProps & { slug: string }> = ({ slug }) =
   )
 }
 
-export default BudgetDashboardPage
+const BudgetBySlugPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
+  return (
+    <Layout>
+      <BudgetContextProvider slug={slug}>
+        <BudgetDashboard />
+      </BudgetContextProvider>
+    </Layout>
+  )
+}
+
+export default BudgetBySlugPage;

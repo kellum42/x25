@@ -1,0 +1,24 @@
+import React, { ReactNode, useState, createContext } from "react";
+import dayjs, { Dayjs } from "dayjs";
+
+import { UseBudgetDetails, useBudgetDetails } from "../hooks/useBudgetDetails";
+
+type BudgetContextProps = {
+  date: Dayjs,
+  setDate: React.Dispatch<React.SetStateAction<dayjs.Dayjs>>
+}
+
+export const BudgetContext = createContext<(BudgetContextProps & UseBudgetDetails) | undefined>(undefined);
+
+export const BudgetContextProvider: React.FC<{ slug: string, children: ReactNode }> = ({ slug, children }) => {
+  const details = useBudgetDetails(slug);
+  const [date, setDate] = useState<Dayjs>(dayjs("15-Oct-2024"))
+
+  return (
+    <BudgetContext.Provider value={{ ...details, date, setDate }}>
+      {children}
+    </BudgetContext.Provider>
+  )
+}
+
+

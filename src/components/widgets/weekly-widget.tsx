@@ -1,29 +1,24 @@
-import React, { FC, useState } from "react"
+import React, { FC, useContext, useState } from "react"
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 import { BudgetLineItem, BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
-import { getFriday, getWeeksBudgetLineItems } from "../../utils/budget";
+import { calculateBalance, getFriday, getWeeksBudgetLineItems } from "../../utils/budget";
+import { cleanCurrencyString, numberOrNull } from "../../utils/util";
 
 import "../../styles/weekly-widget.css"
 import { getTheme } from "../../utils/theme";
-import { initialMetadata } from "gatsby/dist/schema/infer/inference-metadata";
+import { BudgetContext } from "../../contexts/budgetContext";
 
 dayjs.extend(isSameOrAfter);
 
-type WeeklyWidgetProps = {
-  date: Dayjs,
-  startdate: Dayjs,
-  lineItems: BudgetLineItem[],
-  weekStartingBalance: number | null,
-  verifyAmount: ( date: Dayjs, item: BudgetLineItem, amount: number ) => void
-}
 
 type WeeklyWidgetLineItemProps = {
   item: BudgetLineItem,
+  days: number,
   hideWeeklyItems: boolean,
-  isNewDay: string|null,
-  endingBalance: number|null,
+  isNewDay: string | null,
+  endingBalance: number | null,
   hasPassed: boolean
 }
 
@@ -31,37 +26,60 @@ type WeeklyWidgetLineItemProps = {
 //  apps -> customers -> customer details -> payment methods
 
 const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
-  const theme = getTheme("light");
-  const { item, hideWeeklyItems, isNewDay, endingBalance } = props;
-  const show: boolean = !(item.frequency === BudgetLineItemFrequency.Weekly && hideWeeklyItems);
+  const context = useContext(BudgetContext);
 
-  const [ isOpen, setIsOpen ] = useState( false );
-  const [ verifyAmt, setVerifyAmt ] = useState( item.amount.toLocaleString( 'en-US', { maximumFractionDigits: 2 }))
-  const [ loading, setIsLoading ] = useState( false );
+  if (!context) {
+    throw new Error("Calling Budget Context from outside of provider.");
+  }
+
+  const { date, budget, verifyAmount, isVerified } = context;
+
+  if (!budget) {
+    return <></>;
+  }
+
+  const theme = getTheme("light");
+  const { item, hideWeeklyItems, isNewDay, endingBalance, days } = props;
+  const show: boolean = !(item.frequency === BudgetLineItemFrequency.Weekly && hideWeeklyItems);
+  const currentDay = getFriday( date ).add( days, 'day');
+  const verified = isVerified( item, currentDay );
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [verifyAmt, setVerifyAmt] = useState(item.amount.toLocaleString('en-US', { maximumFractionDigits: 2 }))
+  const [loading, setIsLoading] = useState(false);
 
   const toggleOpen = () => {
-    setIsOpen( !isOpen );
+    setIsOpen(!isOpen);
   }
 
-  const verify = () => {
-    console.log( verifyAmt );
-    // setIsLoading( true );
+  const verify = ( unverify: boolean = false ) => {
+    setIsLoading( true );
+    verifyAmount( currentDay, item, unverify ? null : cleanCurrencyString( verifyAmt ));
+    setIsLoading( false );
+    setIsOpen( false );
   }
+
 
   return (
     <div className="line-item-wrapper" style={{ display: show ? "block" : "none" }}>
       {isNewDay && <div className="newday mt-6 text-center fs-6 text-gray-400 fw-bold py-2">{isNewDay}</div>}
       <div className="line-item px-1 py-4 position-relative">
         <div className="d-flex justify-content-between flex-row align-items-center px-4">
-          <div className={"line-item-info fw-semibold d-flex flex-row "  + ( isOpen ? "show" : "" )}>
+          <div className={"line-item-info fw-semibold d-flex flex-row " + (isOpen ? "show" : "")}>
             <div className="me-2 rotate-90">
-              <span 
-                onClick={toggleOpen} 
+              <span
+                onClick={toggleOpen}
                 className="text-gray-400 fc-icon cursor-pointer fc-icon-chevron-right">
               </span>
             </div>
             <div className="line-item-checkbox form-check form-check-custom form-check-solid mx-3">
-              <input className="form-check-input cursor-pointer" type="checkbox" value="" disabled checked={false} />
+              <input 
+              className="form-check-input cursor-pointer" 
+              type="checkbox" 
+              value="" 
+              checked={ verified } 
+              onChange={(evt) => verify( !evt.target.checked )}
+              />
             </div>
             <div className="line-item-title ms-2 d-flex flex-row flex-wrap">
               <div className="fs-6 fw-bold text-gray-900 mb-1">{item.name}</div>
@@ -84,41 +102,68 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
           </div>
         </div>
         {/* collapsable menu */}
-        { isOpen && 
-        <div className="py-4 d-flex flex-row">
-          <div className="me-4">
-            <input 
-            className="form-control form-control-solid py-2"
-            value={verifyAmt} 
-            onChange={ (evt: React.ChangeEvent<HTMLInputElement>) => setVerifyAmt( evt.target.value )}
-            ></input>
+        {isOpen &&
+          <div className="py-4 d-flex flex-row">
+            <div className="me-4">
+              <input
+                className="form-control form-control-solid py-2"
+                value={verifyAmt}
+                onChange={(evt: React.ChangeEvent<HTMLInputElement>) => setVerifyAmt(evt.target.value)}
+                disabled={verified}
+              ></input>
+            </div>
+            <button
+              type="submit"
+              className="btn btn-primary fs-8 py-0 px-6 min-w-100px"
+              data-kt-indicator={loading ? "on" : "off"}
+              onClick={ () => verify() }
+              disabled={verified}
+            >
+              <span className="indicator-label">Verify</span>
+              <span className="indicator-progress">Verifying...
+                <span className="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+            </button>
           </div>
-          <button 
-            type="submit" 
-            className="btn btn-primary fs-8 py-0 px-6 min-w-100px" 
-            data-kt-indicator={ loading? "on" : "off" }
-            onClick={verify}  
-          >
-            <span className="indicator-label">Verify</span>
-            <span className="indicator-progress">Verifying...
-              <span className="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-          </button>
-        </div>
         }
       </div>
     </div>
   )
 }
 
-export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
-  const { date, lineItems, startdate, weekStartingBalance } = props;
+export const WeeklyWidget: FC = (props) => {
+  const context = useContext(BudgetContext);
+
+  if (!context) {
+    throw new Error("Calling Budget Context from outside of provider.");
+  }
+
+  const { date, budget } = context;
+
+  if (!budget) {
+    return <></>;
+  }
+
+  const getWeekStartingBalance = (): number | null => {
+    if (date.isSame(budget.startDate, 'day')) {
+      return budget.startingBalance;
+
+    } else if (date.isAfter(budget.startDate, 'day')) {
+      return numberOrNull(calculateBalance(budget.startDate, budget.startingBalance, budget.budgetLineItems, friday));
+
+    }
+    return null;
+  }
+
+  const { startDate: startdate, budgetLineItems: lineItems } = budget;
 
   const [hideWeeklyItems, setHideWeeklyItems] = useState(false);
 
   const currentBudgetLineItems = getWeeksBudgetLineItems(date, startdate, lineItems);
+  const friday = getFriday( date );
+  const weekStartingBalance = getWeekStartingBalance();
 
   const balanceAfterItem = (i: number): number | null => {
-    if (weekStartingBalance) {
+    if ( weekStartingBalance ) {
       let _balanceAfterItem: number = weekStartingBalance;
       let j = i;
 
@@ -193,18 +238,19 @@ export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
         <div className="card-body d-flex flex-column mb-9 px-6 py-3">
           {weekStartingBalance && currentBudgetLineItems.map((item, i) => {
             const endingBalance = balanceAfterItem(i);
-            const hasPassed: boolean = dayjs().isSameOrAfter(date.add(item.days, 'day'));
+            const hasPassed: boolean = dayjs().isSameOrAfter(friday.add(item.days, 'day'));
 
             let isNewDay = i === 0 || item.days !== currentBudgetLineItems[i - 1].days
-              ? date.add(item.days, 'day').format('dddd, M/D')
+              ? friday.add(item.days, 'day').format('dddd, M/D')
               : null
 
             return (
               <React.Fragment key={i} >
-                <WeeklyWidgetLineItem 
-                  item={item.item} 
-                  isNewDay={isNewDay} 
-                  hideWeeklyItems={hideWeeklyItems} 
+                <WeeklyWidgetLineItem
+                  item={item.item}
+                  days={item.days}
+                  isNewDay={isNewDay}
+                  hideWeeklyItems={hideWeeklyItems}
                   endingBalance={endingBalance}
                   hasPassed={hasPassed}
                 />
