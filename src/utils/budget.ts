@@ -19,12 +19,12 @@ dayjs.extend(isoWeek);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
+
 export const calculateBalance = (startDate: Dayjs, startingAmount: number, items: BudgetLineItem[], endDate?: Dayjs): number | string => {
   //  If endDate is null, set to today.
   //  If endDate is before startDate, return error
   const _endDate: Dayjs = endDate ?? dayjs();
   if (_endDate.isSameOrBefore(startDate, 'day')) {
-    // console.log( "start date: %s, end date: %s", startDate.format("MM/DD/YYYY"), _endDate.format("MM/DD/YYYY") )
     return "End date is before start date. This is illegal.";
   }
 
@@ -38,7 +38,10 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
 
     if (item.frequency == BudgetLineItemFrequency.Once) {
       if (item.date.isBetween(startDate, endDate, 'day', '[)')) {
-        sumDeltas += item.amount * (item.type === "expense" ? -1 : 1);
+        
+        // Check if verified.
+        const vAmount = getVerificationOn( item.date, item );
+        sumDeltas += ( vAmount ?? item.amount ) * (item.type === "expense" ? -1 : 1);
       }
       return;
     }
@@ -73,7 +76,19 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
       //  Math.floor is used to get rid of any remainder, so we just get the occurrences.
       const numOccurrences: number = Math.floor(trueSpan / (item.frequency == BudgetLineItemFrequency.Weekly ? 7 : 14)) + 1;
 
-      sumDeltas += numOccurrences * item.amount * (item.type === "expense" ? -1 : 1);
+      // Check for verifications.
+      const firstOccurrence = localStartDate.add( daysUntilFirstOccurrence, 'day' );
+      const vers = getVerificationsBetween( [firstOccurrence, localEndDate], item );
+
+      if ( vers && vers.length > 0 && vers.length <= numOccurrences ){
+        let verifiedAmount = 0;
+        vers.forEach((v) => { verifiedAmount += v.amount });
+        sumDeltas += verifiedAmount * (item.type === "expense" ? -1 : 1);
+        sumDeltas += ( numOccurrences - vers.length ) * item.amount * (item.type === "expense" ? -1 : 1)
+      
+      } else {
+        sumDeltas += numOccurrences * item.amount * (item.type === "expense" ? -1 : 1);
+      }
 
     } else if (item.frequency == BudgetLineItemFrequency.Monthly) {
       item.dates.forEach(( _, i) => {
@@ -90,16 +105,31 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
         }
 
         const fullMonthsRemaining: number = localEndDate.diff(firstOccurrence, 'month');
+        
+        // Check for verifications.
+        const vers = getVerificationsBetween( [firstOccurrence, localEndDate], item );
+
         //  Based on the date of the first occurrence, calculate the remaining occurrences in the time range.
         //  Occurrences will be equal to the number of remaining full months in time range.
-        //  1 is added to ullMonthsRemaining to account for the first occurrence.
-        sumDeltas += (fullMonthsRemaining + 1) * item.amount * (item.type === "expense" ? -1 : 1);
+        //  1 is added to fullMonthsRemaining to account for the first occurrence.
+        //  1 is added to fullMonthsRemaining to account for the first occurrence.
+        const numOccurrences = fullMonthsRemaining + 1;
 
+        if ( vers && vers.length > 0 && vers.length <= numOccurrences ){
+          let verifiedAmount = 0;
+          vers.forEach((v) => { verifiedAmount += v.amount });
+          sumDeltas += verifiedAmount * (item.type === "expense" ? -1 : 1);
+          sumDeltas += ( numOccurrences - vers.length ) * item.amount * (item.type === "expense" ? -1 : 1)
+        
+        } else {
+          sumDeltas += numOccurrences * item.amount * (item.type === "expense" ? -1 : 1);
+        }
       });
     }
   })
 
   // converts to two decimal places.
+  // console.log( "deltas: %d, startingAmount: %d, sum: %d", sumDeltas, startingAmount, sumDeltas + startingAmount );
   return Math.round((sumDeltas + startingAmount) * 100) / 100;
 }
 
@@ -166,13 +196,21 @@ export const getWeeksBudgetLineItems = ( date: Dayjs, startdate: Dayjs, lineItem
   const friday = getFriday( date );
   let currentItems: CurrentBudgetDetailsLineItem[] = [];
 
+  const itemIsActive = ( date: Dayjs, item: BudgetLineItem ): boolean => {
+    if ( item.frequency === BudgetLineItemFrequency.Once ){
+      return true;
+    } else {
+      return item.starts.isSameOrBefore( date, 'day' ) && 
+      ( item.ends === -1 || item.ends.isSameOrAfter( date, 'day' ));
+    }
+  }
+
   const addItem = ( _item: BudgetLineItem, _j?: number ) => {
     const days = daysTillFirstOccurrence( _item, friday, _j );
     if ( typeof days === 'number' ){
       if ( 
         days < 7 && 
-        budgetLineItemIsActive( date, _item ) && 
-        !friday.add( days, 'day' ).isBefore( startdate ) 
+        !friday.add( days, 'day' ).isBefore( startdate ) // for items that occur right before startdate.
       ){
         currentItems.push({ days, item: _item });
       }
@@ -180,35 +218,30 @@ export const getWeeksBudgetLineItems = ( date: Dayjs, startdate: Dayjs, lineItem
       console.log( "GOT ERROR: %s, item: %s", days, _item.name );
     }
   }
-  lineItems.forEach(( item, i ) => {
-    if ( item.frequency === BudgetLineItemFrequency.Once ){
-      if ( item.date.isBetween( friday, date, "day", "[]" ) ) {
-        currentItems.push({ days: item.date.diff( friday, "date" ), item });
+  
+  lineItems.forEach(( item, _ ) => {
+    if ( itemIsActive( date, item ) ){
+      if ( item.frequency === BudgetLineItemFrequency.Once ){
+        if ( item.date.isBetween( friday, date, "day", "[]" ) ) {
+          currentItems.push({ days: item.date.diff( friday, "date" ), item });
+        }
+  
+      } else if ( item.frequency === BudgetLineItemFrequency.Monthly ){
+        item.dates.forEach(( _, j ) => {
+          addItem( item, j )
+        })
+      } else {
+        addItem( item );
       }
-
-    } else if ( item.frequency === BudgetLineItemFrequency.Monthly ){
-      item.dates.forEach(( _, j ) => {
-        addItem( item, j )
-      })
-    } else {
-      addItem( item );
     }
-  })
+  });
+
   currentItems.sort(( a, b) => {
     if ( a.days < b.days ){ return -1; }
     else if ( a.days > b.days ){ return 1; }
     else { return 0; }
   });
   return currentItems;
-}
-
-
-const budgetLineItemIsActive = ( date: Dayjs, item: BudgetLineItem ): boolean => {
-  if ( item.frequency === BudgetLineItemFrequency.Once ){
-    return false;
-  } else {
-    return item.starts.isSameOrBefore( date, 'day' ) && ( item.ends === -1 || item.ends.isSameOrAfter( date, 'day' ));
-  }
 }
 
 
@@ -252,5 +285,53 @@ export const calculateBalanceOver = ( dates: Dayjs[], startingBalance: number, s
   });
 
   return { dates: returnDates, balances };
+}
+
+
+export const getVerificationOn = ( date: Dayjs, item: BudgetLineItem ): number|null => {
+  const year = date.get( 'year' );
+  const month = date.get( 'month' ) + 1;
+  const day = date.get( 'date' );
+
+  if ( item.vers && year in item.vers && month in item.vers[year] && day in item.vers[year][month] ){
+    return item.vers[year][month][day];
+  }
+
+  return null;
+}
+
+
+export const getVerificationsBetween = ( dates: [Dayjs, Dayjs], item: BudgetLineItem ): { date: string, amount: number }[] | null => {
+  const start = dates[0];
+  const end = dates[1];
+
+  if ( start.isAfter( end, 'date' ) ){
+    console.log( "Not a valid date range." );
+    return null;
+  }
+
+  // console.log("%s -- vers: %s", item.name, JSON.stringify(item.vers));
+
+  const output: { date: string, amount: number }[] = [];
+  let currentDate = start;
+
+  while ( currentDate.isSameOrBefore( end, 'month' )){
+    const year = currentDate.get( 'year' );
+    const month = currentDate.get( 'month' ) + 1;
+    if ( item.vers && item.vers[year] && item.vers[year][month] ){
+      const _monthsVers = item.vers[year][month];
+
+      Object.entries( _monthsVers ).forEach(([ day, amount ]) => {
+        const dateString = month + "-" + day + "-" + year;
+        
+        if ( dayjs( dateString ).isBetween( start, end, "day", "[]" )){
+          const formattedDateString = dayjs( dateString ).format( "YYYY-MMM-DD" );
+          output.push({ date: formattedDateString, amount })
+        }
+      });
+    }
+    currentDate = currentDate.add( 1, 'month' );
+  }
+  return output;
 }
 

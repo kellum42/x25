@@ -3,8 +3,8 @@ import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 import { BudgetLineItem, BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
-import { calculateBalance, getFriday, getWeeksBudgetLineItems } from "../../utils/budget";
-import { cleanCurrencyString, numberOrNull } from "../../utils/util";
+import { calculateBalance, getFriday, getWeeksBudgetLineItems, getVerificationOn } from "../../utils/budget";
+import { numberOrNull } from "../../utils/util";
 
 import "../../styles/weekly-widget.css"
 import { getTheme } from "../../utils/theme";
@@ -24,6 +24,7 @@ type WeeklyWidgetLineItemProps = {
 
 // Model after:
 //  apps -> customers -> customer details -> payment methods
+//  weekly widget badges - user management -> permissions list
 
 const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   const context = useContext(BudgetContext);
@@ -32,7 +33,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { date, budget, verifyAmount, isVerified } = context;
+  const { date, budget, verifyAmount } = context;
 
   if (!budget) {
     return <></>;
@@ -41,22 +42,46 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   const theme = getTheme("light");
   const { item, hideWeeklyItems, isNewDay, endingBalance, days } = props;
   const show: boolean = !(item.frequency === BudgetLineItemFrequency.Weekly && hideWeeklyItems);
-  const currentDay = getFriday( date ).add( days, 'day');
-  const verified = isVerified( item, currentDay );
+  const currentDay = getFriday(date).add(days, 'day');
+  const verifiedAmt = getVerificationOn( currentDay, item );
+  const verified = verifiedAmt !== null;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [verifyAmt, setVerifyAmt] = useState(item.amount.toLocaleString('en-US', { maximumFractionDigits: 2 }))
+  const [verifyAmt, setVerifyAmt] = useState(item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }))
   const [loading, setIsLoading] = useState(false);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
   }
 
-  const verify = ( unverify: boolean = false ) => {
-    setIsLoading( true );
-    verifyAmount( currentDay, item, unverify ? null : cleanCurrencyString( verifyAmt ));
-    setIsLoading( false );
-    setIsOpen( false );
+  const verify = (unverify: boolean = false) => {
+    let value: number | null;
+
+    if ( unverify ){
+      value = null;
+
+    } else {
+      // Check for empty strings
+      if ( verifyAmt.trim() === "" ){ 
+        setVerifyAmt( "" );  
+        return; 
+      }
+
+      const cleanedString = verifyAmt.replace(/[^0-9.]/g, '');
+      
+      // Convert the cleaned string to a number
+      const num = parseFloat( cleanedString );
+      if ( isNaN( num ) ){
+        setVerifyAmt( "" );
+        return;
+      }
+      value = num;
+    }
+
+    setIsLoading(true);
+    verifyAmount(currentDay, item, value);
+    setIsLoading(false);
+    setIsOpen(false);
   }
 
 
@@ -73,12 +98,12 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
               </span>
             </div>
             <div className="line-item-checkbox form-check form-check-custom form-check-solid mx-3">
-              <input 
-              className="form-check-input cursor-pointer" 
-              type="checkbox" 
-              value="" 
-              checked={ verified } 
-              onChange={(evt) => verify( !evt.target.checked )}
+              <input
+                className="form-check-input cursor-pointer"
+                type="checkbox"
+                value=""
+                checked={verified}
+                onChange={(evt) => verify(!evt.target.checked)}
               />
             </div>
             <div className="line-item-title ms-2 d-flex flex-row flex-wrap">
@@ -90,14 +115,29 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
           </div>
           <div className="line-item-numbers d-flex flex-row align-items-center">
             <div className="text-gray-900 text-end">
-              <div
-                style={{ color: item.type === "income" ? theme.success : "inherit" }}
-                className="fs-5 fw-bold"
-              >
-                {item.type === "income" && <span>+</span>}
-                ${item.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-              </div>
-              {endingBalance && <div className="text-gray-400 running-balance fs-7">${endingBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>}
+              {verifiedAmt && verifiedAmt != item.amount ?
+                <div
+                  style={{ color: item.type === "income" ? theme.success : "inherit" }}
+                  className="fs-5 fw-bold"
+                >
+                  <span className="text-decoration-line-through me-2 fs-6">
+                    {item.type === "income" && <span>+</span>}
+                    ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                  <span style={{ color: theme.primary }}>
+                    {item.type === "income" && <span>+</span>}
+                    ${verifiedAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div> :
+                <div
+                  style={{ color: item.type === "income" ? theme.success : "inherit" }}
+                  className="fs-5 fw-bold"
+                >
+                  {item.type === "income" && <span>+</span>}
+                  ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
+              }
+              {endingBalance && <div className="text-gray-400 running-balance fs-7">${endingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>}
             </div>
           </div>
         </div>
@@ -116,7 +156,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
               type="submit"
               className="btn btn-primary fs-8 py-0 px-6 min-w-100px"
               data-kt-indicator={loading ? "on" : "off"}
-              onClick={ () => verify() }
+              onClick={() => verify()}
               disabled={verified}
             >
               <span className="indicator-label">Verify</span>
@@ -159,18 +199,20 @@ export const WeeklyWidget: FC = (props) => {
   const [hideWeeklyItems, setHideWeeklyItems] = useState(false);
 
   const currentBudgetLineItems = getWeeksBudgetLineItems(date, startdate, lineItems);
-  const friday = getFriday( date );
+  const friday = getFriday(date);
   const weekStartingBalance = getWeekStartingBalance();
 
   const balanceAfterItem = (i: number): number | null => {
-    if ( weekStartingBalance ) {
+    if (weekStartingBalance) {
       let _balanceAfterItem: number = weekStartingBalance;
       let j = i;
 
       // Tally balance.
       while (j >= 0) {
         const _item = currentBudgetLineItems[j];
-        _balanceAfterItem += _item.item.amount * (_item.item.type === "expense" ? -1 : 1);
+        // const verifiedAmount = getVerifiedAmt( _item.item, friday.add( _item.days, 'day' ));
+        const verifiedAmount = getVerificationOn( friday.add( _item.days, 'day' ), _item.item );
+        _balanceAfterItem += (verifiedAmount ?? _item.item.amount) * (_item.item.type === "expense" ? -1 : 1);
         j--;
       }
       return _balanceAfterItem;
@@ -205,7 +247,7 @@ export const WeeklyWidget: FC = (props) => {
           {weekStartingBalance &&
             <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
               <div className="d-flex align-items-center">
-                <div className="fs-2 fw-bold counted">${weekStartingBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+                <div className="fs-2 fw-bold counted">${weekStartingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
               </div>
               <div className="fw-semibold fs-6 text-gray-400">Start Balance</div>
             </div>
@@ -228,7 +270,7 @@ export const WeeklyWidget: FC = (props) => {
                       </svg>
                     </span>
                   )}
-                <div className="fs-2 fw-bold counted">${endingBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+                <div className="fs-2 fw-bold counted">${endingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
               </div>
               <div className="fw-semibold fs-6 text-gray-400">End Balance</div>
             </div>

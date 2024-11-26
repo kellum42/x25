@@ -2,7 +2,7 @@ import React, { useState, useEffect, ReactNode, createContext } from 'react';
 import dayjs, { Dayjs } from 'dayjs'
 
 import { saveBudget, getBudget } from '../utils/localStorage';
-import { getSampleBudgetLineItems } from '../utils/mockData';
+// import { getSampleBudgetLineItems } from '../utils/mockData';
 
 export enum BudgetLineItemFrequency { Once = "Once", Weekly = "weekly", Biweekly = "Bi-Weekly", Monthly = "Monthly" }
 export enum WeeklyBudgetLineItemDays {
@@ -22,8 +22,7 @@ type BaseBudgetLineItem = {
   amount: number;
   type: "income" | "expense";
   frequency: BudgetLineItemFrequency;
-  vers?: Record<string, number>,
-  adjs?: Record<string, number>
+  vers?: Record<string, Record<string, Record<string, number>>>
 }
 type OneTimeBudgetLineItem = BaseBudgetLineItem & {
   frequency: BudgetLineItemFrequency.Once,
@@ -49,35 +48,45 @@ export type Budget = {
   slug: string,
   startingBalance: number,
   startDate: Dayjs,
-  budgetLineItems: BudgetLineItem[]
+  budgetLineItems: BudgetLineItem[],
+  adjs?: Record<string, number>
 }
 
 export type UseBudgetDetails = {
   budget: Budget | null,
-  verifyAmount: ( date: Dayjs, item: BudgetLineItem, amount: number|null ) => void,
-  isVerified: ( item: BudgetLineItem, date: Dayjs ) => boolean
+  verifyAmount: ( date: Dayjs, item: BudgetLineItem, amount: number|null ) => void
 }
 
 export const useBudgetDetails = (slug: string): UseBudgetDetails => {
-  const verifyFormat = "YYYY-MMM-DD";
+  // const verifyFormat = "YYYY-MMM-DD";
 
   const [data, setData] = useState<Budget | null>(null)
 
   // Also unverifies.
   const verifyAmount = ( date: Dayjs, item: BudgetLineItem, amount: number | null ) => {
     // Save --> setData?
-    // const format = "YYYY-MMM-DD";
-    const dateString = date.format( verifyFormat );
-    if ( item.vers ){
-      if ( amount === null ){
-        delete item.vers[dateString];
+    const year = date.get( 'year' );
+    const month = date.get( 'month' ) + 1;
+    const day = date.get( 'date' );
 
+    if ( item.vers !== undefined ){
+      if ( amount === null ){
+        const verificationExists = year in item.vers && month in item.vers[year] && day in item.vers[year][month];
+        if ( verificationExists ){
+          delete item.vers[year][month][day];
+        }
       } else {
-        item.vers[dateString] = amount;
+        if ( undefined === item.vers[year] ){
+          item.vers[year] = {};
+        }
+        if ( undefined === item.vers[year][month] ){
+          item.vers[year][month] = {};
+        }
+        item.vers[year][month][day] = amount;
       }
     } else {
       if ( amount !== null ){
-        item.vers = { [dateString]: amount };
+        item.vers = { [year]: { [month]: { [day]: amount }}};
       }
     }
     
@@ -89,9 +98,13 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }) : null );
   }
 
-  const isVerified = ( item: BudgetLineItem, date: Dayjs ): boolean => {
-    return ( item.vers !== undefined && date.format( verifyFormat ) in item.vers );
-  }
+  // const getVerifiedAmt = ( item: BudgetLineItem, date: Dayjs ): number|null => {
+  //   const dateString = date.format( verifyFormat );
+  //   if ( item.vers !== undefined && dateString in item.vers ){
+  //     return item.vers[dateString];
+  //   }
+  //   return null;
+  // }
 
   useEffect(() => {
     // query budget based on slug.
@@ -115,5 +128,5 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }
   }, [data]);
 
-  return { budget: data, verifyAmount, isVerified };
+  return { budget: data, verifyAmount };
 }

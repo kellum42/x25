@@ -63,7 +63,7 @@ export const getBudget = (slug: string): Budget | null => {
   return budget;
 }
 
-export const saveBudget = (budget: Budget): string|undefined => {
+export const saveBudget = (budget: Budget): string|void => {
   const budgets = getBudgets();
 
   if (typeof budgets === "string") {

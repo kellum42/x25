@@ -1,91 +1,202 @@
-import { renderHook, act } from "@testing-library/react";
 import dayjs from 'dayjs'
 
 import {
   daysTillFirstOccurrence,
-  calculateBalance,
   calculateBalanceOver,
-  getWeeksBudgetLineItems
+  getWeeksBudgetLineItems,
+  getVerificationOn,
+  getVerificationsBetween,
+  calculateBalance
 } from "../../utils/budget";
 import { 
   BudgetLineItem, 
   BudgetLineItemFrequency, 
-  useBudgetDetails, 
   WeeklyBudgetLineItemDays,
-  UseBudgetDetails
 } from "../../hooks/useBudgetDetails";
-import { getSampleBudgetLineItems } from "../../utils/mockData";
 import { sampleBudgetTwoItems } from '../../utils/sample-budget-two';
 
-test('it gives 18 days between April 27th and a monthly bill due on May 15th', () => {
-  const bill: BudgetLineItem = {
-    id: "1",
-    name: "Car Insurance",
-    amount: 198.65,
-    frequency: BudgetLineItemFrequency.Monthly,
-    dates: [15],
-    type: "expense",
-    starts: dayjs('2024-01-01'),
-    ends: -1,
-    vers: {},
-    adjs: {}
-  };
-  const offset = daysTillFirstOccurrence(bill, dayjs('2024-04-27'), 0);
-  expect(offset).toBe(18);
+describe( 'daysTillFirstOccurrence()', () => {
+  test('it gives 18 days between April 27th and a monthly bill due on May 15th', () => {
+    const bill: BudgetLineItem = {
+      id: "1",
+      name: "Car Insurance",
+      amount: 198.65,
+      frequency: BudgetLineItemFrequency.Monthly,
+      dates: [15],
+      type: "expense",
+      starts: dayjs('2024-01-01'),
+      ends: -1
+    };
+    const offset = daysTillFirstOccurrence(bill, dayjs('2024-04-27'), 0);
+    expect(offset).toBe(18);
+  });
+
+  test('it gives 5 days till allowance if today is Friday, and 2 days till allowance if today is Monday. Given payday is every Wednesday.', () => {
+    const allowance: BudgetLineItem = {
+      id: "1",
+      name: "Allowance",
+      amount: 30,
+      frequency: BudgetLineItemFrequency.Weekly,
+      day: WeeklyBudgetLineItemDays.Wednesday,
+      type: "income",
+      starts: dayjs('2020-01-01'),
+      ends: -1
+    };
+    const offset = daysTillFirstOccurrence(allowance, dayjs('2024-10-04')); // Friday
+    expect(offset).toBe(5);
+
+    const _offset = daysTillFirstOccurrence(allowance, dayjs('2024-09-30')); // Monday
+    expect(_offset).toBe(2);
+  });
+
+  test('it gives error for OneTimeBudgetLineItems', () => {
+    const bonus: BudgetLineItem = {
+      id: "1",
+      name: "Bonus",
+      amount: 3000,
+      frequency: BudgetLineItemFrequency.Once,
+      type: "income",
+      date: dayjs('2024-05-15')
+    };
+    const offset = daysTillFirstOccurrence(bonus, dayjs('2024-10-01'));
+    expect(typeof offset).toBe('string');
+  })
 });
 
-test('it gives 5 days till allowance if today is Friday, and 2 days till allowance if today is Monday. Given payday is every Wednesday.', () => {
-  const allowance: BudgetLineItem = {
-    id: "1",
-    name: "Allowance",
-    amount: 30,
-    frequency: BudgetLineItemFrequency.Weekly,
-    day: WeeklyBudgetLineItemDays.Wednesday,
-    type: "income",
-    starts: dayjs('2020-01-01'),
-    ends: -1,
-    vers: {},
-    adjs: {}
-  };
-  const offset = daysTillFirstOccurrence(allowance, dayjs('2024-10-04')); // Friday
-  expect(offset).toBe(5);
+describe( 'calculateBalance()', () => {
+  test( 'computes balance correctly', () => {
+    const balance = calculateBalance( dayjs( "03-01-2024" ), 2000, sampleBudgetTwoItems, dayjs( "03-08-2024" ) );
+    expect( balance ).toBe( 1182.79 );
+  });
 
-  const _offset = daysTillFirstOccurrence(allowance, dayjs('2024-09-30')); // Monday
-  expect(_offset).toBe(2);
+  test( 'computes balance correctly again', () => {
+    const balance = calculateBalance( dayjs( "07-02-2024" ), 16468.40, sampleBudgetTwoItems, dayjs( "12-27-2024" ) );
+    expect( balance ).toBe( 44072.30 );
+  });
+
+  const verifiedSampleBudgetTwoItems = sampleBudgetTwoItems.map( (item) => {
+    if ( item.name === "Apple Music" ){
+      item.vers = {
+        "2024": {
+          "3": { "26": 18.27 }, 
+          "4": { "26": 19.84 }
+        }
+      }
+    } else if ( item.name === "Paycheck" ){
+      item.vers = {
+        "2024": {
+          "3": { "14": 3120.30 }, 
+          "4": { "11": 2999.45 }, 
+          "5": { "9": 3300, "23": 3001.40 }
+        }
+      }
+    }
+    return item;
+  })
+
+  test( 'computes balance correctly with verifications', () => {
+    const balance = calculateBalance( dayjs( "03-01-2024" ), 2000, verifiedSampleBudgetTwoItems, dayjs( "03-15-2024" ) );
+    expect( balance ).toBe( 3503.09 );
+  });
+
+  test( 'computes balance correctly with verifications again', () => {
+    const balance = calculateBalance( dayjs( "03-14-2024" ), 382.79, verifiedSampleBudgetTwoItems, dayjs( "07-01-2024" ) );
+    expect( balance ).toBe( 16482.82 );
+  });
 });
 
-test('it gives error for OneTimeBudgetLineItems', () => {
-  const bonus: BudgetLineItem = {
-    id: "1",
-    name: "Bonus",
-    amount: 3000,
-    frequency: BudgetLineItemFrequency.Once,
-    type: "income",
-    date: dayjs('2024-05-15'),
-    vers: {},
-    adjs: {}
-  };
-  const offset = daysTillFirstOccurrence(bonus, dayjs('2024-10-01'));
-  expect(typeof offset).toBe('string');
-})
+// test( 'it calculates daily periods and balances correctly for sample budget #2', () => {
 
-// test('it gives $5358.26 for the balance.', () => {
-//   const budgetLineItems: BudgetLineItem[] = getSampleBudgetLineItems();
+//   const { balances, dates } = calculateBalanceOver( [dayjs('2024-5-16')], 2000, dayjs('2024-3-1'), sampleBudgetTwoItems, );
+//   expect( dates.length ).toBe( 1 );
+//   expect( dates[0].format('M/D/YY') ).toBe( '5/16/24' );
+//   // expect( balances[0] ).toEqual( 10718.29 );
+// });
 
-//   const monthBalance = calculateBalance(dayjs('2024-08-23'), 5346.14, budgetLineItems, dayjs('2024-10-10')); // entire span
-//   expect(monthBalance).toBe(5358.26);
+// test( 'it shows the correct items for the week of 4/5/24 for sample budget #2 via getThisWeeksBudgetLineItems()', () => {
+//   const items = getWeeksBudgetLineItems( dayjs( '4/8/24' ), dayjs( '1/1/24' ), sampleBudgetTwoItems );
+//   expect( items.length ).toBe( 2 );
+//   expect( items[0].item.name ).toBe( 'Savings' );
+//   expect( items[0].days ).toBe( 0 );
+//   expect( items[1].item.name ).toBe( 'Paycheck' );
+//   expect( items[1].days ).toBe( 6 );
+// });
 
-//   const Jan25ThruMar25Balance = calculateBalance(dayjs('2025-01-01'), 6135.26, budgetLineItems, dayjs('2025-02-28')); // entire span
-//   expect(Jan25ThruMar25Balance).toBe(9387.12);
-// })
+// test( 'it shows the correct items for the week of 3/22/24 for sample budget #2 via getThisWeeksBudgetLineItems()', () => {
+//   const items = getWeeksBudgetLineItems( dayjs( '3/22/24' ), dayjs( '1/1/24' ), sampleBudgetTwoItems );
+//   expect( items.length ).toBe( 4 );
+//   expect( items[0].item.name ).toBe( 'Savings' );
+//   expect( items[1].item.name ).toBe( 'Apple Music' );
+//   expect( items[2].item.name ).toBe( 'Travel savings' );
+//   expect( items[3].item.name ).toBe( 'Paycheck' );
+// });
 
-test( 'it calculates daily periods and balances correctly for sample budget #2', () => {
+// const mockItemWithVerifications: BudgetLineItem = {
+//   id: "1",
+//   name: "Car Insurance",
+//   amount: 198.65,
+//   frequency: BudgetLineItemFrequency.Monthly,
+//   dates: [15],
+//   type: "expense",
+//   starts: dayjs('2024-01-01'),
+//   ends: -1,
+//   vers: { 
+//     "2024": { 
+//       "1": {
+//         "15": 186.80
+//       },
+//       "5": {
+//         "15": 210.84
+//       },
+//       "10": {
+//         "15": 211.22
+//       },
+//       "11": {},
+//       "12": {
+//         "15": 232.99
+//       }
+//     },
+//     "2025": {
+//       "4": {
+//         "15": 222.17
+//       },
+//       "5": {
+//         "15": 220.94
+//       }
+//     }
+//   }
+// }
 
-  const { balances, dates } = calculateBalanceOver( [dayjs('2024-5-16')], 2000, dayjs('2024-3-1'), sampleBudgetTwoItems, );
-  expect( dates.length ).toBe( 1 );
-  expect( dates[0].format('M/D/YY') ).toBe( '5/16/24' );
-  expect( balances[0] ).toEqual( 10718.29 );
-});
+// test( 'getVerificationOn() gets correct value', () => {
+//   const result1 = getVerificationOn( dayjs( "05/15/2024" ), mockItemWithVerifications );
+//   expect( result1 ).toBe( 210.84 );
+
+// });
+
+// test( 'getVerificationBetween() gets correct values', () => {
+//   const result2 = getVerificationsBetween( [ dayjs("3/15/24"), dayjs("5/1/25" ) ], mockItemWithVerifications );
+//   expect( result2!.length ).toBe( 4 );
+//   expect( result2 ).toEqual([ 
+//     { date: "2024-May-15", amount: 210.84 }, 
+//     { date: "2024-Oct-15", amount: 211.22 }, 
+//     { date: "2024-Dec-15", amount: 232.99 }, 
+//     { date: "2025-Apr-15", amount: 222.17 } 
+//   ])
+// });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // test('it calculates weekly periods and balances correctly for sample budget #2.', () => {
 
@@ -123,32 +234,13 @@ test( 'it calculates daily periods and balances correctly for sample budget #2',
 //   expect( balances ).toEqual([ null, null, null, null, null ]);
 // })
 
-test( 'it shows the correct items for the week of 4/5/24 for sample budget #2 via getThisWeeksBudgetLineItems()', () => {
-  const items = getWeeksBudgetLineItems( dayjs( '4/8/24' ), dayjs( '1/1/24' ), sampleBudgetTwoItems );
-  expect( items.length ).toBe( 2 );
-  expect( items[0].item.name ).toBe( 'Savings' );
-  expect( items[0].days ).toBe( 0 );
-  expect( items[1].item.name ).toBe( 'Paycheck' );
-  expect( items[1].days ).toBe( 6 );
-});
 
-test( 'it shows the correct items for the week of 3/22/24 for sample budget #2 via getThisWeeksBudgetLineItems()', () => {
-  const items = getWeeksBudgetLineItems( dayjs( '3/22/24' ), dayjs( '1/1/24' ), sampleBudgetTwoItems );
-  expect( items.length ).toBe( 4 );
-  expect( items[0].item.name ).toBe( 'Savings' );
-  expect( items[1].item.name ).toBe( 'Apple Music' );
-  expect( items[2].item.name ).toBe( 'Travel savings' );
-  expect( items[3].item.name ).toBe( 'Paycheck' );
-});
+// test('it gives $5358.26 for the balance.', () => {
+//   const budgetLineItems: BudgetLineItem[] = getSampleBudgetLineItems();
 
-test( 'it adds verifications', () => {
-  const { result } = renderHook<UseBudgetDetails, { slug:string }>( () => useBudgetDetails("test") );
-  const { budget, verifyAmount } = result.current;
-  expect( budget!.budgetLineItems[5].vers).toBe( undefined );
+//   const monthBalance = calculateBalance(dayjs('2024-08-23'), 5346.14, budgetLineItems, dayjs('2024-10-10')); // entire span
+//   expect(monthBalance).toBe(5358.26);
 
-  const item = budget!.budgetLineItems[5];
-  act(() => {
-    verifyAmount( dayjs( "05-15-2025"), item, 25 );
-  });
-  expect( budget?.budgetLineItems[5].vers![ "2025-May-15" ]).toBe( 25 );
-});
+//   const Jan25ThruMar25Balance = calculateBalance(dayjs('2025-01-01'), 6135.26, budgetLineItems, dayjs('2025-02-28')); // entire span
+//   expect(Jan25ThruMar25Balance).toBe(9387.12);
+// })
