@@ -12,7 +12,7 @@ import { WeeklyWidget } from "../../components/widgets/weekly-widget"
 // import { numberOrNull } from "../../utils/util"
 import { SummaryWidget } from "../../components/widgets/summary-widget"
 
-// TODO: Add context provider to easily pass variables between components.
+// TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 
 
 const BudgetDashboard: React.FC = () => {
@@ -26,17 +26,28 @@ const BudgetDashboard: React.FC = () => {
 
   return (
     budget ?
-    <div>
-      <h1 className="text-dark fw-bold my-1 fs-2">{budget.title}</h1>
-      <div className="mt-8">
-        {/* <BudgetDetailsDatePicker /> */}
-        <SummaryWidget />
-        <ChartWidget />
-        <WeeklyWidget />
+      <div>
+        <div className="d-flex flex-row flex-stack">
+          <h1 className="text-dark fw-bold my-1 fs-2">{budget.title}</h1>
+          <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
+            <a href="#" className="btn bg-body btn-color-gray-700 btn-active-primary me-4">Edit Items</a>
+            <a href="#" className="btn btn-primary">View Items</a>
+          </div>
+        </div>
+        <div className="mt-8">
+          <div className="row">
+            <div className="col-lg-6">
+              <SummaryWidget />
+              <ChartWidget />
+            </div>
+            <div className="col-lg-6">
+              <WeeklyWidget />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    :
-    <></>
+      :
+      <></>
   )
 }
 

@@ -12,7 +12,7 @@ export const BudgetContext = createContext<(BudgetContextProps & UseBudgetDetail
 
 export const BudgetContextProvider: React.FC<{ slug: string, children: ReactNode }> = ({ slug, children }) => {
   const details = useBudgetDetails(slug);
-  const [date, setDate] = useState<Dayjs>(dayjs("15-Oct-2024"))
+  const [date, setDate] = useState<Dayjs>(dayjs())
 
   return (
     <BudgetContext.Provider value={{ ...details, date, setDate }}>

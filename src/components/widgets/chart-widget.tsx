@@ -37,19 +37,19 @@ dayjs.extend(isBetween);
 //   budget: BudgetDetailsResponse,
 // }
 
-type ChartWidgetSpan = "1M" | "3M" | "1Y" 
+type ChartWidgetSpan = "1M" | "3M" | "1Y"
 
 export const ChartWidget: FC = () => {
-  
-  const _context = useContext( BudgetContext );
 
-  if ( !_context ){
-    throw new Error( "Calling Budget Context from outside of provider." );
+  const _context = useContext(BudgetContext);
+
+  if (!_context) {
+    throw new Error("Calling Budget Context from outside of provider.");
   }
 
   const { budget, date } = _context;
 
-  if ( !budget ){
+  if (!budget) {
     return <></>;
   }
 
@@ -92,19 +92,19 @@ export const ChartWidget: FC = () => {
 
   const getSpanDates = (): Dayjs[] => {
     const _date = date;
-    if ( span === "1M" ){
-      return [ _date.subtract( 1, "month" ), _date.subtract( 3, "weeks" ),  _date.subtract( 2, "weeks" ),  _date.subtract( 1, "weeks" ), _date, _date.add( 1, "week" ), _date.add( 2, "weeks" ),  _date.add( 3, "weeks" ),  _date.add( 1, "month" ) ]
-    
-    } else if ( span === "3M" ){
-      return [ _date.subtract( 3, "month" ), _date.subtract( 2, "month" ), _date.subtract( 1, "month" ) , _date, _date.add( 1, "month" ), _date.add( 2, "month" ), _date.add( 3, "month" )]
-    
+    if (span === "1M") {
+      return [_date.subtract(1, "month"), _date.subtract(3, "weeks"), _date.subtract(2, "weeks"), _date.subtract(1, "weeks"), _date, _date.add(1, "week"), _date.add(2, "weeks"), _date.add(3, "weeks"), _date.add(1, "month")]
+
+    } else if (span === "3M") {
+      return [_date.subtract(3, "month"), _date.subtract(2, "month"), _date.subtract(1, "month"), _date, _date.add(1, "month"), _date.add(2, "month"), _date.add(3, "month")]
+
     } else {
-      return [ _date.subtract( 1, "year" ), _date.subtract( 9, "month" ), _date.subtract( 6, "month" ), _date.subtract( 3, "month" ), _date, _date.add( 3, "month" ), _date.add( 6, "month" ), _date.add( 9, "month" ), _date.add( 1, "year" )]
+      return [_date.subtract(1, "year"), _date.subtract(9, "month"), _date.subtract(6, "month"), _date.subtract(3, "month"), _date, _date.add(3, "month"), _date.add(6, "month"), _date.add(9, "month"), _date.add(1, "year")]
     }
   }
 
 
-  const { dates, balances } = calculateBalanceOver( getSpanDates(), startingBalance, startDate, budgetLineItems );
+  const { dates, balances } = calculateBalanceOver(getSpanDates(), startingBalance, startDate, budgetLineItems);
   const cleanDatapoints: number[] = balances.filter((n) => n != null); // remove nulls
 
   // console.log(dates.map((d)=> d.format("MM/DD/YYYY")), balances);
@@ -147,7 +147,7 @@ export const ChartWidget: FC = () => {
       colors: [theme.primary]
     },
     xaxis: {
-      categories: dates.map((_d) => { return _d.format( format ) }),
+      categories: dates.map((_d) => { return _d.format(format) }),
       axisBorder: {
         show: false,
       },
@@ -230,60 +230,55 @@ export const ChartWidget: FC = () => {
   };
 
   return (
-    <div>
-        <div className="mixed-chart card card-xl-stretch mb-5 mb-xl-8">
-          <div className="card-body p-0 d-flex justify-content-between flex-column">
-            <div className="d-flex flex-stack card-p flex-grow-1">
-              <div className="symbol symbol-45px">
-                <div className="symbol-label">
-                  <FloatingNode id={nodeId}>
-                    <button
-                      ref={refs.setReference}
-                      {...getReferenceProps()}
-                      data-open={menuIsOpen ? "" : undefined}
-                      type="button"
-                      className="btn btn-clean btn-sm btn-icon btn-icon-primary btn-active-light-primary text-gray-500 fw-bold" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
-                    >
-                      {span}
-                    </button>
-                    {menuIsOpen && (
-                      <div
-                        ref={refs.setFloating}
-                        {...getFloatingProps()}
-                        style={{ ...floatingStyles, backgroundColor: theme["kt-symbol-label-bg"] }}
-                        className="menu menu-column menu-sub-dropdown menu-sub menu-rounded menu-state-bg-light-primary fw-semibold w-100px py-3"
-                        data-kt-menu="true"
-                      >
-                        {/* begin::Menu item */}
-                        <div className="menu-item px-3">
-                          <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "1M" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("1M")}>1 Month</p>
-                          <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "3M" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("3M")}>3 Months</p>
-                          <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "1Y" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("1Y")}>1 Year</p>
-                        </div>
-                        {/* end::Menu item */}
-                      </div>
-                    )}
-                  </FloatingNode>
-                </div>
-              </div>
-
-              <div className="d-flex flex-column text-end">
-                <span className="fw-bolder text-gray-800 fs-2">Balance</span>
-                <span className="text-gray-400 fw-semibold fs-6">{ dates[0].format(format) + " - " + dates[dates.length - 1].format(format) }</span>
-              </div>
+    <div className="card card-xl-stretch">
+      <div className="card-body p-0 d-flex justify-content-between flex-column">
+        <div className="d-flex flex-stack flex-grow-1 p-10">
+          <div className="symbol symbol-45px">
+            <div className="symbol-label">
+              <FloatingNode id={nodeId}>
+                <button
+                  ref={refs.setReference}
+                  {...getReferenceProps()}
+                  data-open={menuIsOpen ? "" : undefined}
+                  type="button"
+                  className="btn btn-clean btn-sm btn-icon btn-icon-primary btn-active-light-primary text-gray-500 fw-bold"
+                >
+                  {span}
+                </button>
+                {menuIsOpen && (
+                  <div
+                    ref={refs.setFloating}
+                    {...getFloatingProps()}
+                    style={{ ...floatingStyles, backgroundColor: theme["kt-symbol-label-bg"] }}
+                    className="menu menu-column menu-sub-dropdown menu-sub menu-rounded menu-state-bg-light-primary fw-semibold w-150px py-3"
+                    data-kt-menu="true"
+                  >
+                    {/* begin::Menu item */}
+                    <div className="menu-item px-3">
+                      <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "1M" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("1M")}>1 Month</p>
+                      <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "3M" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("3M")}>3 Months</p>
+                      <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "1Y" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("1Y")}>1 Year</p>
+                    </div>
+                    {/* end::Menu item */}
+                  </div>
+                )}
+              </FloatingNode>
             </div>
+          </div>
 
-
-            {/* <div className="pt-1"> */}
-            <Chart
-              options={options}
-              series={options.series}
-              type="area"
-              height="150"
-            />
-            {/* </div> */}
+          <div className="d-flex flex-column text-end mb-4">
+            <span className="fw-bolder text-gray-800 fs-2">Balance</span>
+            <span className="text-gray-400 fw-semibold fs-6">{dates[0].format(format) + " - " + dates[dates.length - 1].format(format)}</span>
           </div>
         </div>
+
+        <Chart
+          options={options}
+          series={options.series}
+          type="area"
+          height="150"
+        />
+      </div>
     </div>
   )
 }

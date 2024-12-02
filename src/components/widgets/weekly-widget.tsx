@@ -1,4 +1,4 @@
-import React, { FC, useContext, useState } from "react"
+import React, { FC, useContext, useEffect, useState } from "react"
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
@@ -47,12 +47,16 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   const verified = verifiedAmt !== null;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [verifyAmt, setVerifyAmt] = useState(item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }))
+  const [textInput, setTextInput] = useState<string>( item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) );
   const [loading, setIsLoading] = useState(false);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
   }
+
+  const handleTextInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTextInput( event.target.value );
+  };
 
   const verify = (unverify: boolean = false) => {
     let value: number | null;
@@ -62,17 +66,17 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
 
     } else {
       // Check for empty strings
-      if ( verifyAmt.trim() === "" ){ 
-        setVerifyAmt( "" );  
+      if ( textInput.trim() === "" ){ 
+        setTextInput( "" );  
         return; 
       }
 
-      const cleanedString = verifyAmt.replace(/[^0-9.]/g, '');
+      const cleanedString = textInput.replace(/[^0-9.]/g, '');
       
       // Convert the cleaned string to a number
       const num = parseFloat( cleanedString );
       if ( isNaN( num ) ){
-        setVerifyAmt( "" );
+        setTextInput( "" );
         return;
       }
       value = num;
@@ -83,6 +87,12 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
     setIsLoading(false);
     setIsOpen(false);
   }
+
+  useEffect(() => {
+    setTextInput( item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) );
+    setIsOpen( false );
+
+  }, [props.item]);
 
 
   return (
@@ -109,7 +119,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
             <div className="line-item-title ms-2 d-flex flex-row flex-wrap">
               <div className="fs-6 fw-bold text-gray-900 mb-1">{item.name}</div>
               {item.frequency === BudgetLineItemFrequency.Weekly &&
-                <div><span className="badge badge-light-warning fw-bold mx-2">weekly</span></div>
+                <div><span className="badge badge-light-info fw-bold mx-2">weekly</span></div>
               }
             </div>
           </div>
@@ -146,9 +156,10 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
           <div className="py-4 d-flex flex-row">
             <div className="me-4">
               <input
+                type="text"
                 className="form-control form-control-solid py-2"
-                value={verifyAmt}
-                onChange={(evt: React.ChangeEvent<HTMLInputElement>) => setVerifyAmt(evt.target.value)}
+                value={textInput}
+                onChange={handleTextInput}
                 disabled={verified}
               ></input>
             </div>
@@ -225,9 +236,9 @@ export const WeeklyWidget: FC = (props) => {
   return (
     // print line items for this week in order.
 
-    <div className="col-lg-6 x25-line-item-list">
-      <div className="card card-flush h-lg-100">
-        <div className="card-header mt-6">
+    <div className="x25-line-item-list">
+      <div className="card card-flush p-10">
+        <div className="card-header px-0">
           <div className="card-title flex-column">
             <h3 className="fw-bold mb-1">This Week</h3>
             {/* <div className="fs-6 text-gray-400">{currentBudgetLineItems.length} Budget Items</div> */}
@@ -237,7 +248,9 @@ export const WeeklyWidget: FC = (props) => {
           </div>
         </div>
 
-        <div className="d-flex flex-wrap px-6 py-2">
+        <div className="mb-4"><span className="badge badge-lg badge-light-warning fw-bold">XX Verifications Due</span></div>
+
+        <div className="d-flex flex-wrap py-2">
           <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
             <div className="d-flex align-items-center">
               <div className="fs-2 fw-bold counted">{currentBudgetLineItems.length}</div>
@@ -277,7 +290,7 @@ export const WeeklyWidget: FC = (props) => {
           }
         </div>
 
-        <div className="card-body d-flex flex-column mb-9 px-6 py-3">
+        <div className="d-flex flex-column">
           {weekStartingBalance && currentBudgetLineItems.map((item, i) => {
             const endingBalance = balanceAfterItem(i);
             const hasPassed: boolean = dayjs().isSameOrAfter(friday.add(item.days, 'day'));
@@ -287,8 +300,9 @@ export const WeeklyWidget: FC = (props) => {
               : null
 
             return (
-              <React.Fragment key={i} >
+              // <React.Fragment key={i} >
                 <WeeklyWidgetLineItem
+                  key={i}
                   item={item.item}
                   days={item.days}
                   isNewDay={isNewDay}
@@ -296,7 +310,7 @@ export const WeeklyWidget: FC = (props) => {
                   endingBalance={endingBalance}
                   hasPassed={hasPassed}
                 />
-              </React.Fragment>
+              // </React.Fragment>
             )
           })}
         </div>

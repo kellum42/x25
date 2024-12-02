@@ -25,12 +25,12 @@ export const SummaryWidget: FC = () => {
   const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.budgetLineItems, date);
 
   const getVersDue = (): number => {
-    const items = getWeeksBudgetLineItems( date, budget.startDate, budget.budgetLineItems );
+    const items = getWeeksBudgetLineItems(date, budget.startDate, budget.budgetLineItems);
     const idealVerCount = items.length;
     let actualVerCount = 0;
-    items.forEach(( _item, _ ) => {
-      const ver = getVerificationOn( getFriday( date ).add( _item.days, 'day' ), _item.item );
-      actualVerCount += ver === null ? 0 : 1; 
+    items.forEach((_item, _) => {
+      const ver = getVerificationOn(getFriday(date).add(_item.days, 'day'), _item.item);
+      actualVerCount += ver === null ? 0 : 1;
     })
     return idealVerCount - actualVerCount;
   };
@@ -38,52 +38,54 @@ export const SummaryWidget: FC = () => {
   const getPastDueVers = (): number => {
     let vers: number = 0;
     let expectedVers: number = 0;
-    const start = date.subtract( 3, 'month' );
+    const start = date.subtract(3, 'month');
     const end = date;
 
     budget.budgetLineItems.forEach((item, _) => {
-      if ( item.frequency === BudgetLineItemFrequency.Once ){
-        if ( item.date.isBetween( start, end, 'day', '[]' )){
+      if (item.frequency === BudgetLineItemFrequency.Once) {
+        if (item.date.isBetween(start, end, 'day', '[]')) {
           expectedVers++;
-          vers += getVerificationOn( item.date, item ) === null ? 0 : 1;
+          vers += getVerificationOn(item.date, item) === null ? 0 : 1;
         }
       } else {
-        const _start = start.isBefore( item.starts ) ? start : item.starts;
-        const _end = item.ends !== -1 && item.ends.isBefore( end ) ? item.ends : end;
-        const _rangeInDays = _end.diff( _start, 'day' );
+        const _start = start.isBefore(item.starts) ? start : item.starts;
+        const _end = item.ends !== -1 && item.ends.isBefore(end) ? item.ends : end;
+        const _rangeInDays = _end.diff(_start, 'day');
 
         const i = item.frequency === BudgetLineItemFrequency.Monthly ? item.dates.length : 1;
-        for( let _i = 0;_i < i;_i++ ){
-          const _daysTillFirstOccurrence = daysTillFirstOccurrence( item, _start, _i );
-          if ( typeof _daysTillFirstOccurrence === 'string'){ return; }
+        for (let _i = 0; _i < i; _i++) {
+          const _daysTillFirstOccurrence = daysTillFirstOccurrence(item, _start, _i);
+          if (typeof _daysTillFirstOccurrence === 'string') { return; }
 
           const rangeInDays = _rangeInDays - _daysTillFirstOccurrence;
-          if ( rangeInDays < 0 ){ return; }
-          const firstOccurrence = _start.add( _daysTillFirstOccurrence, 'day' );
+          if (rangeInDays < 0) { return; }
+          const firstOccurrence = _start.add(_daysTillFirstOccurrence, 'day');
 
-          const numOccurrences = item.frequency === BudgetLineItemFrequency.Monthly 
+          const numOccurrences = item.frequency === BudgetLineItemFrequency.Monthly
             ? _end.diff(firstOccurrence, 'month') + 1
-            : Math.floor( rangeInDays / (item.frequency == BudgetLineItemFrequency.Weekly ? 7 : 14)) + 1
-          
-            expectedVers += numOccurrences;
-            const _vers = getVerificationsBetween( [firstOccurrence, _end], item );
-            vers += _vers ? _vers.length : 0;
+            : Math.floor(rangeInDays / (item.frequency == BudgetLineItemFrequency.Weekly ? 7 : 14)) + 1
+
+          expectedVers += numOccurrences;
+          const _vers = getVerificationsBetween([firstOccurrence, _end], item);
+          vers += _vers ? _vers.length : 0;
         }
       }
     });
     return expectedVers - vers;
   };
 
+  const pastDueVers = getPastDueVers();
+
   return (
-    <div className="row g-xxl-9">
-      <div className="col-xxl-8">
-        <div className="card card-xxl-stretch mb-5 mb-xl-10">
-          <div className="card-header p-10 pt-6 pb-2">
-            <div className="card-title d-block">
-              <h3 className="m-0 text-gray-900">Summary</h3>
-              <p className="text-gray-400 fw-semibold fs-6 mt-2">As of {date.format("MMM D, YYYY")}</p>
-            </div>
-            {/* <div className="card-toolbar">
+    // <div className="row g-xxl-9">
+    //   <div className="col-xxl-8">
+    <div className="card mb-6">
+      <div className="card-header p-10 pb-2">
+        <div className="card-title d-block">
+          <h3 className="m-0 text-gray-900">Summary</h3>
+          <p className="text-gray-400 fw-semibold fs-6 mt-2">As of {date.format("MMM D, YYYY")}</p>
+        </div>
+        {/* <div className="card-toolbar">
               <ul className="nav nav-tabs nav-line-tabs nav-stretch border-transparent fs-5 fw-bold" id="kt_security_summary_tabs" role="tablist">
                 <li className="nav-item" role="presentation">
                   <a className="nav-link text-active-primary active" data-kt-countup-tabs="true" data-bs-toggle="tab" href="#kt_security_summary_tab_pane_hours" data-kt-initialized="1" aria-selected="true" role="tab">12 Hours</a>
@@ -96,52 +98,71 @@ export const SummaryWidget: FC = () => {
                 </li>
               </ul>
             </div> */}
-            <div className="card-toolbar">
-              <DateChanger />
-            </div>
-          </div>
+        <div className="card-toolbar">
+          <DateChanger />
+        </div>
+      </div>
 
-          <div className="card-body pt-7 pb-0 px-0">
-            {/* begin::Tab content */}
-            <div className="tab-content">
-              {/* begin::Tab panel */}
-              <div className="tab-pane fade active show" id="kt_security_summary_tab_pane_hours" role="tabpanel">
-                {/* begin::Row */}
-                <div className="row p-0 mb-5 px-9">
-                  {/* begin::Col */}
-                  {typeof balance === 'number' &&
-                    <div className="col">
-                      <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                        <span className="fs-6 fw-semibold text-success d-block">Current Balance</span>
-                        <span className="fs-2hx fw-bold text-gray-900 counted">${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                      </div>
-                    </div>
-                  }
-                  {/* end::Col */}
-                  {/* begin::Col */}
-                  <div className="col">
-                    <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                      <span className="fs-6 fw-semibold text-warning d-block">Verifications Due</span>
-                      <span className="fs-2hx fw-bold text-gray-900 counted">{ getVersDue() }</span>
-                    </div>
+      <div className="card-body pt-7 pb-0 px-0">
+        {/* begin::Tab content */}
+        <div className="tab-content">
+          {/* begin::Tab panel */}
+          <div className="tab-pane fade active show" id="kt_security_summary_tab_pane_hours" role="tabpanel">
+            {/* begin::Row */}
+            <div className="row p-0 mb-5 px-9">
+              {/* begin::Col */}
+              {typeof balance === 'number' &&
+                <div className="col p-2">
+                  <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
+                    <span className="fs-6 fw-semibold text-success d-block">Current Balance</span>
+                    <span className="fs-2hx fw-bold text-gray-900 counted">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
-                  {/* end::Col */}
-                  {/* begin::Col */}
-                  <div className="col">
-                    <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                      <span className="fs-6 fw-semibold text-danger d-block">Past Due Verifications</span>
-                      <span className="fs-2hx fw-bold text-gray-900 counted">{ getPastDueVers() }</span>
-                    </div>
-                  </div>
-                  {/* end::Col */}
                 </div>
-                {/* end::Row */}
+              }
+              {/* end::Col */}
+              {/* begin::Col */}
+              <div className="col p-2">
+                <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
+                  <span className="fs-6 fw-semibold text-warning d-block">Verifications Due</span>
+                  <span className="fs-2hx fw-bold text-gray-900 counted">{getVersDue()}</span>
+                </div>
               </div>
+              {/* end::Col */}
+              {/* begin::Col */}
+              <div className="col p-2">
+                <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
+                  <span className="fs-6 fw-semibold text-danger d-block">Past Due Verifications</span>
+                  <span className="fs-2hx fw-bold text-gray-900 counted">{pastDueVers > 100 ? "100+" : pastDueVers}</span>
+                </div>
+              </div>
+              {/* end::Col */}
             </div>
-            {/* end::Tab content */}
+            {/* end::Row */}
           </div>
+        </div>
+        {/* end::Tab content */}
+      </div>
+
+      <div className="px-10 fw-semibold">
+        <div className="fs-6 d-flex justify-content-between mb-4">
+          <div className="">Start Date</div>
+          <div className="d-flex">{ budget.startDate.format( "MMM D, YYYY" )}</div>
+        </div>
+        <div className="separator separator-dashed"></div>
+
+        <div className="fs-6 d-flex justify-content-between my-4">
+          <div className="">Starting Balance</div>
+          <div className="d-flex">${ budget.startingBalance.toLocaleString( undefined, { minimumFractionDigits: 2 }) }</div>
+        </div>
+        <div className="separator separator-dashed"></div>
+
+        <div className="fs-6 d-flex justify-content-between my-4">
+          <div className="hover text-primary">Line Items</div>
+          <div className="d-flex hover text-primary">{ budget.budgetLineItems.length }</div>
         </div>
       </div>
     </div>
+    //   </div>
+    // </div>
   );
 };
