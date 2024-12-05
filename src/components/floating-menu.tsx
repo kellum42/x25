@@ -216,7 +216,7 @@ export const MenuComponent = React.forwardRef<
               >
                 <div
                   ref={refs.setFloating}
-                  className="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
+                  className="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-250px py-3"
                   style={floatingStyles}
                   {...getFloatingProps()}
                 >
@@ -234,12 +234,13 @@ export const MenuComponent = React.forwardRef<
 interface MenuItemProps {
   label: string;
   disabled?: boolean;
+  isHighlighted?: boolean;
 }
 
 export const MenuItem = React.forwardRef<
   HTMLButtonElement,
   MenuItemProps & React.ButtonHTMLAttributes<HTMLButtonElement>
->(({ label, disabled, ...props }, forwardedRef) => {
+>(({ label, disabled, isHighlighted, ...props }, forwardedRef) => {
   const menu = React.useContext(MenuContext);
   const item = useListItem({ label: disabled ? null : label });
   const tree = useFloatingTree();
@@ -267,7 +268,7 @@ export const MenuItem = React.forwardRef<
       })}
     >
       {/* <div className="menu-item px-3"> */}
-      <a className="menu-link px-3">
+      <a className={"menu-link px-3" + ( isHighlighted ? " text-primary" : "" )}>
         {label}
       </a>
       {/* </div> */}

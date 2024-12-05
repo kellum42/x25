@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, createContext } from "react";
+import React, { ReactNode, useState, createContext, useEffect } from "react";
 import dayjs, { Dayjs } from "dayjs";
 
 import { UseBudgetDetails, useBudgetDetails } from "../hooks/useBudgetDetails";
@@ -13,6 +13,10 @@ export const BudgetContext = createContext<(BudgetContextProps & UseBudgetDetail
 export const BudgetContextProvider: React.FC<{ slug: string, children: ReactNode }> = ({ slug, children }) => {
   const details = useBudgetDetails(slug);
   const [date, setDate] = useState<Dayjs>(dayjs())
+
+  // useEffect(() => {
+  //   console.log("DATE HAS CHANGED");
+  // },[date]);
 
   return (
     <BudgetContext.Provider value={{ ...details, date, setDate }}>

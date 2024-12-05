@@ -19,7 +19,9 @@ dayjs.extend(isoWeek);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
-
+// TODO:
+//  - Test if this accounts for monthly events that occur after the month ends.
+//  - ex. if something occurs on the 31st and the month only has 30 days.
 export const calculateBalance = (startDate: Dayjs, startingAmount: number, items: BudgetLineItem[], endDate?: Dayjs): number | string => {
   //  If endDate is null, set to today.
   //  If endDate is before startDate, return error

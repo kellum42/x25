@@ -7,17 +7,21 @@ import { calculateBalance, getUpcomingBudgetItems, itemIsActive, ytd } from "../
 import { BudgetContext } from "../contexts/budgetContext";
 import { numberOrNull } from "../utils/util";
 import { Menu, MenuItem } from "./floating-menu";
+import { BudgetItemFilterMenu } from "./budget-item-filter-menu";
 
-enum BudgetItemSorts {
+// TODO:
+//  - Search functionality
+
+export enum BudgetItemSorts {
   PLtoH = "Price ↑",
   PHtoL = "Price ↓",
-  YTDLtoH = "YTD ↑",
-  YTDHtoL = "YTD ↓",
+  YTDLtoH = "Price YTD ↑",
+  YTDHtoL = "Price YTD ↓",
   upcoming = "Upcoming",
   farthest = "Farthest"
 }
-type BudgetItemFilters = {
-  frequency: BudgetLineItemFrequency[] | null,
+export type BudgetItemFilters = {
+  frequency: BudgetLineItemFrequency[],
   state: "active" | "inactive" | null
 }
 
@@ -25,94 +29,6 @@ type BudgetItemQueryProps = {
   setQuery: React.Dispatch<SetStateAction<(items: BudgetLineItem[]) => BudgetLineItem[]>>
 }
 
-const BudgetItemFilterMenu: React.FC<{
-  filters: BudgetItemFilters,
-  setFilters: React.Dispatch<React.SetStateAction<BudgetItemFilters>>,
-  default: BudgetItemFilters
-}> = (props) => {
-  const [isActive, setIsActive] = useState(false);
-
-  const handleStateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value === "all") {
-      props.setFilters({ ...props.filters, state: null });
-
-    } else {
-      const state = e.target.value as ( "active" | "inactive" );
-      props.setFilters({ ...props.filters, state });
-    }
-  }
-
-  const handleFrequencyChange = () => {
-
-  }
-
-  useEffect(() => {
-    setIsActive(
-      props.filters.frequency !== props.default.frequency ||
-      props.filters.state !== props.default.state
-    );
-
-  }, [props.filters]);
-
-
-  const filterButton: React.ReactNode = (
-    <button type="button" className={"btn btn-light-primary me-3" + (isActive ? " active" : "")} data-kt-menu-placement="bottom-end">
-      <span className="svg-icon svg-icon-2">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="currentColor"></path>
-        </svg>
-      </span>
-      Filter
-    </button>
-  );
-  return (
-    <Menu label="" rootMenuButton={filterButton}>
-      <div>
-        <div className="px-7 py-5">
-          <div className="fs-4 text-dark fw-bold">Filter Options</div>
-        </div>
-        <div className="separator border-gray-200"></div>
-        <div className="px-7 py-5">
-          <div className="mb-10" data-select2-id="select2-data-191-hbxa">
-            <label className="form-label fs-5 fw-semibold mb-3">Month:</label>
-            <select className="form-select form-select-solid fw-bold select2-hidden-accessible" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-customer-table-filter="month" data-dropdown-parent="#kt-toolbar-filter" data-select2-id="select2-data-7-h9l7" tabIndex={-1} aria-hidden="true" data-kt-initialized="1">
-              <option data-select2-id="select2-data-9-vxa5"></option>
-              <option value="aug" data-select2-id="select2-data-198-olrw">August</option>
-              <option value="sep" data-select2-id="select2-data-199-8smh">September</option>
-              <option value="oct" data-select2-id="select2-data-200-hajy">October</option>
-              <option value="nov" data-select2-id="select2-data-201-yuls">November</option>
-              <option value="dec" data-select2-id="select2-data-202-tct8">December</option>
-            </select><span className="select2 select2-container select2-container--bootstrap5 select2-container--above" dir="ltr" data-select2-id="select2-data-8-w45b" style={{ width: "100%" }}><span className="selection"><span className="select2-selection select2-selection--single form-select form-select-solid fw-bold select2-selection--clearable" role="combobox" aria-haspopup="true" aria-expanded="false" tabIndex={0} aria-disabled="false" aria-labelledby="select2-cwom-container" aria-controls="select2-cwom-container"><button type="button" className="select2-selection__clear" tabIndex={-1} title="Remove all items" aria-label="Remove all items" aria-describedby="select2-cwom-container" data-select2-id="select2-data-204-s23v"><span aria-hidden="true">×</span></button><span className="select2-selection__rendered" id="select2-cwom-container" role="textbox" aria-readonly="true" title="December">December</span><span className="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span className="dropdown-wrapper" aria-hidden="true"></span></span>
-          </div>
-          <div className="mb-10">
-            <label className="form-label fs-5 fw-semibold mb-3">Item State:</label>
-            <div className="d-flex flex-column flex-wrap fw-semibold" data-kt-customer-table-filter="payment_type">
-              <label className="form-check form-check-sm form-check-custom form-check-solid mb-3 me-5">
-                <input className="form-check-input" type="radio" value="all" name="item-state" checked={props.filters.state === null} onChange={handleStateChange} />
-                <span className="form-check-label text-gray-600">All</span>
-              </label>
-              <label className="form-check form-check-sm form-check-custom form-check-solid mb-3 me-5">
-                <input className="form-check-input" type="radio" value="active" name="item-state" checked={props.filters.state === "active"} onChange={handleStateChange} />
-                <span className="form-check-label text-gray-600">Active</span>
-              </label>
-              <label className="form-check form-check-sm form-check-custom form-check-solid mb-3">
-                <input className="form-check-input" type="radio" value="inactive" name="item-state" checked={props.filters.state === "inactive"} onChange={handleStateChange} />
-                <span className="form-check-label text-gray-600">Inactive</span>
-              </label>
-            </div>
-          </div>
-          <div className="d-flex justify-content-end">
-            <button type="reset" className="btn btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true" data-kt-customer-table-filter="reset">Reset</button>
-            <button type="submit" className="btn btn-primary" data-kt-menu-dismiss="true" data-kt-customer-table-filter="filter">Apply</button>
-          </div>
-        </div>
-      </div>
-    </Menu>
-  )
-}
-
-// Pass function with filters to parent.
-// So all parent has to do is call function with budget items array.
 export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
 
   const context = useContext(BudgetContext);
@@ -124,8 +40,16 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
   const { budget, date } = context;
 
   const defaults: { sort: BudgetItemSorts, filters: BudgetItemFilters } = {
-    sort: BudgetItemSorts.upcoming,
-    filters: { frequency: null, state: "active" }
+    sort: BudgetItemSorts.PHtoL,
+    filters: { 
+      frequency: [
+        BudgetLineItemFrequency.Once, 
+        BudgetLineItemFrequency.Weekly, 
+        BudgetLineItemFrequency.Monthly, 
+        BudgetLineItemFrequency.Biweekly
+      ], 
+      state: null 
+    }
   }
 
   const [sort, setSort] = useState<BudgetItemSorts>(defaults.sort);
@@ -157,11 +81,12 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
       if (budget !== null) {
         let willShow = true;
 
-        willShow = filters.frequency === null || filters.frequency.includes(item.frequency);
+        willShow = filters.frequency.includes(item.frequency);
 
         if (willShow) {
           willShow = filters.state === null || (filters.state === "active" ? itemIsActive(date, budget.startDate, item) : !itemIsActive(date, budget.startDate, item));
         }
+
         return willShow;
       } else {
         return false;
@@ -172,14 +97,13 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
   useEffect(() => {
     const fn = () => (items: BudgetLineItem[]): BudgetLineItem[] => {
       let _items = items;
-
       _items = filterItems(_items);
       _items = sortItems(_items);
       return _items;
     };
     props.setQuery(fn);
 
-  }, [sort, filters]);
+  }, [sort, filters, date]);
 
   return (
     <div>
@@ -199,31 +123,24 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
           </div>
           <div className="card-toolbar">
             <div className="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+            <Menu label="" rootMenuButton={(
               <button type="button" className="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                <span className="svg-icon svg-icon-2">
-                  <svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect y="6" width="16" height="3" rx="1.5" fill="currentColor" />
-                    <rect opacity="0.3" y="12" width="8" height="3" rx="1.5" fill="currentColor" />
-                    <rect opacity="0.3" width="12" height="3" rx="1.5" fill="currentColor" />
-                  </svg>
-                </span>
-                Sort
-              </button>
-              {/* <MenuButton />
-          <Menu label="" rootMenuButton={<MenuButton />}>
-                <MenuItem label="Edit"/>
-                <MenuItem label="Duplicate" />
-                <MenuItem label="Delete" />
-              </Menu> */}
-
-              {/* <button type="button" className="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                <span className="svg-icon svg-icon-2">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="currentColor"></path>
-                  </svg>
-                </span>
-                Filter
-              </button> */}
+              <span className="svg-icon svg-icon-2">
+                <svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect y="6" width="16" height="3" rx="1.5" fill="currentColor" />
+                  <rect opacity="0.3" y="12" width="8" height="3" rx="1.5" fill="currentColor" />
+                  <rect opacity="0.3" width="12" height="3" rx="1.5" fill="currentColor" />
+                </svg>
+              </span>
+              Sort
+            </button>
+            )}>
+                { Object.keys( BudgetItemSorts ).map( key => {
+                  const _sort = BudgetItemSorts[key as keyof typeof BudgetItemSorts]
+                  return <MenuItem label={_sort} isHighlighted={ sort === _sort } onClick={() => setSort( _sort )} />
+                })}
+            </Menu>
+              
               <BudgetItemFilterMenu filters={filters} setFilters={setFilters} default={defaults.filters} />
               <div className="d-none menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true" id="kt-toolbar-filter"></div>
               <button type="button" className="btn btn-light-primary me-3" data-bs-toggle="modal" data-bs-target="#kt_customers_export_modal">
@@ -236,7 +153,6 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
                 </span>
                 Select
               </button>
-              {/* <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_add_customer">Add Customer</button> */}
             </div>
             <div className="d-flex justify-content-end align-items-center d-none" data-kt-customer-table-toolbar="selected">
               <div className="fw-bold me-5">
@@ -248,7 +164,7 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
       </div>
       {budget &&
         <p className="fs-5 fw-semibold mt-6 mb-4">{budget.budgetLineItems.length} Budget Items
-          <span className="text-gray-600 ps-4">{sort}</span>
+          <span className="text-gray-600 ps-4">by {sort}</span>
         </p>
       }
     </div>

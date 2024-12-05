@@ -98,13 +98,9 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }) : null );
   }
 
-  // const getVerifiedAmt = ( item: BudgetLineItem, date: Dayjs ): number|null => {
-  //   const dateString = date.format( verifyFormat );
-  //   if ( item.vers !== undefined && dateString in item.vers ){
-  //     return item.vers[dateString];
-  //   }
-  //   return null;
-  // }
+  const addBudgetItem = ( item: BudgetLineItem ) => {
+
+  }
 
   useEffect(() => {
     // query budget based on slug.

@@ -1,16 +1,16 @@
-import React, { useContext, useEffect, useState } from "react"
+import React, { useContext, useState } from "react"
 import type { PageProps } from "gatsby"
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 import { Layout } from "../../../components/layout"
 import { BudgetContextProvider, BudgetContext } from "../../../contexts/budgetContext"
-// import { BudgetLineItemFrequency } from "../../../hooks/useBudgetDetails"
 import { BudgetLineItemCard } from "../../../components/budget-line-item-card"
-import { calculateBalance, ytd } from "../../../utils/budget";
-import dayjs from "dayjs";
-import { DateChanger } from "../../../components/datechanger";
+import { ytd } from "../../../utils/budget";
 import { BudgetItemQuery } from "../../../components/budget-item-query";
 import { BudgetLineItem } from "../../../hooks/useBudgetDetails";
+import { AddNewBudgetItemModal } from "../../../components/modals/add-new-budget-item-modal"
+
+// TODO:
+//  - Fix ytd's. Some of them are wrong.
 
 const BudgetLineItems: React.FC = () => {
   const context = useContext(BudgetContext);
@@ -25,16 +25,11 @@ const BudgetLineItems: React.FC = () => {
     return (items: BudgetLineItem[]) => items;
   }
 
-  const [ queryFn, setQueryFn ] = useState<( (items: BudgetLineItem[]) => BudgetLineItem[] )>( 
-    initialQuery
-  )
+  const [queryFn, setQueryFn] = useState<((items: BudgetLineItem[]) => BudgetLineItem[])>(initialQuery)
+  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
 
-  useEffect(() => {
-    
-
-  }, [queryFn]);
-
-  const queriedItems: BudgetLineItem[] = budget === null ? [] : queryFn( budget.budgetLineItems );
+  const queriedItems: BudgetLineItem[] = budget === null ? [] : queryFn(budget.budgetLineItems);
+  
 
   return (
     budget ?
@@ -42,22 +37,16 @@ const BudgetLineItems: React.FC = () => {
         <div className="d-flex flex-row flex-stack mb-4">
           <div>
             <h1 className="text-dark fw-bold my-1 fs-2">{budget.title}</h1>
-            {/* <p className="fs-5 fw-semibold text-gray-600 my-3">{budget.budgetLineItems.length} Budget Line Items</p> */}
           </div>
           <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
-            {/* <a href="#" className="btn bg-body btn-color-gray-700 btn-active-primary me-4">Edit Items</a> */}
-            <a href="#" className="btn btn-primary">Add New Item</a>
+            <a href="#" className="btn btn-primary" onClick={() => setModalIsOpen(true)}>Add New Item</a>
           </div>
         </div>
-        {/* <div className="card p-4"> */}
-          <BudgetItemQuery setQuery={setQueryFn} />
-        {/* </div> */}
-        {/* <p className="fs-5 fw-semibold text-gray-600 mt-6 mb-4">{budget.budgetLineItems.length} Budget Items</p> */}
+        <BudgetItemQuery setQuery={setQueryFn} />
         <div className="">
           <div className="row">
             {queriedItems.map((item, i) => {
-              // const runningTotal = calculateBalance(start, 0, [item], date);
-              const runningTotal = ytd( date, budget.startDate, item );
+              const runningTotal = ytd(date, budget.startDate, item);
 
               return (
                 <BudgetLineItemCard key={i} item={item} date={date} runningTotal={runningTotal} />
@@ -65,6 +54,7 @@ const BudgetLineItems: React.FC = () => {
             })}
           </div>
         </div>
+        <AddNewBudgetItemModal isOpen={modalIsOpen} setIsOpen={setModalIsOpen}/>
       </div> :
       <></>
   );
