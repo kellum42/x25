@@ -348,3 +348,32 @@ export const getVerificationsBetween = (dates: [Dayjs, Dayjs], item: BudgetLineI
   return output;
 }
 
+export const JSONtoBudgetItem = (json: string): BudgetLineItem|undefined => {
+  try {
+    const item = JSON.parse(json) as BudgetLineItem;
+    // Parse dayjs.
+
+    if (item.frequency === BudgetLineItemFrequency.Once) {
+      item.date = dayjs(item.date);
+
+    } else {
+      item.starts = dayjs(item.starts);
+      item.ends = item.ends === -1 ? -1 : dayjs(item.ends);
+    }
+    
+    return item
+    // const goodItem: BudgetLineItem = item as BudgetLineItem;
+    // console.log(goodItem);
+
+  } catch (e) {
+    if (typeof e === "string") {
+      console.log(e);
+    
+    } else if (e instanceof Error) {
+      console.log( e.message );
+
+    } else {
+      console.log( "An unknown error occurred getting the budgets." );
+    }
+  }
+}

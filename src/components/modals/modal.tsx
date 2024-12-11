@@ -6,7 +6,7 @@ type ModalProps = {
   isOpen: boolean,
   setIsOpen: React.Dispatch<SetStateAction<boolean>>,
   isLoading?: boolean,
-  action?: { label: string, fn: () => void, cancel?: string }
+  action?: { label: string, actionFn: () => void, cancel?: string, cancelFn?: () => void }
 }
 
 export const Modal: React.FC<ModalProps> = (props) => {
@@ -35,8 +35,8 @@ export const Modal: React.FC<ModalProps> = (props) => {
               </div>
             </div>
             { action && <div className="modal-footer flex-center">
-							<button onClick={() => setIsOpen(false)} type="reset" className="btn btn-light me-3">{ action.cancel ?? "Discard" }</button>
-							<button type="submit" onClick={() => action.fn()} className="btn btn-primary">
+							<button onClick={() => action.cancelFn ? action.cancelFn() : setIsOpen(false)} type="reset" className="btn btn-light me-3">{ action.cancel ?? "Discard" }</button>
+							<button type="submit" onClick={() => action.actionFn()} className="btn btn-primary">
 								<span className="indicator-label">{ action.label }</span>
 								<span className="indicator-progress">Please wait...
 								<span className="spinner-border spinner-border-sm align-middle ms-2"></span></span>

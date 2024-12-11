@@ -7,7 +7,7 @@ import { BudgetLineItemCard } from "../../../components/budget-line-item-card"
 import { ytd } from "../../../utils/budget";
 import { BudgetItemQuery } from "../../../components/budget-item-query";
 import { BudgetLineItem } from "../../../hooks/useBudgetDetails";
-import { AddNewBudgetItemModal } from "../../../components/modals/add-new-budget-item-modal"
+import { AddNewBudgetItem } from "../../../components/modals/add-new-budget-item-modal"
 
 // TODO:
 //  - Fix ytd's. Some of them are wrong.
@@ -54,7 +54,7 @@ const BudgetLineItems: React.FC = () => {
             })}
           </div>
         </div>
-        <AddNewBudgetItemModal isOpen={modalIsOpen} setIsOpen={setModalIsOpen}/>
+        <AddNewBudgetItem isOpen={modalIsOpen} setIsOpen={setModalIsOpen}/>
       </div> :
       <></>
   );

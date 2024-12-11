@@ -1,10 +1,13 @@
 import React, { useState, useEffect, ReactNode, createContext } from 'react';
 import dayjs, { Dayjs } from 'dayjs'
+import { z } from "zod";
 
 import { saveBudget, getBudget } from '../utils/localStorage';
 // import { getSampleBudgetLineItems } from '../utils/mockData';
 
 export enum BudgetLineItemFrequency { Once = "Once", Weekly = "weekly", Biweekly = "Bi-Weekly", Monthly = "Monthly" }
+// const zBudgetItemFrequency = z.enum([ "Once", "Weekly", "BiWeekly", "Monthly"]);
+// type BudgetLineItemFrequency = z.infer< typeof zBudgetItemFrequency>;
 export enum WeeklyBudgetLineItemDays {
   Monday = "Monday",
   Tuesday = "Tuesday",

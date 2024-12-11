@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { Budget, BudgetLineItemFrequency } from "../hooks/useBudgetDetails"
+import { Budget, BudgetLineItem, BudgetLineItemFrequency } from "../hooks/useBudgetDetails"
 
 const budgetsKey = "x25__budgets";
 const intialUseKey = "x25__initialuse";
@@ -75,4 +75,14 @@ export const saveBudget = (budget: Budget): string|void => {
   budgets[ budget.id ] = budget;
   localStorage.setItem( budgetsKey, JSON.stringify( budgets ));
   localStorage.setItem( intialUseKey, "initial" );
+}
+
+export const saveBudgetItem = ( slug: string, item: BudgetLineItem ): string | void => {
+  const budget = getBudget( slug );
+
+  if ( budget !== null ){
+    const _budget = { ...budget } as Budget;
+    _budget.budgetLineItems.push( item );
+    return saveBudget( _budget );
+  }
 }

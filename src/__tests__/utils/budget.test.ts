@@ -3,19 +3,19 @@ import dayjs from 'dayjs'
 import {
   daysTillFirstOccurrence,
   calculateBalanceOver,
-  getWeeksBudgetLineItems,
   getVerificationOn,
   getVerificationsBetween,
-  calculateBalance
+  calculateBalance,
+  JSONtoBudgetItem
 } from "../../utils/budget";
-import { 
-  BudgetLineItem, 
-  BudgetLineItemFrequency, 
+import {
+  BudgetLineItem,
+  BudgetLineItemFrequency,
   WeeklyBudgetLineItemDays,
 } from "../../hooks/useBudgetDetails";
 import { sampleBudgetTwoItems } from '../../utils/sample-budget-two';
 
-describe( 'daysTillFirstOccurrence()', () => {
+describe('daysTillFirstOccurrence()', () => {
   test('it gives 18 days between April 27th and a monthly bill due on May 15th', () => {
     const bill: BudgetLineItem = {
       id: "1",
@@ -63,30 +63,30 @@ describe( 'daysTillFirstOccurrence()', () => {
   })
 });
 
-describe( 'calculateBalance()', () => {
-  test( 'computes balance correctly', () => {
-    const balance = calculateBalance( dayjs( "03-01-2024" ), 2000, sampleBudgetTwoItems, dayjs( "03-08-2024" ) );
-    expect( balance ).toBe( 1182.79 );
+describe('calculateBalance()', () => {
+  test('computes balance correctly', () => {
+    const balance = calculateBalance(dayjs("03-01-2024"), 2000, sampleBudgetTwoItems, dayjs("03-08-2024"));
+    expect(balance).toBe(1182.79);
   });
 
-  test( 'computes balance correctly again', () => {
-    const balance = calculateBalance( dayjs( "07-02-2024" ), 16468.40, sampleBudgetTwoItems, dayjs( "12-27-2024" ) );
-    expect( balance ).toBe( 44072.30 );
+  test('computes balance correctly again', () => {
+    const balance = calculateBalance(dayjs("07-02-2024"), 16468.40, sampleBudgetTwoItems, dayjs("12-27-2024"));
+    expect(balance).toBe(44072.30);
   });
 
-  const verifiedSampleBudgetTwoItems = sampleBudgetTwoItems.map( (item) => {
-    if ( item.name === "Apple Music" ){
+  const verifiedSampleBudgetTwoItems = sampleBudgetTwoItems.map((item) => {
+    if (item.name === "Apple Music") {
       item.vers = {
         "2024": {
-          "3": { "26": 18.27 }, 
+          "3": { "26": 18.27 },
           "4": { "26": 19.84 }
         }
       }
-    } else if ( item.name === "Paycheck" ){
+    } else if (item.name === "Paycheck") {
       item.vers = {
         "2024": {
-          "3": { "14": 3120.30 }, 
-          "4": { "11": 2999.45 }, 
+          "3": { "14": 3120.30 },
+          "4": { "11": 2999.45 },
           "5": { "9": 3300, "23": 3001.40 }
         }
       }
@@ -94,14 +94,32 @@ describe( 'calculateBalance()', () => {
     return item;
   })
 
-  test( 'computes balance correctly with verifications', () => {
-    const balance = calculateBalance( dayjs( "03-01-2024" ), 2000, verifiedSampleBudgetTwoItems, dayjs( "03-15-2024" ) );
-    expect( balance ).toBe( 3503.09 );
+  test('computes balance correctly with verifications', () => {
+    const balance = calculateBalance(dayjs("03-01-2024"), 2000, verifiedSampleBudgetTwoItems, dayjs("03-15-2024"));
+    expect(balance).toBe(3503.09);
   });
 
-  test( 'computes balance correctly with verifications again', () => {
-    const balance = calculateBalance( dayjs( "03-14-2024" ), 382.79, verifiedSampleBudgetTwoItems, dayjs( "07-01-2024" ) );
-    expect( balance ).toBe( 16482.82 );
+  test('computes balance correctly with verifications again', () => {
+    const balance = calculateBalance(dayjs("03-14-2024"), 382.79, verifiedSampleBudgetTwoItems, dayjs("07-01-2024"));
+    expect(balance).toBe(16482.82);
+  });
+});
+
+describe('JSONtoBudgetItem()', () => {
+  test('it parses Record correctly', () => {
+    const _item: Record<string, string> = {
+      id: "12345",
+      name: "Test Item",
+      // amount: "300.00",
+      type: "expense",
+      frequency: "monthly",
+      dates: "1,15",
+      // starts: "1/1/2025",
+      ends: "-1"
+    }
+
+    const item = JSONtoBudgetItem( JSON.stringify( _item ) );
+    expect( item ).toBeDefined();
   });
 });
 
