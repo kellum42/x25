@@ -5,7 +5,8 @@ import {
   BudgetItem,
   GetBudgetsResponse,
   GetBudgetResponse,
-  SaveResponse
+  SaveResponse,
+  x25Error
 } from "./schemas";
 
 const budgetsKey = "x25__budgets";
@@ -110,4 +111,22 @@ export const saveBudgetItem = (slug: string, item: BudgetItem): SaveResponse => 
 
   budget.items.push(item);
   return saveBudget(budget);
+}
+
+export const deleteBudgetItem = (id: string, item: BudgetItem): {status: "success"} | x25Error => {
+  const response = getBudgets();
+
+  if (response.status === "fail") {
+    return { status: "fail", message: "Error occurred deleting budget item. Please try again later." };
+  }
+
+  const budgets = response.data;
+  if ( id in budgets){
+    const budget = budgets[id];
+    budget.items = budget.items.filter((_item) => _item.id !== item.id);
+    return saveBudget( budget );
+    
+  } else {
+    return { status: "fail", message: "Could not find budget." };
+  }
 }

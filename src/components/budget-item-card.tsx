@@ -5,19 +5,23 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { BudgetItem, BudgetItemFrequency } from "../utils/schemas";
 import { calculateBalance } from "../utils/budget";
 import { Menu, MenuItem } from "./floating-menu";
+import { defaultProps } from "react-select/dist/declarations/src/Select";
 
 dayjs.extend(isSameOrAfter);
 
 type BudgetItemCardProps = {
   item: BudgetItem,
   date: Dayjs,
-  runningTotal: number | null
+  runningTotal: number | null,
+  onDelete: (item: BudgetItem) => void
 }
 
-// TODO: - fix menu button not changing to blue on hover.
+// TODO: 
+//  - fix menu button not changing to blue on hover.
+//  - have actions and filters run on apply button click.
 
-export const BudgetItemCard: React.FC<BudgetItemCardProps> = ({ item, date, runningTotal }) => {
-
+export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
+  const { item, date, runningTotal, onDelete } = props;
   const started = item.frequency !== BudgetItemFrequency.once && date.isSameOrAfter(item.starts);
   const ended = item.frequency !== BudgetItemFrequency.once && item.ends !== "-1" && date.isAfter(item.ends);
 
@@ -63,7 +67,7 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = ({ item, date, runn
                 {/* <MenuItem label="Undo" onClick={() => console.log("Undo")} /> */}
                 <MenuItem label="Edit"/>
                 <MenuItem label="Duplicate" />
-                <MenuItem label="Delete" />
+                <MenuItem label="Delete" onClick={() => onDelete( item )}/>
               </Menu>
 
               {/* <div className="d-none menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3" data-kt-menu="true">

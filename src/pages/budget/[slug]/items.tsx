@@ -8,6 +8,8 @@ import { BudgetItemQuery } from "../../../components/budget-item-query"
 import { BudgetItemCard } from "../../../components/budget-item-card"
 import { ytd } from "../../../utils/budget";
 import { AddNewBudgetItem } from "../../../components/modals/add-new-budget-item-modal"
+import { Popup } from "../../../components/popups/popup"
+import { deleteBudgetItem } from "../../../utils/localStorage"
 
 // TODO:
 //  - Fix ytd's. Some of them are wrong.
@@ -27,6 +29,7 @@ const BudgetItems: React.FC = () => {
 
   const [queryFn, setQueryFn] = useState<((items: BudgetItem[]) => BudgetItem[])>(initialQuery)
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
+  const [deleteItem, setDeleteItem] = useState<BudgetItem|null>(null);
 
   const queriedItems: BudgetItem[] = budget === undefined ? [] : queryFn(budget.items);
   
@@ -50,12 +53,34 @@ const BudgetItems: React.FC = () => {
               const runningTotal = ytd(date, budget.startDate, item);
 
               return (
-                <BudgetItemCard key={i} item={item} date={date} runningTotal={runningTotal} />
+                <BudgetItemCard 
+                  key={i} 
+                  item={item} 
+                  date={date} 
+                  runningTotal={runningTotal} 
+                  onDelete={(item) => {
+                    setDeleteItem(item);
+                  }}  
+                />
               )
             })}
           </div>
         </div>
         <AddNewBudgetItem isOpen={modalIsOpen} setIsOpen={setModalIsOpen}/>
+        { deleteItem && 
+          <Popup 
+            item={deleteItem} 
+            onDeleteItem={(item) => {
+              const response = deleteBudgetItem(budget.id, item);
+              if ( response.status === "success" ){
+                setDeleteItem( null );
+              } else {
+                console.log( response.message );
+              }
+            }}
+            onCancel={() => setDeleteItem(null)}
+          />
+        }
       </div>
       }
       { error &&
