@@ -2,24 +2,24 @@ import React from "react";
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
-import { BudgetLineItem, BudgetLineItemFrequency } from "../hooks/useBudgetDetails";
+import { BudgetItem, BudgetItemFrequency } from "../utils/schemas";
 import { calculateBalance } from "../utils/budget";
 import { Menu, MenuItem } from "./floating-menu";
 
 dayjs.extend(isSameOrAfter);
 
-type BudgetLineItemCardProps = {
-  item: BudgetLineItem,
+type BudgetItemCardProps = {
+  item: BudgetItem,
   date: Dayjs,
   runningTotal: number | null
 }
 
 // TODO: - fix menu button not changing to blue on hover.
 
-export const BudgetLineItemCard: React.FC<BudgetLineItemCardProps> = ({ item, date, runningTotal }) => {
+export const BudgetItemCard: React.FC<BudgetItemCardProps> = ({ item, date, runningTotal }) => {
 
-  const started = item.frequency !== BudgetLineItemFrequency.Once && date.isSameOrAfter(item.starts);
-  const ended = item.frequency !== BudgetLineItemFrequency.Once && item.ends !== -1 && date.isAfter(item.ends);
+  const started = item.frequency !== BudgetItemFrequency.once && date.isSameOrAfter(item.starts);
+  const ended = item.frequency !== BudgetItemFrequency.once && item.ends !== "-1" && date.isAfter(item.ends);
 
   const MenuButton: React.FC = () => {
     return (
@@ -43,7 +43,7 @@ export const BudgetLineItemCard: React.FC<BudgetLineItemCardProps> = ({ item, da
       <div className="card mb-6 mb-xl-9">
         <div className="card-body p-6">
           <div className="d-flex flex-stack mb-3">
-            {item.frequency === BudgetLineItemFrequency.Weekly && <div className="badge badge-light-info">weekly</div>}
+            {item.frequency === BudgetItemFrequency.weekly && <div className="badge badge-light-info">weekly</div>}
             <div></div>
             <div>
               {/* <button type="button" className="btn btn-sm btn-icon btn-color-light-dark btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
@@ -117,25 +117,25 @@ export const BudgetLineItemCard: React.FC<BudgetLineItemCardProps> = ({ item, da
           </div>
           <div className="fs-7 fw-semibold text-gray-600 mb-5">
             {/* { item.type === "expense" ? "Billed " : "Credited "} */}
-            {item.frequency === BudgetLineItemFrequency.Weekly && <span>Every {item.day}</span>}
-            {item.frequency === BudgetLineItemFrequency.Biweekly && <span>Every other {item.day}</span>}
-            {item.frequency === BudgetLineItemFrequency.Once && <span>One-time on {item.date.format("MMM D, YYYY")}</span>}
-            {item.frequency === BudgetLineItemFrequency.Monthly && <span>{item.dates.map(
+            {item.frequency === BudgetItemFrequency.weekly && <span>Every {item.day}</span>}
+            {item.frequency === BudgetItemFrequency.biweekly && <span>Every other {item.day}</span>}
+            {item.frequency === BudgetItemFrequency.once && <span>One-time on {item.date.format("MMM D, YYYY")}</span>}
+            {item.frequency === BudgetItemFrequency.monthly && <span>{item.dates.map(
               (_date, i) => {
                 let a: string = "";
                 if (i !== 0) { a += ", "; }
                 a += _date.toString();
-                if ([1, 21, 31].includes(_date)) { a += "st"; }
-                else if ([2, 22].includes(_date)) { a += "nd"; }
-                else if ([3, 23].includes(_date)) { a += "rd"; }
+                if (["1", "21", "31"].includes(_date)) { a += "st"; }
+                else if (["2", "22"].includes(_date)) { a += "nd"; }
+                else if (["3", "23"].includes(_date)) { a += "rd"; }
                 else { a += "th"; }
                 return a;
               })} of month</span>
             }
 
-            {item.frequency !== BudgetLineItemFrequency.Once && <p className="my-2">
+            {item.frequency !== BudgetItemFrequency.once && <p className="my-2">
               {started ? "Began" : "Begins"}: {item.starts.format("MMM D, YYYY")}
-              {item.ends !== -1 && (ended ? ", Ended: " : ", Ends: ") + item.ends.format("MMM D, YYYY")}
+              {item.ends !== "-1" && (ended ? ", Ended: " : ", Ends: ") + item.ends.format("MMM D, YYYY")}
             </p>}
           </div>
           <div className="d-flex flex-stack flex-wrapr">

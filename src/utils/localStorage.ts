@@ -1,88 +1,113 @@
 import dayjs from "dayjs";
-import { Budget, BudgetLineItem, BudgetLineItemFrequency } from "../hooks/useBudgetDetails"
+
+import {
+  Budget,
+  BudgetItem,
+  GetBudgetsResponse,
+  GetBudgetResponse,
+  SaveResponse
+} from "./schemas";
 
 const budgetsKey = "x25__budgets";
 const intialUseKey = "x25__initialuse";
 
-export const getBudgets = (): (Record<string, Budget> | string) => {
+export const getBudgets = (): GetBudgetsResponse => {
   const firstSave = null === localStorage.getItem(intialUseKey);
 
+  // No budgets have been saved yet.
   if (firstSave) {
-    return {};
+    return { status: "success", data: {} };
   }
 
   const _budgets = localStorage.getItem(budgetsKey);
   if (_budgets === null) {
     // error out
-    return "Error occurred pulling budgets. Please try again later.";
+    return {
+      status: "fail",
+      message: "Error occurred pulling budgets. Please try again later."
+    };
 
   } else {
     try {
       const budgets: Record<string, Budget> = JSON.parse(_budgets);
       // Parse dayjs.
-      Object.entries( budgets ).forEach(([ _id, _budget ]) => {
+      Object.entries(budgets).forEach(([_id, _budget]) => {
         budgets[_id] = {
           ..._budget,
-          startDate: dayjs( _budget.startDate ),
-          budgetLineItems: _budget.budgetLineItems.map(( _item, _ ) => {
-            if ( _item.frequency === BudgetLineItemFrequency.Once ){
-              _item.date = dayjs( _item.date );
+          startDate: dayjs(_budget.startDate),
+          items: _budget.items.map((_item, _) => {
+            if (_item.frequency === "Once") {
+              _item.date = dayjs(_item.date);
             } else {
-              _item.starts = dayjs( _item.starts );
-              _item.ends = _item.ends === -1 ? -1 : dayjs( _item.ends );
+              _item.starts = dayjs(_item.starts);
+              _item.ends = _item.ends === "-1" ? "-1" : dayjs(_item.ends);
             }
             return _item;
           })
         }
       });
-      return budgets;
+      return { status: "success", data: budgets };
 
     } catch (e) {
+      let message;
       if (typeof e === "string") {
-        return e;
+        message = e;
       } else if (e instanceof Error) {
-        return e.message;
+        message = e.message;
 
       } else {
-        return "An unknown error occurred getting the budgets."
+        message = "An unknown error occurred getting the budgets."
       }
+      return { status: "fail", message };
     }
   }
 }
 
-export const getBudget = (slug: string): Budget | null => {
-  const budgets = getBudgets();
-  let budget = null;
-  if ( typeof budgets !== "string" ){
-    Object.entries( budgets ).forEach(([ _, _budget ]) => {
-      if ( slug === _budget.slug ){
-        budget = _budget;
-      }
-    })
+export const getBudget = (slug: string): GetBudgetResponse => {
+  const response = getBudgets();
+  // if ( response instanceof x25Error ) {
+  //   return response;
+  // }
+  if (response.status === "fail") {
+    return response;
   }
+  let budget: GetBudgetResponse = {
+    status: "fail",
+    message: `Budget with slug '${slug}' could not be found.`
+  };
+  Object.entries(response.data).forEach(([_, _budget]) => {
+    if (slug === _budget.slug) {
+      budget = { status: "success", data: _budget };
+    }
+  })
   return budget;
 }
 
-export const saveBudget = (budget: Budget): string|void => {
-  const budgets = getBudgets();
+export const saveBudget = (budget: Budget): SaveResponse => {
+  const response = getBudgets();
 
-  if (typeof budgets === "string") {
-    // error out
-    console.log( budgets );
-    return "Error occurred saving  budget. Please try again later.";
+  if (response.status === "fail") {
+    return { status: "fail", message: "Error occurred saving budget. Please try again later." };
   }
 
-  budgets[ budget.id ] = budget;
-  localStorage.setItem( budgetsKey, JSON.stringify( budgets ));
-  localStorage.setItem( intialUseKey, "initial" );
+  const budgets = response.data;
+
+  budgets[budget.id] = budget;
+  localStorage.setItem(budgetsKey, JSON.stringify(budgets));
+  localStorage.setItem(intialUseKey, "initial");
+
+  return { status: "success" }
 }
 
-export const saveBudgetItem = ( slug: string, item: BudgetLineItem ): string | void => {
-  const budget = getBudget( slug );
+export const saveBudgetItem = (slug: string, item: BudgetItem): SaveResponse => {
+  const response = getBudget(slug);
 
-  if ( budget !== null ){
-    const _budget = { ...budget } as Budget;
-    _budget.budgetLineItems.push( item );
-    return saveBudget( _budget );
+  if (response.status === "fail") {
+    return { status: "fail", message: "Error occurred saving budget item. Please try again later." };
   }
+
+  const budget = response.data;
+
+  budget.items.push(item);
+  return saveBudget(budget);
 }

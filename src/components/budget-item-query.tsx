@@ -2,7 +2,7 @@ import React, { SetStateAction, useContext, useEffect, useState } from "react"
 import { Dayjs } from "dayjs";
 
 import { DateChanger } from "./datechanger";
-import { BudgetLineItem, BudgetLineItemFrequency } from "../hooks/useBudgetDetails";
+import { BudgetItem, BudgetItemFrequency } from "../utils/schemas";
 import { calculateBalance, getUpcomingBudgetItems, itemIsActive, ytd } from "../utils/budget";
 import { BudgetContext } from "../contexts/budgetContext";
 import { numberOrNull } from "../utils/util";
@@ -21,12 +21,12 @@ export enum BudgetItemSorts {
   farthest = "Farthest"
 }
 export type BudgetItemFilters = {
-  frequency: BudgetLineItemFrequency[],
+  frequency: BudgetItemFrequency[],
   state: "active" | "inactive" | null
 }
 
 type BudgetItemQueryProps = {
-  setQuery: React.Dispatch<SetStateAction<(items: BudgetLineItem[]) => BudgetLineItem[]>>
+  setQuery: React.Dispatch<SetStateAction<(items: BudgetItem[]) => BudgetItem[]>>
 }
 
 export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
@@ -42,12 +42,9 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
   const defaults: { sort: BudgetItemSorts, filters: BudgetItemFilters } = {
     sort: BudgetItemSorts.PHtoL,
     filters: { 
-      frequency: [
-        BudgetLineItemFrequency.Once, 
-        BudgetLineItemFrequency.Weekly, 
-        BudgetLineItemFrequency.Monthly, 
-        BudgetLineItemFrequency.Biweekly
-      ], 
+      frequency: Object.keys(BudgetItemFrequency).map(
+        key => BudgetItemFrequency[key as keyof typeof BudgetItemFrequency]
+      ), 
       state: null 
     }
   }
@@ -55,10 +52,10 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
   const [sort, setSort] = useState<BudgetItemSorts>(defaults.sort);
   const [filters, setFilters] = useState<BudgetItemFilters>(defaults.filters);
 
-  const sortItems = (items: BudgetLineItem[]): BudgetLineItem[] => {
-    let _items: BudgetLineItem[] = [];
+  const sortItems = (items: BudgetItem[]): BudgetItem[] => {
+    let _items: BudgetItem[] = [];
 
-    if (budget !== null) {
+    if (budget !== undefined) {
       if (sort === BudgetItemSorts.upcoming || sort === BudgetItemSorts.farthest) {
         _items = getUpcomingBudgetItems(date, -1, items, sort === BudgetItemSorts.upcoming ? "asc" : "desc").map((_item) => _item.item);
 
@@ -76,9 +73,9 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
     return _items;
   }
 
-  const filterItems = (items: BudgetLineItem[]): BudgetLineItem[] => {
+  const filterItems = (items: BudgetItem[]): BudgetItem[] => {
     return items.filter((item) => {
-      if (budget !== null) {
+      if (budget !== undefined) {
         let willShow = true;
 
         willShow = filters.frequency.includes(item.frequency);
@@ -95,7 +92,7 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
   }
 
   useEffect(() => {
-    const fn = () => (items: BudgetLineItem[]): BudgetLineItem[] => {
+    const fn = () => (items: BudgetItem[]): BudgetItem[] => {
       let _items = items;
       _items = filterItems(_items);
       _items = sortItems(_items);
@@ -163,7 +160,7 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
         </div>
       </div>
       {budget &&
-        <p className="fs-5 fw-semibold mt-6 mb-4">{budget.budgetLineItems.length} Budget Items
+        <p className="fs-5 fw-semibold mt-6 mb-4">{budget.items.length} Budget Items
           <span className="text-gray-600 ps-4">by {sort}</span>
         </p>
       }

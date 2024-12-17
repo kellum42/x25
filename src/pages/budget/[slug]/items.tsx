@@ -2,37 +2,38 @@ import React, { useContext, useState } from "react"
 import type { PageProps } from "gatsby"
 
 import { Layout } from "../../../components/layout"
-import { BudgetContextProvider, BudgetContext } from "../../../contexts/budgetContext"
-import { BudgetLineItemCard } from "../../../components/budget-line-item-card"
+import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
+import { BudgetItem } from "../../../utils/schemas"
+import { BudgetItemQuery } from "../../../components/budget-item-query"
+import { BudgetItemCard } from "../../../components/budget-item-card"
 import { ytd } from "../../../utils/budget";
-import { BudgetItemQuery } from "../../../components/budget-item-query";
-import { BudgetLineItem } from "../../../hooks/useBudgetDetails";
 import { AddNewBudgetItem } from "../../../components/modals/add-new-budget-item-modal"
 
 // TODO:
 //  - Fix ytd's. Some of them are wrong.
 
-const BudgetLineItems: React.FC = () => {
+const BudgetItems: React.FC = () => {
   const context = useContext(BudgetContext);
 
   if (!context) {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { budget, date } = context;
+  const { budget, error, date } = context;
 
-  const initialQuery = (): (items: BudgetLineItem[]) => BudgetLineItem[] => {
-    return (items: BudgetLineItem[]) => items;
+  const initialQuery = (): (items: BudgetItem[]) => BudgetItem[] => {
+    return (items: BudgetItem[]) => items;
   }
 
-  const [queryFn, setQueryFn] = useState<((items: BudgetLineItem[]) => BudgetLineItem[])>(initialQuery)
+  const [queryFn, setQueryFn] = useState<((items: BudgetItem[]) => BudgetItem[])>(initialQuery)
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
 
-  const queriedItems: BudgetLineItem[] = budget === null ? [] : queryFn(budget.budgetLineItems);
+  const queriedItems: BudgetItem[] = budget === undefined ? [] : queryFn(budget.items);
   
 
   return (
-    budget ?
+    <>
+    { budget &&
       <div>
         <div className="d-flex flex-row flex-stack mb-4">
           <div>
@@ -49,14 +50,18 @@ const BudgetLineItems: React.FC = () => {
               const runningTotal = ytd(date, budget.startDate, item);
 
               return (
-                <BudgetLineItemCard key={i} item={item} date={date} runningTotal={runningTotal} />
+                <BudgetItemCard key={i} item={item} date={date} runningTotal={runningTotal} />
               )
             })}
           </div>
         </div>
         <AddNewBudgetItem isOpen={modalIsOpen} setIsOpen={setModalIsOpen}/>
-      </div> :
-      <></>
+      </div>
+      }
+      { error &&
+        <div>{error.message}</div>
+      }
+      </>
   );
 };
 
@@ -64,7 +69,7 @@ const ItemsPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
   return (
     <Layout>
       <BudgetContextProvider slug={slug}>
-        <BudgetLineItems />
+        <BudgetItems />
       </BudgetContextProvider>
     </Layout>
   )

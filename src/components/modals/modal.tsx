@@ -6,11 +6,12 @@ type ModalProps = {
   isOpen: boolean,
   setIsOpen: React.Dispatch<SetStateAction<boolean>>,
   isLoading?: boolean,
-  action?: { label: string, actionFn: () => void, cancel?: string, cancelFn?: () => void }
+  action?: { label: string, actionFn: () => void, cancel?: string, cancelFn?: () => void },
+  error?: string | null
 }
 
 export const Modal: React.FC<ModalProps> = (props) => {
-  const { title, children, isOpen, setIsOpen, isLoading, action } = props;
+  const { title, children, isOpen, setIsOpen, isLoading, action, error } = props;
 
   // style={{ display: "block", paddingLeft: "0px" }}
   return (
@@ -34,14 +35,25 @@ export const Modal: React.FC<ModalProps> = (props) => {
                 {children}
               </div>
             </div>
-            { action && <div className="modal-footer flex-center">
-							<button onClick={() => action.cancelFn ? action.cancelFn() : setIsOpen(false)} type="reset" className="btn btn-light me-3">{ action.cancel ?? "Discard" }</button>
-							<button type="submit" onClick={() => action.actionFn()} className="btn btn-primary">
-								<span className="indicator-label">{ action.label }</span>
-								<span className="indicator-progress">Please wait...
-								<span className="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-							</button>
-						</div> }
+            {error &&
+              <div className="fv-plugins-message-container invalid-feedback">
+                <div data-field="target_assign" data-validator="notEmpty">{error}</div>
+              </div>
+            }
+            {action &&
+              <div className="modal-footer flex-center">
+                <button onClick={() => action.cancelFn ? action.cancelFn() : setIsOpen(false)} type="reset" className="btn btn-light me-3">{action.cancel ?? "Discard"}</button>
+                <button type="submit" onClick={() => action.actionFn()} className="btn btn-primary">
+                  {
+                    isLoading ?
+                      <span className="indicator-progress">Please wait...
+                        <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+                      </span> :
+                      <span className="indicator-label">{action.label}</span>
+                  }
+                </button>
+              </div>
+            }
           </div>
         </div>
       </div>

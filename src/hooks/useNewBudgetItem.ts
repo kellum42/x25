@@ -1,24 +1,26 @@
-import { useState } from "react";
-import { saveBudgetItem } from "../utils/localStorage";
-import { BudgetLineItemFrequency, WeeklyBudgetLineItemDays } from "./useBudgetDetails";
-import dayjs from "dayjs";
+import { z } from "zod";
 
-export const useAddNewBudgetItem = (): {
+import { useEffect, useState } from "react";
+// import { saveBudgetItem } from "../utils/localStorage";
+// import { BudgetItem, zBudgetItem } from "./useBudgetDetails";
+import dayjs from "dayjs";
+import { getUniqueID } from "../utils/util";
+import { BudgetItem } from "../utils/schemas";
+import { zBudgetItem } from "../utils/schemas";
+import { saveBudgetItem } from "../utils/localStorage";
+
+export type UseNewBudgetItemType = {
   fields: { name: string, amount: string, type: string, frequency: string, starts: string, ends: string, date: string, dates: string, day: string },
   loading: boolean,
   error: string | null,
   screen: 0 | 1,
-  save: () => void,
+  save: (slug?: string) => boolean,
   next: () => void,
   back: () => void,
   update: (name: string, value?: string) => void
-} => {
-  // save()
-  // error
-  // fields
-  // next()
-  // loading
-  // screen
+};
+
+export const useNewBudgetItem = (): UseNewBudgetItemType => {
 
   const [fields, setFields] = useState({
     name: "",
@@ -36,7 +38,7 @@ export const useAddNewBudgetItem = (): {
   const [error, setError] = useState<string | null>(null);
   const [screen, setScreen] = useState<0 | 1>(0);
 
-  const update = (name: string, value?: string ) => {
+  const update = (name: string, value?: string) => {
     if (value !== undefined) {
       if (name === "type") {
         if ("income" !== value && "expense" !== value) { return; }
@@ -49,80 +51,74 @@ export const useAddNewBudgetItem = (): {
     }
   };
 
-  const validate = () => {
-    if ( !fields.name || fields.name.length > 2 ){
-      setError( "Invald name" );
+  const parseError = (err: z.ZodError): string => {
+    if ( err.issues && err.issues.length > 0 ){
+      const issue = err.issues[0];
+      return ( issue.path.length > 0 ? issue.path[0].toString() + " - "  : "" ) + issue.message;
     }
-    if ( !fields.type || ![ "income", "expense" ].includes( fields.type )){
-      setError( "Invalid type." );
-    }
-    if ( !fields.frequency || !Object.keys( BudgetLineItemFrequency ).includes( fields.frequency )){
-      setError( "Invalid frequency." );
-    }
-    if ( fields.frequency === BudgetLineItemFrequency.Once ){
-      if ( fields["date"] === undefined ){
-        setError( "Date is required." );
-      }
-    } else {
-      if ( fields[ "starts" ] === undefined || !fields[ "starts" ]){
-        setError( "Start date is required." ); return;
-      }
-      if ( fields[ "ends" ] === undefined || !fields[ "ends" ]){
-        setError( "End date is required." ); return;
-      }
-      if ( fields.ends !== "-1" && dayjs( fields.starts ).isAfter( dayjs( fields.ends ) )){
-        setError( "Invalid range given." );
-      }
-      if ( fields.frequency === BudgetLineItemFrequency.Monthly ){
-        if ( fields[ "dates" ] === undefined || !fields[ "dates" ]){
-          setError( "Dates is required." );
-        }
-      }
-      if ( fields.frequency === BudgetLineItemFrequency.Weekly || fields.frequency === BudgetLineItemFrequency.Biweekly ){
-        if ( fields[ "day" ] === undefined || !Object.keys( WeeklyBudgetLineItemDays ).includes( fields.day )){
-          setError( "Day is required." );
-        }
-      }
-    }
-    return error === null
+    return "An error has occurred. Please try again later.";
   }
 
-  const save = ( slug: string ) => {
-    // console.log(fields);
-    validate();
+  const validate = (): z.SafeParseReturnType<BudgetItem, BudgetItem> => {
+    const obj: Record<string, any> = { "id": getUniqueID() };
 
-    if ( error === null ){
-      saveBudgetItem( slug, );
+    Object.keys(fields).map((key) => {
+      const value: string = fields[key as keyof typeof fields];
+
+      if ("starts" === key || "date" === key || "ends" === key) {
+        if (key === "ends" && value === "-1") {
+          obj[key] = value;
+
+        } else {
+          const date = dayjs(value);
+          if (date.isValid()) {
+            obj[key] = date;
+          }
+        }
+
+      } else if ("amount" === key) {
+        obj[key] = parseFloat(value);
+
+      } else if ("dates" === key) {
+        obj[key] = value.split(",");
+
+      } else {
+        obj[key] = value;
+      }
+    })
+
+    return zBudgetItem.safeParse(obj);
+  }
+
+  const save = (slug?: string): boolean => {
+    setError( null ); // reset errors.
+
+    if ( slug === undefined ){
+      setError( "Can't find budget." );
+      return false;
     }
 
-    // try {
-    //   const _item = inputs;
-    //   _item.id = getUniqueID();
-    //   const item = JSON.parse(JSON.stringify(_item));
-    //   // Parse dayjs.
+    const parse = validate();
+    
+    if ( parse.success ){
+      const item = parse.data as BudgetItem;
+      setLoading( true );
+      const response = saveBudgetItem( slug, item );
+      setLoading( false );
 
-    //   if (item.frequency === BudgetLineItemFrequency.Once) {
-    //     item.date = dayjs(item.date);
+      if ( response.status === "fail" ){
+        setError( response.message );
+      
+      } else {
+        return true;
+      }
+    
 
-    //   } else {
-    //     item.starts = dayjs(item.starts);
-    //     item.ends = item.ends === -1 ? -1 : dayjs(item.ends);
-    //   }
+    } else {
+      setError( parseError( parse.error ));
+    }
 
-    //   const goodItem: BudgetLineItem = item as BudgetLineItem;
-    //   console.log(goodItem);
-
-    // } catch (e) {
-    //   if (typeof e === "string") {
-    //     console.log(e);
-
-    //   } else if (e instanceof Error) {
-    //     console.log( e.message );
-
-    //   } else {
-    //     console.log( "An unknown error occurred getting the budgets." );
-    //   }
-    // }
+    return false;
   };
 
   const next = () => {

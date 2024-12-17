@@ -3,7 +3,7 @@ import Select, { SingleValue, MultiValue } from 'react-select'
 
 import { Menu } from "./floating-menu";
 import { BudgetItemFilters } from "./budget-item-query";
-import { BudgetLineItemFrequency } from "../hooks/useBudgetDetails";
+import { BudgetItemFrequency } from "../utils/schemas";
 
 // TODO:
 //  - Do filtering when the "Apply" button is hit.
@@ -23,14 +23,14 @@ export const BudgetItemFilterMenu: React.FC<{
     }
   }
 
-  const handleFrequencyChange = (change: MultiValue<{ label: string, value: BudgetLineItemFrequency }>) => {
+  const handleFrequencyChange = (change: MultiValue<{ label: string, value: BudgetItemFrequency }>) => {
     const frequency = change.map((_frequency) => _frequency.value);
     props.setFilters({ ...props.filters, frequency });
   }
 
   const getFrequencyOptions = () => {
-    return Object.keys(BudgetLineItemFrequency).map(key => (
-      { value: BudgetLineItemFrequency[key as keyof typeof BudgetLineItemFrequency], label: key }
+    return Object.keys(BudgetItemFrequency).map(key => (
+      { value: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency], label: key }
     ));
   }
 

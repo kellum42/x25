@@ -110,11 +110,11 @@ describe('JSONtoBudgetItem()', () => {
     const _item: Record<string, string> = {
       id: "12345",
       name: "Test Item",
-      // amount: "300.00",
+      amount: "300.00",
       type: "expense",
       frequency: "monthly",
       dates: "1,15",
-      // starts: "1/1/2025",
+      starts: "1/1/2025",
       ends: "-1"
     }
 
