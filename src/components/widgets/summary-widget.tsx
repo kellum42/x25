@@ -1,11 +1,13 @@
 import React, { FC, useContext } from "react"
+import { Link } from "gatsby"
 import dayjs, { Dayjs } from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween';
 
 import { BudgetContext } from "../../contexts/budgetContext";
-import { calculateBalance, daysTillFirstOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getWeeksBudgetLineItems } from "../../utils/budget";
+import { calculateBalance, daysTillFirstOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getUpcomingBudgetItems } from "../../utils/budget";
 import { DateChanger } from "../datechanger";
-import { BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
+// import { BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
+import { BudgetItemFrequency } from "../../utils/schemas";
 
 dayjs.extend(isBetween);
 
@@ -22,14 +24,18 @@ export const SummaryWidget: FC = () => {
     return <></>;
   }
 
-  const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.budgetLineItems, date);
+  const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, date);
 
+  // Gets the verifications due this week.
+  // Friday is the first day of the week.
   const getVersDue = (): number => {
-    const items = getWeeksBudgetLineItems(date, budget.startDate, budget.budgetLineItems);
+    const friday = getFriday(date);
+    const items = getUpcomingBudgetItems(friday, 7, budget.items)
+    // const items = getWeeksBudgetLineItems(date, budget.startDate, budget.items);
     const idealVerCount = items.length;
     let actualVerCount = 0;
     items.forEach((_item, _) => {
-      const ver = getVerificationOn(getFriday(date).add(_item.days, 'day'), _item.item);
+      const ver = getVerificationOn(friday.add(_item.days, 'day'), _item.item);
       actualVerCount += ver === null ? 0 : 1;
     })
     return idealVerCount - actualVerCount;
@@ -41,18 +47,18 @@ export const SummaryWidget: FC = () => {
     const start = date.subtract(3, 'month');
     const end = date;
 
-    budget.budgetLineItems.forEach((item, _) => {
-      if (item.frequency === BudgetLineItemFrequency.Once) {
+    budget.items.forEach((item, _) => {
+      if (item.frequency === BudgetItemFrequency.once) {
         if (item.date.isBetween(start, end, 'day', '[]')) {
           expectedVers++;
           vers += getVerificationOn(item.date, item) === null ? 0 : 1;
         }
       } else {
         const _start = start.isBefore(item.starts) ? start : item.starts;
-        const _end = item.ends !== -1 && item.ends.isBefore(end) ? item.ends : end;
+        const _end = item.ends !== "-1" && item.ends.isBefore(end) ? item.ends : end;
         const _rangeInDays = _end.diff(_start, 'day');
 
-        const i = item.frequency === BudgetLineItemFrequency.Monthly ? item.dates.length : 1;
+        const i = item.frequency === BudgetItemFrequency.monthly ? item.dates.length : 1;
         for (let _i = 0; _i < i; _i++) {
           const _daysTillFirstOccurrence = daysTillFirstOccurrence(item, _start, _i);
           if (typeof _daysTillFirstOccurrence === 'string') { return; }
@@ -61,9 +67,9 @@ export const SummaryWidget: FC = () => {
           if (rangeInDays < 0) { return; }
           const firstOccurrence = _start.add(_daysTillFirstOccurrence, 'day');
 
-          const numOccurrences = item.frequency === BudgetLineItemFrequency.Monthly
+          const numOccurrences = item.frequency === BudgetItemFrequency.monthly
             ? _end.diff(firstOccurrence, 'month') + 1
-            : Math.floor(rangeInDays / (item.frequency == BudgetLineItemFrequency.Weekly ? 7 : 14)) + 1
+            : Math.floor(rangeInDays / (item.frequency == BudgetItemFrequency.weekly ? 7 : 14)) + 1
 
           expectedVers += numOccurrences;
           const _vers = getVerificationsBetween([firstOccurrence, _end], item);
@@ -157,12 +163,16 @@ export const SummaryWidget: FC = () => {
         <div className="separator separator-dashed"></div>
 
         <div className="fs-6 d-flex justify-content-between my-4">
-          <div className="hover text-primary">Line Items</div>
-          <div className="d-flex hover text-primary">{ budget.budgetLineItems.length }</div>
+          <Link to={`/budget/${budget.slug}/items`} className="hover text-primary">Budget Items</Link>
+          <div className="d-flex">{ budget.items.length }</div>
+        </div>
+        <div className="separator separator-dashed"></div>
+
+        <div className="fs-6 d-flex justify-content-between my-4">
+          <Link to={`/budget/${budget.slug}#sims`} className="hover text-primary">Simulations</Link>
+          <div className="d-flex">0</div>
         </div>
       </div>
     </div>
-    //   </div>
-    // </div>
   );
 };

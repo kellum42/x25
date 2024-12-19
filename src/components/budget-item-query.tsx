@@ -42,9 +42,10 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
   const defaults: { sort: BudgetItemSorts, filters: BudgetItemFilters } = {
     sort: BudgetItemSorts.PHtoL,
     filters: { 
-      frequency: Object.keys(BudgetItemFrequency).map(
-        key => BudgetItemFrequency[key as keyof typeof BudgetItemFrequency]
-      ), 
+      // frequency: Object.keys(BudgetItemFrequency).map(
+      //   key => BudgetItemFrequency[key as keyof typeof BudgetItemFrequency]
+      // ), 
+      frequency: Object.values(BudgetItemFrequency),
       state: null 
     }
   }
@@ -78,6 +79,7 @@ export const BudgetItemQuery: React.FC<BudgetItemQueryProps> = (props) => {
       if (budget !== undefined) {
         let willShow = true;
 
+        // console.log("item frequency: %s, filters frequencys: %s", item.frequency, JSON.stringify(filters.frequency))
         willShow = filters.frequency.includes(item.frequency);
 
         if (willShow) {

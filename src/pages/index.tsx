@@ -1,42 +1,46 @@
-import * as React from "react"
+import React, { useState } from "react"
 import type { HeadFC, PageProps } from "gatsby"
-// import {header} from '../components/index.module.css'
+
 import BudgetCard from '../components/budget-card'
+import { Layout } from "../components/layout"
+import { getBudgets } from "../utils/localStorage"
+import { AddNewBudget } from "../components/modals/add-new-budget"
 
 // TODO:
 //  - Get popup on budget cards working
 //  - Ensure it looks good on mobile
 
 const IndexPage: React.FC<PageProps> = () => {
+  const [createNewBudget, setCreateNewBudget] = useState<boolean>(false);
+
+  const response = getBudgets();
 
   return (
-    <div className="d-flex flex-column flex-root">
-      <div className="page d-flex flex-row flex-column-fluid">
-        <div className="wrapper d-flex flex-column flex-row-fluid">
-          <div className="header" style={{ padding: "20px" }}>
-            <img style={{ height: "32px" }} src={'/img/logo-compact-craft.svg'} />
-          </div>
-
-          <div className="content fs-6 d-flex flex-column flex-column-fluid">
-            <div className="post fs-6 d-flex flex-column-fluid">
-              <div className="container-xxl">
-                <div className="d-flex flex-wrap flex-stack mb-6">
-                  <h3 className="fw-bold my-2">My Budgets</h3>
-                  <div className="d-flex align-items-center my-2">
-                    <button className="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#kt_modal_create_campaign">Add New Budget</button>
-                  </div>
-                </div>
-
-                <div className="row g-6 g-xl-9">
-                  <BudgetCard title="2024 Kellum Budget" />
-                  <BudgetCard title="2024 Kellum Budget" />
-                </div>
-              </div>
-            </div>
-          </div>
+    <Layout>
+      <div className="d-flex flex-wrap flex-stack mb-6">
+        <h3 className="text-dark fw-bold mb-4 fs-2">My Budgets</h3>
+        <div className="d-flex align-items-center my-2">
+          <button onClick={() => setCreateNewBudget(true)} className="btn btn-primary">Add New Budget</button>
         </div>
       </div>
-    </div>
+
+      <div className="row">
+        {response.status === "fail" && <p>{response.message}</p>}
+        {response.status === "success" && Object.values(response.data).filter(budget => budget.parent === undefined).map(budget => (
+          <BudgetCard budget={budget} />
+        ))}
+      </div>
+
+      {createNewBudget &&
+        <AddNewBudget 
+          onCancel={() => setCreateNewBudget(false)}
+          onNewBudgetCreated={() => {
+            console.log("yay new budget created.");
+            setCreateNewBudget(false);
+          }}
+        />
+      }
+    </Layout>
   )
 }
 

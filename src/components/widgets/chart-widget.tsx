@@ -53,7 +53,7 @@ export const ChartWidget: FC = () => {
     return <></>;
   }
 
-  const { startingBalance, startDate, budgetLineItems } = budget;
+  const { startingBalance, startDate, items } = budget;
 
   const [span, setSpan] = useState<ChartWidgetSpan>("1Y");
   const [menuIsOpen, setMenuIsOpen] = React.useState(false);
@@ -104,7 +104,7 @@ export const ChartWidget: FC = () => {
   }
 
 
-  const { dates, balances } = calculateBalanceOver(getSpanDates(), startingBalance, startDate, budgetLineItems);
+  const { dates, balances } = calculateBalanceOver(getSpanDates(), startingBalance, startDate, items);
   const cleanDatapoints: number[] = balances.filter((n) => n != null); // remove nulls
 
   // console.log(dates.map((d)=> d.format("MM/DD/YYYY")), balances);
@@ -230,7 +230,7 @@ export const ChartWidget: FC = () => {
   };
 
   return (
-    <div className="card card-xl-stretch">
+    <div className="card card-xl-stretch mb-6">
       <div className="card-body p-0 d-flex justify-content-between flex-column">
         <div className="d-flex flex-stack flex-grow-1 p-10">
           <div className="symbol symbol-45px">

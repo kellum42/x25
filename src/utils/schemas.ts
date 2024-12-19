@@ -1,6 +1,10 @@
 import dayjs, { Dayjs } from 'dayjs';
 import { z } from "zod";
 
+// TODO: 
+//  - make a validation to ensure slug has no spaces or non-url characters
+//  - make create date required on all budgets and simulations.
+
 // Errors
 const x25Error = z.object({
   status: z.literal("fail"),
@@ -99,25 +103,43 @@ export const zBudgetItem = z.discriminatedUnion(
     }
   )
 
-const Budget = z.object({
-  id: z.string(),
-  title: z.string(),
-  slug: z.string(),
+
+export const Budget = z.object({
+  id: z.string().nonempty(),
+  title: z.string().nonempty(),
+  slug: z.string().nonempty(),
   startingBalance: z.number(),
   startDate: zDayjs,
-  items: zBudgetItem.array()
+  items: zBudgetItem.array(),
+  createDate: zDayjs.optional(),
+  parent: z.string().optional(),
+  changes: z.string().array().optional(),
+  avatar: z.object({
+    color: z.string(),
+    bg: z.string(),
+    svg: z.number()
+  }).optional()
 })
+
+// const BudgetSimumlation = Budget.merge(
+//   z.object({
+//     parent: z.string().nonempty(),
+//     changes: z.string().array(),
+//     avatar: z.object({
+//       color: z.string(),
+//       bg: z.string(),
+//       svg: z.string()
+//     })
+//   })
+// );
 
 export type BudgetItem = z.infer<typeof zBudgetItem>;
 export type Budget = z.infer<typeof Budget>;
-
-// export type BudgetItemFrequency = z.infer<typeof zBudgetItemFrequency>;
 export type BudgetItemFrequency = typeof BudgetItemFrequency[keyof typeof BudgetItemFrequency];
-// export type WeeklyBudgetItemDays = z.infer<typeof zWeeklyBudgetItemDays>;
-// export type BaseBudgetItem = z.infer<typeof zBaseBudgetItem>;
 export type OneTimeBudgetItem = z.infer<typeof zOneTimeBudgetItem>;
 export type WeeklyBudgetItem = z.infer<typeof zWeeklyBudgetItem>;
 export type MonthlyBudgetItem = z.infer<typeof zMonthlyBudgetItem>;
+// export type BudgetSimumlation = z.infer<typeof BudgetSimumlation>;
 
 
 const zGetBudgetsResponse = z.discriminatedUnion("status", [

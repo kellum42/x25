@@ -2,8 +2,9 @@ import React, { FC, useContext, useEffect, useState } from "react"
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
-import { BudgetLineItem, BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
-import { calculateBalance, getFriday, getWeeksBudgetLineItems, getVerificationOn } from "../../utils/budget";
+// import { BudgetLineItem, BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
+import { BudgetItem, BudgetItemFrequency } from "../../utils/schemas";
+import { calculateBalance, getFriday, getVerificationOn, getUpcomingBudgetItems } from "../../utils/budget";
 import { numberOrNull } from "../../utils/util";
 
 import "../../styles/weekly-widget.css"
@@ -14,7 +15,7 @@ dayjs.extend(isSameOrAfter);
 
 
 type WeeklyWidgetLineItemProps = {
-  item: BudgetLineItem,
+  item: BudgetItem,
   days: number,
   hideWeeklyItems: boolean,
   isNewDay: string | null,
@@ -25,6 +26,9 @@ type WeeklyWidgetLineItemProps = {
 // Model after:
 //  apps -> customers -> customer details -> payment methods
 //  weekly widget badges - user management -> permissions list
+
+// TODO:
+//  - Week widgets lists more than just one week.
 
 const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   const context = useContext(BudgetContext);
@@ -41,7 +45,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
 
   const theme = getTheme("light");
   const { item, hideWeeklyItems, isNewDay, endingBalance, days } = props;
-  const show: boolean = !(item.frequency === BudgetLineItemFrequency.Weekly && hideWeeklyItems);
+  const show: boolean = !(item.frequency === BudgetItemFrequency.weekly && hideWeeklyItems);
   const currentDay = getFriday(date).add(days, 'day');
   const verifiedAmt = getVerificationOn( currentDay, item );
   const verified = verifiedAmt !== null;
@@ -118,7 +122,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
             </div>
             <div className="line-item-title ms-2 d-flex flex-row flex-wrap">
               <div className="fs-6 fw-bold text-gray-900 mb-1">{item.name}</div>
-              {item.frequency === BudgetLineItemFrequency.Weekly &&
+              {item.frequency === BudgetItemFrequency.weekly &&
                 <div><span className="badge badge-light-info fw-bold mx-2">weekly</span></div>
               }
             </div>
@@ -181,7 +185,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   )
 }
 
-export const WeeklyWidget: FC = (props) => {
+export const WeeklyWidget: FC = () => {
   const context = useContext(BudgetContext);
 
   if (!context) {
@@ -199,18 +203,22 @@ export const WeeklyWidget: FC = (props) => {
       return budget.startingBalance;
 
     } else if (date.isAfter(budget.startDate, 'day')) {
-      return numberOrNull(calculateBalance(budget.startDate, budget.startingBalance, budget.budgetLineItems, friday));
+      return numberOrNull(calculateBalance(budget.startDate, budget.startingBalance, budget.items, friday));
 
     }
     return null;
   }
 
-  const { startDate: startdate, budgetLineItems: lineItems } = budget;
+  const { startDate: startdate, items } = budget;
 
   const [hideWeeklyItems, setHideWeeklyItems] = useState(false);
 
-  const currentBudgetLineItems = getWeeksBudgetLineItems(date, startdate, lineItems);
+  // const currentItems = getWeeksBudgetLineItems(date, startdate, items);
   const friday = getFriday(date);
+
+  // Ensure we don't get items that occur before the start date.
+  const currentItems = getUpcomingBudgetItems(friday, 7, items)
+    .filter( _item => !friday.add( _item.days, 'day').isBefore( startdate ) );
   const weekStartingBalance = getWeekStartingBalance();
 
   const balanceAfterItem = (i: number): number | null => {
@@ -220,7 +228,7 @@ export const WeeklyWidget: FC = (props) => {
 
       // Tally balance.
       while (j >= 0) {
-        const _item = currentBudgetLineItems[j];
+        const _item = currentItems[j];
         // const verifiedAmount = getVerifiedAmt( _item.item, friday.add( _item.days, 'day' ));
         const verifiedAmount = getVerificationOn( friday.add( _item.days, 'day' ), _item.item );
         _balanceAfterItem += (verifiedAmount ?? _item.item.amount) * (_item.item.type === "expense" ? -1 : 1);
@@ -231,7 +239,7 @@ export const WeeklyWidget: FC = (props) => {
     return null;
   }
 
-  const endingBalance: number | null = balanceAfterItem(currentBudgetLineItems.length - 1);
+  const endingBalance: number | null = balanceAfterItem(currentItems.length - 1);
 
   return (
     // print line items for this week in order.
@@ -253,9 +261,9 @@ export const WeeklyWidget: FC = (props) => {
         <div className="d-flex flex-wrap py-2">
           <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
             <div className="d-flex align-items-center">
-              <div className="fs-2 fw-bold counted">{currentBudgetLineItems.length}</div>
+              <div className="fs-2 fw-bold counted">{currentItems.length}</div>
             </div>
-            <div className="fw-semibold fs-6 text-gray-400">Budget Item{currentBudgetLineItems.length > 1 && <span>s</span>}</div>
+            <div className="fw-semibold fs-6 text-gray-400">Budget Item{currentItems.length > 1 && <span>s</span>}</div>
           </div>
           {weekStartingBalance &&
             <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
@@ -291,26 +299,24 @@ export const WeeklyWidget: FC = (props) => {
         </div>
 
         <div className="d-flex flex-column">
-          {weekStartingBalance && currentBudgetLineItems.map((item, i) => {
+          {weekStartingBalance && currentItems.map((_item, i) => {
             const endingBalance = balanceAfterItem(i);
-            const hasPassed: boolean = dayjs().isSameOrAfter(friday.add(item.days, 'day'));
+            const hasPassed: boolean = dayjs().isSameOrAfter(friday.add(_item.days, 'day'));
 
-            let isNewDay = i === 0 || item.days !== currentBudgetLineItems[i - 1].days
-              ? friday.add(item.days, 'day').format('dddd, M/D')
+            let isNewDay = i === 0 || _item.days !== currentItems[i - 1].days
+              ? friday.add(_item.days, 'day').format('dddd, M/D')
               : null
 
             return (
-              // <React.Fragment key={i} >
                 <WeeklyWidgetLineItem
                   key={i}
-                  item={item.item}
-                  days={item.days}
+                  item={_item.item}
+                  days={_item.days}
                   isNewDay={isNewDay}
                   hideWeeklyItems={hideWeeklyItems}
                   endingBalance={endingBalance}
                   hasPassed={hasPassed}
                 />
-              // </React.Fragment>
             )
           })}
         </div>

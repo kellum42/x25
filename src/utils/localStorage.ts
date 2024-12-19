@@ -42,9 +42,14 @@ export const getBudgets = (): GetBudgetsResponse => {
             } else {
               _item.starts = dayjs(_item.starts);
               _item.ends = _item.ends === "-1" ? "-1" : dayjs(_item.ends);
+
             }
             return _item;
           })
+        }
+
+        if ( budgets[_id].createDate !== undefined ){
+          budgets[_id].createDate = dayjs( budgets[_id].createDate );
         }
       });
       return { status: "success", data: budgets };
@@ -82,6 +87,19 @@ export const getBudget = (slug: string): GetBudgetResponse => {
     }
   })
   return budget;
+}
+
+export const getSimulationsForBudget = (id?: string): {status: "success", sims: Budget[]} | x25Error => {
+  if ( id === undefined ){
+    return {status: "fail", message: "Can't get simulations for invalid budget id."};
+  }
+  
+  const response = getBudgets();
+  if (response.status === "fail") {
+    return response;
+  }
+  
+  return { status: "success", sims: Object.values(response.data).filter( _budget => _budget.parent === id) };
 }
 
 export const saveBudget = (budget: Budget): SaveResponse => {

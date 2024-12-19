@@ -6,13 +6,8 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 
-// import {
-//   BudgetItem,
-//   BudgetItemFrequency,
-//   WeeklyBudgetItemDays
-// } from "../hooks/useBudgetDetails"
 import { numberOrNull } from './util';
-import { BudgetItem, BudgetItemFrequency, WeekDays } from './schemas';
+import { BudgetItem, BudgetItemFrequency } from './schemas';
 
 // needed to use day.js plugins
 dayjs.extend(isBetween);
@@ -132,7 +127,6 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
   })
 
   // converts to two decimal places.
-  // console.log( "deltas: %d, startingAmount: %d, sum: %d", sumDeltas, startingAmount, sumDeltas + startingAmount );
   return Math.round((sumDeltas + startingAmount) * 100) / 100;
 }
 

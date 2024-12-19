@@ -10,10 +10,21 @@ type ModalProps = {
   error?: string | null
 }
 
+// TODO:
+//  - Allow modal to be closed by clicking on backdrop.
+
 export const Modal: React.FC<ModalProps> = (props) => {
   const { title, children, isOpen, setIsOpen, isLoading, action, error } = props;
 
-  // style={{ display: "block", paddingLeft: "0px" }}
+  const onCancelClick = () => {
+    if ( action?.cancelFn !== undefined ){
+      action.cancelFn();
+
+    } else {
+      setIsOpen(false)
+    } 
+  };
+
   return (
     <>
       <div className={"modal fade" + (isOpen ? " d-block show" : " ")} tabIndex={-1} aria-modal="true" role="dialog">
@@ -42,7 +53,7 @@ export const Modal: React.FC<ModalProps> = (props) => {
             }
             {action &&
               <div className="modal-footer flex-center">
-                <button onClick={() => action.cancelFn ? action.cancelFn() : setIsOpen(false)} type="reset" className="btn btn-light me-3">{action.cancel ?? "Discard"}</button>
+                <button onClick={onCancelClick} type="reset" className="btn btn-light me-3">{action.cancel ?? "Discard"}</button>
                 <button type="submit" onClick={() => action.actionFn()} className="btn btn-primary">
                   {
                     isLoading ?
@@ -57,7 +68,7 @@ export const Modal: React.FC<ModalProps> = (props) => {
           </div>
         </div>
       </div>
-      <div onClick={() => setIsOpen(false)} className={"modal-backdrop fade" + (isOpen ? " show" : " d-none")}></div>
+      <div onClick={onCancelClick} className={"modal-backdrop fade" + (isOpen ? " show" : " d-none")}></div>
     </>
   );
 }
