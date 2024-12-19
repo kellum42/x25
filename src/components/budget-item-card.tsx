@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
@@ -6,41 +6,40 @@ import { BudgetItem, BudgetItemFrequency } from "../utils/schemas";
 import { calculateBalance } from "../utils/budget";
 import { Menu, MenuItem } from "./floating-menu";
 import { defaultProps } from "react-select/dist/declarations/src/Select";
+import { deleteBudgetItem, saveBudgetItem } from "../utils/localStorage";
+import { Popup } from "./popups/popup";
+import { MenuButton } from "./menu-button";
+import { getUniqueID } from "../utils/util";
+import { BudgetContext } from "../contexts/budgetContext";
 
 dayjs.extend(isSameOrAfter);
 
 type BudgetItemCardProps = {
   item: BudgetItem,
   date: Dayjs,
-  runningTotal: number | null,
-  onDelete: (item: BudgetItem) => void
+  runningTotal: number | null
+  // onDelete: (item: BudgetItem) => void
 }
 
 // TODO: 
 //  - fix menu button not changing to blue on hover.
 //  - have actions and filters run on apply button click.
+//  - find a way to show error for errors with duplicate, delete functionailty
+//  - be able to close menu after successful duplicate fn
 
 export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
-  const { item, date, runningTotal, onDelete } = props;
+  const context = useContext(BudgetContext);
+
+  if (!context) {
+    throw new Error("Calling Budget Context from outside of provider.");
+  }
+
+  const { budget, duplicateBudgetItem, deleteBudgetItem } = context;
+  const { item, date, runningTotal } = props;
   const started = item.frequency !== BudgetItemFrequency.once && date.isSameOrAfter(item.starts);
   const ended = item.frequency !== BudgetItemFrequency.once && item.ends !== "-1" && date.isAfter(item.ends);
 
-  const MenuButton: React.FC = () => {
-    return (
-      <button type="button" className="btn btn-sm btn-icon btn-color-light-dark btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-        <span className="svg-icon svg-icon-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-              <rect x="5" y="5" width="5" height="5" rx="1" fill="currentColor"></rect>
-              <rect x="14" y="5" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
-              <rect x="5" y="14" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
-              <rect x="14" y="14" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
-            </g>
-          </svg>
-        </span>
-      </button>
-    )
-  };
+  const [toDelete, setToDelete] = useState<boolean>(false);
 
   return (
     <div className="col-12 col-lg-3">
@@ -52,8 +51,8 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
             <div>
               <Menu label="" rootMenuButton={<MenuButton />}>
                 <MenuItem label="Edit" />
-                <MenuItem label="Duplicate" />
-                <MenuItem label="Delete" onClick={() => onDelete(item)} />
+                <MenuItem label="Duplicate" onClick={() => duplicateBudgetItem(item)} />
+                <MenuItem label="Delete" onClick={() => setToDelete(true)} />
               </Menu>
             </div>
           </div>
@@ -68,7 +67,8 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
               (_date, i) => {
                 let a: string = "";
                 if (i !== 0) { a += ", "; }
-                a += _date.toString();
+                // a += _date.toString();
+                a += _date;
                 if (["1", "21", "31"].includes(_date)) { a += "st"; }
                 else if (["2", "22"].includes(_date)) { a += "nd"; }
                 else if (["3", "23"].includes(_date)) { a += "rd"; }
@@ -77,10 +77,12 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
               })} of month</span>
             }
 
-            {item.frequency !== BudgetItemFrequency.once && <p className="my-2">
-              {started ? "Began" : "Begins"}: {item.starts.format("MMM D, YYYY")}
-              {item.ends !== "-1" && (ended ? ", Ended: " : ", Ends: ") + item.ends.format("MMM D, YYYY")}
-            </p>}
+            {item.frequency !== BudgetItemFrequency.once &&
+              <p className="my-2">
+                {started ? "Began" : "Begins"}: {item.starts.format("MMM D, YYYY")}
+                {item.ends !== "-1" && (ended ? ", Ended: " : ", Ends: ") + item.ends.format("MMM D, YYYY")}
+              </p>
+            }
           </div>
           <div className="d-flex flex-stack flex-wrapr">
             <div className="d-flex my-1">
@@ -97,6 +99,23 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
           </div>
         </div>
       </div>
+      {toDelete &&
+        <Popup
+          item={item}
+          onDeleteItem={(item) => {
+            deleteBudgetItem(item);
+            // if (budget) {
+            //   const response = deleteBudgetItem(budget.id, item.id);
+            //   if (response.status === "success") {
+            //     setToDelete(false);
+            //   } else {
+            //     console.log(response.message);
+            //   }
+            // }
+          }}
+          onCancel={() => setToDelete(false)}
+        />
+      }
     </div>
   )
 };

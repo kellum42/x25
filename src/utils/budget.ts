@@ -138,8 +138,8 @@ export const daysTillFirstOccurrence = (item: BudgetItem, startDate: Dayjs, i?: 
       if ( day === "Monday" ){ return 1; }
       if ( day === "Tuesday" ){ return 2; }
       if ( day === "Wednesday" ){ return 3; }
-      if ( day === "Friday" ){ return 4; }
-      if ( day === "Saturday" ){ return 5; }
+      if ( day === "Thursday" ){ return 4; }
+      if ( day === "Friday" ){ return 5; }
       else { return 6; }
     }
 
@@ -147,7 +147,7 @@ export const daysTillFirstOccurrence = (item: BudgetItem, startDate: Dayjs, i?: 
     const startDay = startDate.day();
     const firstOccurrence = getDayAsInt( item.day );
 
-    const isBiWeekly = BudgetItemFrequency.biweekly;
+    const isBiWeekly = item.frequency === BudgetItemFrequency.biweekly;
     const occursThisWeek = (startDate.isoWeek() - item.starts.isoWeek()) % 2 === 0 // for biweekly line items
 
     // is upcoming this week
@@ -213,7 +213,8 @@ export const getUpcomingBudgetItems = (from: Dayjs, toInDays: number, items: Bud
 
   const addItem = (_item: BudgetItem, _j?: number) => {
     const days = daysTillFirstOccurrence(_item, from, _j);
-    if (typeof days === 'number') {
+    if (typeof days === 'number' && days >= 0 && days <= toInDays) {
+      // console.log("%s - from: %s, days: %s, occurrence day: %s", _item.name, from.format("YYYY-MM-DD"), days, from.add(days, 'day').format("YYYY-MM-DD"));
       upcomingItems.push({ days, item: _item });
     } else {
       console.log("GOT ERROR: %s, item: %s", days, _item.name);
@@ -222,6 +223,8 @@ export const getUpcomingBudgetItems = (from: Dayjs, toInDays: number, items: Bud
 
   items.forEach((item, _) => {
     // if ( itemIsActive( date, item ) ){
+
+    // For one-time items, ensure the item occurs within the range.
     if (item.frequency === "Once") {
       const toDate = from.add(toInDays, 'day');
       if (item.date.isBetween(from, toDate, "day", "[]")) {

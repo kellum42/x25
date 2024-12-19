@@ -131,7 +131,7 @@ export const saveBudgetItem = (slug: string, item: BudgetItem): SaveResponse => 
   return saveBudget(budget);
 }
 
-export const deleteBudgetItem = (id: string, item: BudgetItem): {status: "success"} | x25Error => {
+export const deleteBudgetItem = (id: string, itemId: string ): {status: "success"} | x25Error => {
   const response = getBudgets();
 
   if (response.status === "fail") {
@@ -141,7 +141,7 @@ export const deleteBudgetItem = (id: string, item: BudgetItem): {status: "succes
   const budgets = response.data;
   if ( id in budgets){
     const budget = budgets[id];
-    budget.items = budget.items.filter((_item) => _item.id !== item.id);
+    budget.items = budget.items.filter((_item) => _item.id !== itemId);
     return saveBudget( budget );
     
   } else {

@@ -29,6 +29,7 @@ type WeeklyWidgetLineItemProps = {
 
 // TODO:
 //  - Week widgets lists more than just one week.
+//  - MAKE THIS MORE READABLE AND CLEAR
 
 const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   const context = useContext(BudgetContext);
@@ -217,8 +218,12 @@ export const WeeklyWidget: FC = () => {
   const friday = getFriday(date);
 
   // Ensure we don't get items that occur before the start date.
-  const currentItems = getUpcomingBudgetItems(friday, 7, items)
-    .filter( _item => !friday.add( _item.days, 'day').isBefore( startdate ) );
+  const currentItems = getUpcomingBudgetItems(friday, 6, items)
+    // .filter( item => {
+    //   const starts = item.item.frequency === BudgetItemFrequency.once ? item.item.date : item.item.starts;
+    //   return starts
+    // })
+    // .filter( _item => !friday.add( _item.days, 'day').isBefore( startdate ) );
   const weekStartingBalance = getWeekStartingBalance();
 
   const balanceAfterItem = (i: number): number | null => {
@@ -300,6 +305,7 @@ export const WeeklyWidget: FC = () => {
 
         <div className="d-flex flex-column">
           {weekStartingBalance && currentItems.map((_item, i) => {
+            // console.log("GOT AN ITEM: %s", _item.item.name);
             const endingBalance = balanceAfterItem(i);
             const hasPassed: boolean = dayjs().isSameOrAfter(friday.add(_item.days, 'day'));
 

@@ -3,18 +3,64 @@ import dayjs, { Dayjs } from 'dayjs';
 
 import { saveBudget, getBudget } from '../utils/localStorage';
 import { x25Error, Budget, BudgetItem } from '../utils/schemas';
+import { getUniqueID } from '../utils/util';
 
 export type UseBudgetDetails = {
   budget?: Budget,
   error?: x25Error,
-  verifyAmount: (date: Dayjs, item: BudgetItem, amount: number | null) => void
+  verifyAmount: (date: Dayjs, item: BudgetItem, amount: number | null) => void,
+  duplicateBudgetItem: (item: BudgetItem) => void,
+  deleteBudgetItem: (item: BudgetItem) => void
 }
 
 export const useBudgetDetails = (slug: string): UseBudgetDetails => {
-  // const verifyFormat = "YYYY-MMM-DD";
 
   const [data, setData] = useState<Budget>();
   const [error, setError] = useState<x25Error>();
+
+  const updateBudget = (key: keyof Budget, value: string|number|Dayjs|BudgetItem[]) => {
+    setData( prev => (
+      prev === undefined ?
+      undefined :
+      {
+        ...prev,
+        [key]: value
+      }
+    ))
+  }
+
+  const updateBudgetItem = (item: BudgetItem) => {
+    if ( data === undefined ){
+      setError({
+        status: "fail",
+        message: "ERROR: Data is undefined. updateBudgetItem() -> useBudgetDetails"
+      })
+    } else {
+      if (item.id in data.items) {
+        setData( prev => (
+          prev === undefined ?
+          undefined :
+          {
+            ...prev,
+            items: prev.items.map(( _item) => (
+              item.id === _item.id ? item: _item
+            ))
+          }
+        ))
+      } else {
+        const items = data.items;
+        items.push(item);
+        setData( prev => (
+          prev === undefined ?
+          undefined :
+          {
+            ...prev,
+            items
+          }
+        ))
+      }
+    }
+  }
 
   // Also unverifies.
   const verifyAmount = (date: Dayjs, item: BudgetItem, amount: number | null) => {
@@ -43,27 +89,27 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
         item.vers = { [year]: { [month]: { [day]: amount } } };
       }
     }
+    updateBudgetItem(item);
+  }
 
-    // setData(prevData => ({
-    //   ...prevData,
-    //   items: prevData.items.map((_item) => (
-    //     item.id === _item.id ? item : _item
-    //   ))
-    // }));
-    setData( prev => (
-      prev === undefined ?
-      undefined :
-      {
-        ...prev,
-        items: prev.items.map(( _item) => (
-          item.id === _item.id ? item: _item
-        ))
-      }
-    ))
+  const duplicateBudgetItem = (item: BudgetItem) => {
+    const duplicate: BudgetItem = {
+      ...item,
+      name: "Copy of " + item.name,
+      id: getUniqueID()
+    }
+    updateBudgetItem(duplicate);
   }
 
   const addBudgetItem = (item: BudgetItem) => {
 
+  }
+
+  const deleteBudgetItem = (item: BudgetItem) => {
+    if ( data ){
+      const items = data.items.filter((_item) => _item.id !== item.id);
+      updateBudget( "items", items );
+    }
   }
 
   useEffect(() => {
@@ -79,15 +125,16 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
   useEffect(() => {
     // save data.
     // TODO: - Do something with error on save.
+    setError(undefined)
     
     if (data) {
-      saveBudget(data)
+      const response = saveBudget(data);
+      if ( response.status === "fail" ){
+        setError( response );
+        console.log("ERROR ON BUDGET SAVE: %s", response.message);
+      }
     }
   }, [data]);
 
-  // useEffect(() => {
-  //   console.log(error?.message);
-  // }, [error]);
-
-  return { budget: data, error, verifyAmount };
+  return { budget: data, error, verifyAmount, duplicateBudgetItem, deleteBudgetItem };
 }

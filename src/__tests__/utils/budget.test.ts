@@ -8,39 +8,40 @@ import {
   calculateBalance,
   JSONtoBudgetItem
 } from "../../utils/budget";
-import {
-  BudgetLineItem,
-  BudgetLineItemFrequency,
-  WeeklyBudgetLineItemDays,
-} from "../../hooks/useBudgetDetails";
+// import {
+//   BudgetItem,
+//   BudgetItemFrequency,
+//   WeeklyBudgetLineItemDays,
+// } from "../../hooks/useBudgetDetails";
+import { BudgetItem, BudgetItemFrequency } from '../../utils/schemas';
 import { sampleBudgetTwoItems } from '../../utils/sample-budget-two';
 
 describe('daysTillFirstOccurrence()', () => {
   test('it gives 18 days between April 27th and a monthly bill due on May 15th', () => {
-    const bill: BudgetLineItem = {
+    const bill: BudgetItem = {
       id: "1",
       name: "Car Insurance",
       amount: 198.65,
-      frequency: BudgetLineItemFrequency.Monthly,
-      dates: [15],
+      frequency: BudgetItemFrequency.monthly,
+      dates: ["15"],
       type: "expense",
       starts: dayjs('2024-01-01'),
-      ends: -1
+      ends: "-1"
     };
     const offset = daysTillFirstOccurrence(bill, dayjs('2024-04-27'), 0);
     expect(offset).toBe(18);
   });
 
   test('it gives 5 days till allowance if today is Friday, and 2 days till allowance if today is Monday. Given payday is every Wednesday.', () => {
-    const allowance: BudgetLineItem = {
+    const allowance: BudgetItem = {
       id: "1",
       name: "Allowance",
       amount: 30,
-      frequency: BudgetLineItemFrequency.Weekly,
-      day: WeeklyBudgetLineItemDays.Wednesday,
+      frequency: BudgetItemFrequency.weekly,
+      day: "Wednesday",
       type: "income",
       starts: dayjs('2020-01-01'),
-      ends: -1
+      ends: "-1"
     };
     const offset = daysTillFirstOccurrence(allowance, dayjs('2024-10-04')); // Friday
     expect(offset).toBe(5);
@@ -50,11 +51,11 @@ describe('daysTillFirstOccurrence()', () => {
   });
 
   test('it gives error for OneTimeBudgetLineItems', () => {
-    const bonus: BudgetLineItem = {
+    const bonus: BudgetItem = {
       id: "1",
       name: "Bonus",
       amount: 3000,
-      frequency: BudgetLineItemFrequency.Once,
+      frequency: BudgetItemFrequency.once,
       type: "income",
       date: dayjs('2024-05-15')
     };

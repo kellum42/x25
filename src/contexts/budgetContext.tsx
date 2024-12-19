@@ -8,6 +8,9 @@ type BudgetContextProps = {
   setDate: React.Dispatch<React.SetStateAction<dayjs.Dayjs>>
 }
 
+// TODO:
+//  - Maybe show useBudgetDetails errors from here, so it doesn't have to be shown in every sub component.
+
 export const BudgetContext = createContext<(UseBudgetDetails & BudgetContextProps ) | undefined>(undefined);
 
 export const BudgetContextProvider: React.FC<{ slug: string, children: ReactNode }> = ({ slug, children }) => {

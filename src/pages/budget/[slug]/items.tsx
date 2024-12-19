@@ -32,7 +32,7 @@ const BudgetItems: React.FC = () => {
 
   const [queryFn, setQueryFn] = useState<((items: BudgetItem[]) => BudgetItem[])>(initialQuery)
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
-  const [deleteItem, setDeleteItem] = useState<BudgetItem | null>(null);
+  // const [deleteItem, setDeleteItem] = useState<BudgetItem | null>(null);
 
   const queriedItems: BudgetItem[] = budget === undefined ? [] : queryFn(budget.items);
 
@@ -70,16 +70,16 @@ const BudgetItems: React.FC = () => {
                     item={item}
                     date={date}
                     runningTotal={runningTotal}
-                    onDelete={(item) => {
-                      setDeleteItem(item);
-                    }}
+                    // onDelete={(item) => {
+                    //   setDeleteItem(item);
+                    // }}
                   />
                 )
               })}
             </div>
           </div>
           <AddNewBudgetItem isOpen={modalIsOpen} setIsOpen={setModalIsOpen} />
-          {deleteItem &&
+          {/* {deleteItem &&
             <Popup
               item={deleteItem}
               onDeleteItem={(item) => {
@@ -92,7 +92,7 @@ const BudgetItems: React.FC = () => {
               }}
               onCancel={() => setDeleteItem(null)}
             />
-          }
+          } */}
         </div>
       }
       {error &&
