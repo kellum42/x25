@@ -10,7 +10,8 @@ export type UseBudgetDetails = {
   error?: x25Error,
   verifyAmount: (date: Dayjs, item: BudgetItem, amount: number | null) => void,
   duplicateBudgetItem: (item: BudgetItem) => void,
-  deleteBudgetItem: (item: BudgetItem) => void
+  deleteBudgetItem: (item: BudgetItem) => void,
+  updateBudgetItem: (item: BudgetItem) => void
 }
 
 export const useBudgetDetails = (slug: string): UseBudgetDetails => {
@@ -18,47 +19,68 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
   const [data, setData] = useState<Budget>();
   const [error, setError] = useState<x25Error>();
 
-  const updateBudget = (key: keyof Budget, value: string|number|Dayjs|BudgetItem[]) => {
-    setData( prev => (
+  const _updateBudget = (key: keyof Budget, value: string | number | Dayjs | BudgetItem[]) => {
+    setData(prev => (
       prev === undefined ?
-      undefined :
-      {
-        ...prev,
-        [key]: value
-      }
+        undefined :
+        {
+          ...prev,
+          [key]: value
+        }
     ))
   }
 
-  const updateBudgetItem = (item: BudgetItem) => {
-    if ( data === undefined ){
+  const _updateBudgetItem = (item: BudgetItem) => {
+    if (data === undefined) {
       setError({
         status: "fail",
         message: "ERROR: Data is undefined. updateBudgetItem() -> useBudgetDetails"
       })
     } else {
-      if (item.id in data.items) {
-        setData( prev => (
-          prev === undefined ?
-          undefined :
-          {
-            ...prev,
-            items: prev.items.map(( _item) => (
-              item.id === _item.id ? item: _item
-            ))
-          }
-        ))
-      } else {
-        const items = data.items;
+      let itemFound = false;
+      const items = data.items.map(_item => {
+        if (_item.id === item.id) {
+          itemFound = true;
+          return item;
+        } else {
+          return _item;
+        }
+      });
+
+      if (!itemFound) {
         items.push(item);
-        setData( prev => (
-          prev === undefined ?
+      }
+      setData(prev => (
+        prev === undefined ?
           undefined :
           {
             ...prev,
             items
           }
-        ))
-      }
+      ))
+      // if (item.id in data.items) {
+      //   setData( prev => (
+      //     prev === undefined ?
+      //     undefined :
+      //     {
+      //       ...prev,
+      //       items: prev.items.map(( _item) => (
+      //         item.id === _item.id ? item: _item
+      //       ))
+      //     }
+      //   ))
+      // } else {
+      //   const items = data.items;
+      // items.push(item);
+      // setData( prev => (
+      //   prev === undefined ?
+      //   undefined :
+      //   {
+      //     ...prev,
+      //     items
+      //   }
+      // ))
+      // }
     }
   }
 
@@ -89,7 +111,7 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
         item.vers = { [year]: { [month]: { [day]: amount } } };
       }
     }
-    updateBudgetItem(item);
+    _updateBudgetItem(item);
   }
 
   const duplicateBudgetItem = (item: BudgetItem) => {
@@ -98,43 +120,43 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
       name: "Copy of " + item.name,
       id: getUniqueID()
     }
-    updateBudgetItem(duplicate);
+    _updateBudgetItem(duplicate);
   }
 
-  const addBudgetItem = (item: BudgetItem) => {
-
+  const updateBudgetItem = (item: BudgetItem) => {
+    _updateBudgetItem(item);
   }
 
   const deleteBudgetItem = (item: BudgetItem) => {
-    if ( data ){
+    if (data) {
       const items = data.items.filter((_item) => _item.id !== item.id);
-      updateBudget( "items", items );
+      _updateBudget("items", items);
     }
   }
 
   useEffect(() => {
     const response = getBudget(slug);
-    if ( response.status === "success" ){
+    if (response.status === "success") {
       setData(response.data);
     } else {
       setError(response);
     }
-    
+
   }, []);
 
   useEffect(() => {
     // save data.
     // TODO: - Do something with error on save.
     setError(undefined)
-    
+
     if (data) {
       const response = saveBudget(data);
-      if ( response.status === "fail" ){
-        setError( response );
+      if (response.status === "fail") {
+        setError(response);
         console.log("ERROR ON BUDGET SAVE: %s", response.message);
       }
     }
   }, [data]);
 
-  return { budget: data, error, verifyAmount, duplicateBudgetItem, deleteBudgetItem };
+  return { budget: data, error, verifyAmount, duplicateBudgetItem, deleteBudgetItem, updateBudgetItem };
 }

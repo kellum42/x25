@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import dayjs from 'dayjs'
 
 import { BudgetItemFrequency } from "../../hooks/useBudgetDetails";
-import { useNewBudgetItem, UseNewBudgetItemType } from "../../hooks/useNewBudgetItem";
+import { useNewBudgetItem, UseNewBudgetItemType } from "../../hooks/useUpdateBudgetItem";
 import * as localStorage from "../../utils/localStorage";
 
 // TODO: - Finish rest of validations.

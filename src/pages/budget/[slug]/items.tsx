@@ -8,9 +8,10 @@ import { BudgetItem } from "../../../utils/schemas"
 import { BudgetItemQuery } from "../../../components/budget-item-query"
 import { BudgetItemCard } from "../../../components/budget-item-card"
 import { ytd } from "../../../utils/budget";
-import { AddNewBudgetItem } from "../../../components/modals/add-new-budget-item-modal"
+// import { AddNewBudgetItem } from "../../../components/modals/add-new-budget-item-modal"
 import { Popup } from "../../../components/popups/popup"
 import { deleteBudgetItem } from "../../../utils/localStorage"
+import { UpdateBudgetItem } from "../../../components/modals/update-budget-item-modal"
 
 // TODO:
 //  - Fix ytd's. Some of them are wrong.
@@ -31,7 +32,7 @@ const BudgetItems: React.FC = () => {
   }
 
   const [queryFn, setQueryFn] = useState<((items: BudgetItem[]) => BudgetItem[])>(initialQuery)
-  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
+  const [createItem, setCreateItem] = useState<boolean>(false);
   // const [deleteItem, setDeleteItem] = useState<BudgetItem | null>(null);
 
   const queriedItems: BudgetItem[] = budget === undefined ? [] : queryFn(budget.items);
@@ -55,7 +56,7 @@ const BudgetItems: React.FC = () => {
               </ul>
             </div>
             <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
-              <a href="#" className="btn btn-primary" onClick={() => setModalIsOpen(true)}>Add New Item</a>
+              <button className="btn btn-primary" onClick={() => setCreateItem(true)}>Add New Item</button>
             </div>
           </div>
           <BudgetItemQuery setQuery={setQueryFn} />
@@ -78,7 +79,9 @@ const BudgetItems: React.FC = () => {
               })}
             </div>
           </div>
-          <AddNewBudgetItem isOpen={modalIsOpen} setIsOpen={setModalIsOpen} />
+          { createItem && 
+            <UpdateBudgetItem mode="create" onCancel={() => { setCreateItem(false) }} />
+          }
           {/* {deleteItem &&
             <Popup
               item={deleteItem}

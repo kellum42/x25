@@ -3,14 +3,11 @@ import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 import { BudgetItem, BudgetItemFrequency } from "../utils/schemas";
-import { calculateBalance } from "../utils/budget";
 import { Menu, MenuItem } from "./floating-menu";
-import { defaultProps } from "react-select/dist/declarations/src/Select";
-import { deleteBudgetItem, saveBudgetItem } from "../utils/localStorage";
 import { Popup } from "./popups/popup";
 import { MenuButton } from "./menu-button";
-import { getUniqueID } from "../utils/util";
 import { BudgetContext } from "../contexts/budgetContext";
+import { UpdateBudgetItem } from "./modals/update-budget-item-modal";
 
 dayjs.extend(isSameOrAfter);
 
@@ -18,7 +15,6 @@ type BudgetItemCardProps = {
   item: BudgetItem,
   date: Dayjs,
   runningTotal: number | null
-  // onDelete: (item: BudgetItem) => void
 }
 
 // TODO: 
@@ -40,6 +36,7 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
   const ended = item.frequency !== BudgetItemFrequency.once && item.ends !== "-1" && date.isAfter(item.ends);
 
   const [toDelete, setToDelete] = useState<boolean>(false);
+  const [toEdit, setToEdit] = useState<boolean>(false);
 
   return (
     <div className="col-12 col-lg-3">
@@ -50,7 +47,7 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
             <div></div>
             <div>
               <Menu label="" rootMenuButton={<MenuButton />}>
-                <MenuItem label="Edit" />
+                <MenuItem label="Edit" onClick={() => setToEdit(true)} />
                 <MenuItem label="Duplicate" onClick={() => duplicateBudgetItem(item)} />
                 <MenuItem label="Delete" onClick={() => setToDelete(true)} />
               </Menu>
@@ -115,6 +112,9 @@ export const BudgetItemCard: React.FC<BudgetItemCardProps> = (props) => {
           }}
           onCancel={() => setToDelete(false)}
         />
+      }
+      {toEdit &&
+        <UpdateBudgetItem mode="edit" onCancel={() => { setToEdit(false) }} currentItem={item} />
       }
     </div>
   )

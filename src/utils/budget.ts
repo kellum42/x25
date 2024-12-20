@@ -7,7 +7,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 
 import { numberOrNull } from './util';
-import { BudgetItem, BudgetItemFrequency } from './schemas';
+import { BudgetItem, BudgetItemFrequency, MonthlyBudgetItem, OneTimeBudgetItem, WeeklyBudgetItem } from './schemas';
 
 // needed to use day.js plugins
 dayjs.extend(isBetween);
@@ -375,6 +375,32 @@ export const JSONtoBudgetItem = (json: string): BudgetItem|undefined => {
       console.log( "An unknown error occurred getting the budgets." );
     }
   }
+}
+
+
+export const budgetItemToRecord = (item: BudgetItem): Record<string, string> => {
+  const obj: Record<string, string> = {};
+
+    for (const key in item) {
+      if (item.frequency === "Monthly") {
+        const value = item[key as keyof MonthlyBudgetItem];
+        if (Array.isArray(value)) {
+          obj[key] = value.join(",");
+        } else if (dayjs.isDayjs(value)) {
+          obj[key] = value.format("MM/DD/YYYY");
+        } else {
+          obj[key] = (typeof value === "string" || typeof value === "number") ? value.toString() : JSON.stringify(value);
+        }
+      } else {
+        const value = item[key as keyof (OneTimeBudgetItem | WeeklyBudgetItem)];
+        if (dayjs.isDayjs(value)) {
+          obj[key] = value.format("MM/DD/YYYY");
+        } else {
+          obj[key] = (typeof value === "string" || typeof value === "number") ? value.toString() : JSON.stringify(value);
+        }
+      }
+    }
+    return obj;
 }
 
 // export const isBudgetItem = (json:string): boolean => {

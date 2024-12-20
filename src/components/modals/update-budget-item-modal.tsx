@@ -1,13 +1,13 @@
-import React, { SetStateAction, useContext } from "react"
+import React, { useContext } from "react"
 import Select from "react-select";
-import DatePicker from "react-datepicker";
 
 import { Modal } from "./modal";
-import dayjs from "dayjs";
-import { useNewBudgetItem } from "../../hooks/useNewBudgetItem";
+import dayjs, { Dayjs, isDayjs } from "dayjs";
+import { useUpdateBudgetItem } from "../../hooks/useUpdateBudgetItem";
 import { BudgetContext } from "../../contexts/budgetContext";
-import { BudgetItemFrequency, WeekDays } from "../../utils/schemas";
+import { BudgetItem, BudgetItemFrequency, MonthlyBudgetItem, OneTimeBudgetItem, WeekDays, WeeklyBudgetItem } from "../../utils/schemas";
 import { FormDatePicker } from "../form-datepicker";
+import { budgetItemToRecord } from "../../utils/budget";
 
 
 // TODO: 
@@ -17,25 +17,34 @@ import { FormDatePicker } from "../form-datepicker";
 //  - Store item frequency as "biweekly" vs "Bi-weekly" so label can be changed without messing up data.
 //  - Screen ui resets when leaving screen, but value persists. Make ui persist as well.
 //  - Takes a reload for new budget items to appear. Fix that.
+//  - Incorporate vers in getDefaultFields()?
+//  - Figure out a better way to do getDefaultFields()
 
-type AddNewBudgetItemProps = {
-  isOpen: boolean,
-  setIsOpen: React.Dispatch<SetStateAction<boolean>>
+type UpdateBudgetItemProps = {
+  onCancel: () => void,
+  mode: "create" | "edit",
+  currentItem?: BudgetItem
 }
 
-export const AddNewBudgetItem: React.FC<AddNewBudgetItemProps> = (props) => {
+export const UpdateBudgetItem: React.FC<UpdateBudgetItemProps> = (props) => {
   const context = useContext(BudgetContext);
 
   if (!context) {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { isOpen, setIsOpen } = props;
-  const { fields, screen, next, save, back, update, error } = useNewBudgetItem();
+  
+
+  const { mode, onCancel, currentItem } = props;
+  const { fields, screen, next, back, update, error, save } = useUpdateBudgetItem(
+    mode === "edit" && currentItem ?
+      budgetItemToRecord( currentItem ) :
+      { "type": "expense", "ends": "-1", "day": "Friday" }
+  );
 
   const screens = [
     {
-      title: "Add New Budget Item",
+      title: (mode === "create" ? "Create New" : "Edit") + " Budget Item",
       action: {
         label: "Next",
         cancel: "Cancel",
@@ -43,13 +52,14 @@ export const AddNewBudgetItem: React.FC<AddNewBudgetItemProps> = (props) => {
       }
     },
     {
-      title: "Add New Budget Item (cont'd)",
+      title: (mode === "create" ? "Create New" : "Edit") + " Budget Item (cont'd)",
       action: {
         label: "Finish",
         cancel: "Back",
-        actionFn: () => { 
-          if ( save( context.budget?.slug )){
-            setIsOpen( false );
+        actionFn: () => {
+          const success = save();
+          if (success) {
+            onCancel();
           }
         },
         cancelFn: () => back()
@@ -63,27 +73,20 @@ export const AddNewBudgetItem: React.FC<AddNewBudgetItemProps> = (props) => {
   return (
     <Modal
       title={currentScreen.title}
-      isOpen={isOpen}
-      setIsOpen={setIsOpen}
+      isOpen={true}
+      setIsOpen={onCancel}
       action={currentScreen.action}
       error={currentScreen.error}
     >
       {screen === 0 &&
         <GeneralScreen
-          type={fields.type}
+          fields={fields}
           update={update}
         />
       }
       {screen === 1 &&
         <FrequencyScreen
-          date={fields.date}
-          dates={fields.dates}
-          day={fields.day}
-          starts={fields.starts}
-          ends={fields.ends}
-          frequency={fields.frequency}
-          back={back}
-          save={save}
+          fields={fields}
           update={update}
         />
       }
@@ -92,23 +95,24 @@ export const AddNewBudgetItem: React.FC<AddNewBudgetItemProps> = (props) => {
 }
 
 type GeneralScreenProps = {
-  type: string,
+  fields: Record<string, string | undefined>,
   update: (name: string, value?: string) => void
 }
 
 const GeneralScreen: React.FC<GeneralScreenProps> = (props) => {
-  const { type, update } = props;
+  const { fields, update } = props;
+  const type = fields.type ?? "";
 
   return (
     <div>
       <div className="mb-5 fv-row fv-plugins-icon-container">
         <label className="required fs-5 fw-semibold mb-2">Name</label>
-        <input type="text" onChange={(e) => update("name", e.target.value)} className="form-control form-control-solid" placeholder="Name" name="name" />
+        <input type="text" onChange={(e) => update("name", e.target.value)} value={fields.name ?? ""} className="form-control form-control-solid" placeholder="Name" name="name" />
         <div className="fv-plugins-message-container invalid-feedback"></div>
       </div>
       <div className="mb-5 fv-plugins-icon-container">
         <label className="required fs-5 fw-semibold mb-2">Amount</label>
-        <input type="number" onChange={(e) => update("amount", e.target.value)} className="form-control form-control-solid" placeholder="Amount" name="amount" />
+        <input type="number" onChange={(e) => update("amount", e.target.value)} value={fields.amount ?? ""} className="form-control form-control-solid" placeholder="Amount" name="amount" />
         <div className="fv-plugins-message-container invalid-feedback"></div>
       </div>
       <div className="mb-5 cfv-plugins-icon-container">
@@ -130,19 +134,19 @@ const GeneralScreen: React.FC<GeneralScreenProps> = (props) => {
 }
 
 type FrequencyScreenProps = {
-  day: string,
-  date: string,
-  dates: string,
-  starts: string,
-  ends: string,
-  frequency: string,
-  back: () => void,
-  save: (slug?: string) => void,
+  fields: Record<string, string | undefined>,
   update: (name: string, value?: string) => void
 }
 
 const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
-  const { update, frequency, date, starts, ends } = props;
+  const { update, fields } = props;
+
+  const frequency = fields.frequency ?? "";
+  const date = fields.date ?? "";
+  const starts = fields.starts ?? "";
+  const ends = fields.ends ?? "";
+  const day = fields.day ?? "Friday";
+
   const dateFormat = "YYYY-MM-DD";
   const isWeekly = frequency === "Weekly" || frequency === "Biweekly";
 
@@ -155,9 +159,9 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
           defaultValue={{ label: "Once", value: "Once" }}
           options={
             Object.keys(BudgetItemFrequency).map(
-              key => ({ 
-                value: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency], 
-                label: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency] 
+              key => ({
+                value: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency],
+                label: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency]
               })
             )
           }
@@ -210,10 +214,8 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
                 <label className="required fs-6 fw-semibold">Day</label>
                 <div className="fs-7 fw-semibold text-muted">What day will this occur?</div>
                 <Select
-                  defaultValue={{ label: "Friday", value: "Friday" }}
-                  options={
-                    Object.keys(WeekDays).map(day => ({ label: day, value: day }))
-                  }
+                  defaultValue={{ label: day, value: day }}
+                  options={Object.values(WeekDays).map(v => ({ label: v, value: v }))}
                   onChange={(newValue) => update("day", newValue?.value)}
                 />
               </div>
