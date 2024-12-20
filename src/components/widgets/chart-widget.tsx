@@ -1,43 +1,20 @@
 import React, { FC, useState, useContext } from "react"
-// import type { PageProps } from "gatsby"
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-import {
-  autoUpdate,
-  flip,
-  FloatingNode,
-  offset,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useFloatingNodeId,
-  useInteractions,
-} from "@floating-ui/react";
 import dayjs, { Dayjs } from 'dayjs'
-// import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-// import CustomParseFormat from 'dayjs/plugin/customParseFormat';
-// import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isBetween from 'dayjs/plugin/isBetween';
 
-// import { BudgetDetailsResponse, BudgetLineItem } from "../../hooks/useBudgetDetails";
 import { getTheme } from "../../utils/theme";
 import { calculateBalanceOver } from "../../utils/budget";
 import { BudgetContext } from "../../contexts/budgetContext";
+import { Menu, MenuItem } from "../floating-menu";
 
-// dayjs.extend(LocalizedFormat);
-// dayjs.extend(CustomParseFormat)
-// dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
-// type ChartWidgetProps = {
-//   date: Dayjs,
-//   budget: BudgetDetailsResponse,
-// }
 
-type ChartWidgetSpan = "1M" | "3M" | "1Y"
+// type ChartWidgetSpan = "-3Y" | "-1Y" | "YTD" | "1Y" | "3Y"
 
 export const ChartWidget: FC = () => {
 
@@ -53,61 +30,49 @@ export const ChartWidget: FC = () => {
     return <></>;
   }
 
+  enum Period { 
+    n3Y = "-3Y", 
+    n1Y = "-1Y", 
+    YTD = "YTD", 
+    p1Y = "1Y", 
+    p3Y = "3Y" 
+  };
+  const format = ("MM/DD/YYYY");
+
   const { startingBalance, startDate, items } = budget;
 
-  const [span, setSpan] = useState<ChartWidgetSpan>("1Y");
-  const [menuIsOpen, setMenuIsOpen] = React.useState(false);
+  const [period, setPeriod] = useState<Period>(Period.YTD);
+  // const [menuIsOpen, setMenuIsOpen] = React.useState(false);
 
-  // const { date, budget } = props;
-  // const { startDate, startingBalance, budgetLineItems } = budget;
   const theme = getTheme("light");
-  const nodeId = useFloatingNodeId();
-  const format = "M/D/YY";
+  
 
-  const { floatingStyles, refs, context } = useFloating<HTMLButtonElement>({
-    nodeId,
-    open: menuIsOpen,
-    onOpenChange: setMenuIsOpen,
-    placement: "bottom-start",
-    middleware: [
-      offset({ mainAxis: 4, alignmentAxis: 0 }),
-      flip(),
-      shift()
-    ],
-    whileElementsMounted: autoUpdate
-  });
+  // const onClick = (period: Period) => {
+    // setMenuIsOpen(false);
+    // setSpan(timeSpan);
+  // }
 
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
+  const getPeriodRanges = (): Dayjs[] => {
+    if (period === Period.n3Y) {
+      return [...Array(6).fill(0).map((_, i) => { return date.subtract(6 * (6-i), "month") }), date];
 
-  const {
-    getReferenceProps,
-    getFloatingProps,
-  } = useInteractions([click, dismiss]);
+    } else if (period === Period.p3Y) {
+      return [ date, ...Array(6).fill(0).map((_, i) => { return date.add(6 * (i + 1), "month") })];
 
-  const onClick = (timeSpan: ChartWidgetSpan) => {
-    setMenuIsOpen(false);
-    setSpan(timeSpan);
-  }
+    } else if (period === Period.n1Y) {
+      return [ ...Array(11).fill(0).map((_, i) => { return date.subtract(12 - i, "month") }), date ];
 
-  const getSpanDates = (): Dayjs[] => {
-    const _date = date;
-    if (span === "1M") {
-      return [_date.subtract(1, "month"), _date.subtract(3, "weeks"), _date.subtract(2, "weeks"), _date.subtract(1, "weeks"), _date, _date.add(1, "week"), _date.add(2, "weeks"), _date.add(3, "weeks"), _date.add(1, "month")]
-
-    } else if (span === "3M") {
-      return [_date.subtract(3, "month"), _date.subtract(2, "month"), _date.subtract(1, "month"), _date, _date.add(1, "month"), _date.add(2, "month"), _date.add(3, "month")]
+    } else if (period === Period.p1Y) {
+      return [ date, ...Array(11).fill(0).map((_, i) => { return date.add(i + 1, "month") }), date ];
 
     } else {
-      return [_date.subtract(1, "year"), _date.subtract(9, "month"), _date.subtract(6, "month"), _date.subtract(3, "month"), _date, _date.add(3, "month"), _date.add(6, "month"), _date.add(9, "month"), _date.add(1, "year")]
+      const j1 = date.set( 'month', 0 ).set( 'date', 1 );
+      return Array(13).fill(0).map((_, i) => { return j1.add(i, 'month' )} )
     }
   }
 
-
-  const { dates, balances } = calculateBalanceOver(getSpanDates(), startingBalance, startDate, items);
+  const { dates, balances } = calculateBalanceOver(getPeriodRanges(), startingBalance, startDate, items);
   const cleanDatapoints: number[] = balances.filter((n) => n != null); // remove nulls
-
-  // console.log(dates.map((d)=> d.format("MM/DD/YYYY")), balances);
 
   const options: ApexOptions = {
     series: [{
@@ -235,34 +200,12 @@ export const ChartWidget: FC = () => {
         <div className="d-flex flex-stack flex-grow-1 p-10">
           <div className="symbol symbol-45px">
             <div className="symbol-label">
-              <FloatingNode id={nodeId}>
-                <button
-                  ref={refs.setReference}
-                  {...getReferenceProps()}
-                  data-open={menuIsOpen ? "" : undefined}
-                  type="button"
-                  className="btn btn-clean btn-sm btn-icon btn-icon-primary btn-active-light-primary text-gray-500 fw-bold"
-                >
-                  {span}
-                </button>
-                {menuIsOpen && (
-                  <div
-                    ref={refs.setFloating}
-                    {...getFloatingProps()}
-                    style={{ ...floatingStyles, backgroundColor: theme["kt-symbol-label-bg"] }}
-                    className="menu menu-column menu-sub-dropdown menu-sub menu-rounded menu-state-bg-light-primary fw-semibold w-150px py-3"
-                    data-kt-menu="true"
-                  >
-                    {/* begin::Menu item */}
-                    <div className="menu-item px-3">
-                      <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "1M" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("1M")}>1 Month</p>
-                      <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "3M" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("3M")}>3 Months</p>
-                      <p className={"menu-link p-3 m-0 text-gray-500 " + (span === "1Y" ? "fw-bold text-gray-700" : "")} onClick={() => onClick("1Y")}>1 Year</p>
-                    </div>
-                    {/* end::Menu item */}
-                  </div>
-                )}
-              </FloatingNode>
+              <Menu label={period} >
+                { Object.keys(Period).map( (key,i) => { 
+                  const value = Period[key as keyof typeof Period];
+                  return <MenuItem label={value} key={i} onClick={() => setPeriod(value)} /> 
+                })}
+              </Menu>
             </div>
           </div>
 

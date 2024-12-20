@@ -2,10 +2,10 @@ import React, { useContext } from "react"
 import Select from "react-select";
 
 import { Modal } from "./modal";
-import dayjs, { Dayjs, isDayjs } from "dayjs";
+import dayjs from "dayjs";
 import { useUpdateBudgetItem } from "../../hooks/useUpdateBudgetItem";
 import { BudgetContext } from "../../contexts/budgetContext";
-import { BudgetItem, BudgetItemFrequency, MonthlyBudgetItem, OneTimeBudgetItem, WeekDays, WeeklyBudgetItem } from "../../utils/schemas";
+import { BudgetItem, BudgetItemFrequency, WeekDays } from "../../utils/schemas";
 import { FormDatePicker } from "../form-datepicker";
 import { budgetItemToRecord } from "../../utils/budget";
 
@@ -14,11 +14,7 @@ import { budgetItemToRecord } from "../../utils/budget";
 //  - Finish form validation
 //  - Make "starts" date range for datepicker begin on budget start date.
 //  - When item start date is set to date in past, show message budget will reflect this item charges.
-//  - Store item frequency as "biweekly" vs "Bi-weekly" so label can be changed without messing up data.
-//  - Screen ui resets when leaving screen, but value persists. Make ui persist as well.
-//  - Takes a reload for new budget items to appear. Fix that.
-//  - Incorporate vers in getDefaultFields()?
-//  - Figure out a better way to do getDefaultFields()
+
 
 type UpdateBudgetItemProps = {
   onCancel: () => void,
