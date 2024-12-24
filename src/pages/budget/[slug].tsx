@@ -12,6 +12,7 @@ import { SimulationsWidget } from "../../components/widgets/simulations-widget"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
+//  - Remove simulations widget on simulations
 
 const BudgetDashboard: React.FC = () => {
   const context = useContext(BudgetContext);

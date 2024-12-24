@@ -1,0 +1,111 @@
+
+import dayjs from "dayjs";
+
+import {
+  BudgetItem,
+  BudgetItemFrequency,
+  WeekDays
+} from "../utils/schemas";
+
+export const sampleBudgetThreeItems: BudgetItem[] = [
+  {
+    id: "1",
+    name: "Rent",
+    amount: 1999,
+    frequency: BudgetItemFrequency.monthly,
+    dates: ["1"],
+    type: "expense",
+    starts: dayjs('2024-09-01'),
+    ends: dayjs('2025-08-01'),
+  },
+  {
+    id: "2",
+    name: "House",
+    amount: 3250,
+    frequency: BudgetItemFrequency.monthly,
+    dates: ["1"],
+    type: "expense",
+    starts: dayjs('2025-10-01'),
+    ends: "-1",
+  },
+  {
+    id: "3",
+    name: "Acura",
+    amount: 1010.16,
+    frequency: BudgetItemFrequency.monthly,
+    dates: ["15"],
+    type: "expense",
+    starts: dayjs('2024-09-01'),
+    ends: dayjs('2025-07-15'),
+  },
+  {
+    id: "4",
+    name: "Savings",
+    amount: 500,
+    frequency: BudgetItemFrequency.weekly,
+    day: WeekDays.friday,
+    type: "expense",
+    starts: dayjs('2024-09-01'),
+    ends: dayjs('2025-07-11'),
+  },
+  {
+    id: "5",
+    name: "Travis Paycheck",
+    amount: 3055.51,
+    frequency: BudgetItemFrequency.monthly,
+    dates: ["10","25"],
+    type: "income",
+    starts: dayjs('2024-09-01'),
+    ends: "-1"
+  },
+  {
+    id: "6",
+    name: "Rahni Paycheck",
+    amount: 3101.3,
+    frequency: BudgetItemFrequency.biweekly,
+    day: WeekDays.friday,
+    type: "income",
+    starts: dayjs('2024-09-13'),
+    ends: "-1"
+  },
+  {
+    id: "7",
+    name: "Harvest",
+    amount: 1330,
+    frequency: BudgetItemFrequency.monthly,
+    dates: ["5"],
+    type: "expense",
+    starts: dayjs('2024-09-01'),
+    ends: "-1",
+  },
+  {
+    id: "8",
+    name: "Leisure",
+    amount: 765,
+    frequency: BudgetItemFrequency.weekly,
+    day: WeekDays.friday,
+    type: "expense",
+    starts: dayjs('2024-09-01'),
+    ends: "-1",
+  },
+  {
+    id: "9",
+    name: "Travel",
+    amount: 300,
+    frequency: BudgetItemFrequency.weekly,
+    day: WeekDays.friday,
+    type: "expense",
+    starts: dayjs('2024-09-01'),
+    ends: "-1",
+  },
+  {
+    id: "10",
+    name: "Rest of Bills",
+    amount: 1860,
+    frequency: BudgetItemFrequency.monthly,
+    dates: ["22"],
+    type: "expense",
+    starts: dayjs('2024-09-01'),
+    ends: "-1",
+  },
+];

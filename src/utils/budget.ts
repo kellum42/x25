@@ -7,7 +7,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 
 import { numberOrNull } from './util';
-import { BudgetItem, BudgetItemFrequency, MonthlyBudgetItem, OneTimeBudgetItem, WeeklyBudgetItem } from './schemas';
+import { Budget, BudgetItem, BudgetItemFrequency, MonthlyBudgetItem, OneTimeBudgetItem, WeeklyBudgetItem, x25Error } from './schemas';
 
 // needed to use day.js plugins
 dayjs.extend(isBetween);
@@ -17,13 +17,18 @@ dayjs.extend(isSameOrAfter);
 
 // TODO:
 //  - Test if this accounts for monthly events that occur after the month ends.
-//  - ex. if something occurs on the 31st and the month only has 30 days.
-export const calculateBalance = (startDate: Dayjs, startingAmount: number, items: BudgetItem[], endDate?: Dayjs): number | string => {
+//    ex. if something occurs on the 31st and the month only has 30 days.
+//    Maybe default these charges to occur on the first of the next month. Ask user their preferene?
+//  - Incorporate returning x25 error on errors instead of strings.
+
+type CalculateBalanceAt = "StartofDay" | "EndofDay";
+export const calculateBalance = (startDate: Dayjs, startingAmount: number, items: BudgetItem[], endDate?: Dayjs, at: CalculateBalanceAt = "StartofDay"): number | string => {
   //  If endDate is null, set to today.
   //  If endDate is before startDate, return error
   const _endDate: Dayjs = endDate ?? dayjs();
-  if (_endDate.isSameOrBefore(startDate, 'day')) {
+  if (_endDate.isSameOrBefore(startDate, 'day') && at === "StartofDay" ) {
     return "End date is before start date. This is illegal.";
+    // TODO: - Maybe just return startingAmount here?
   }
 
   //  Get sumDeltas (sum of expenses/income for line items between start date and end date)
@@ -50,7 +55,7 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
     const localStartDate = item.starts.isAfter(startDate, 'day') ? item.starts : startDate;
 
     // Makes end date not inclusive --> _endDate.subtract( 1, "day" )
-    const localEndDate = item.ends != "-1" && item.ends.isBefore(_endDate, 'day') ? item.ends : _endDate.subtract(1, "day");
+    const localEndDate = item.ends != "-1" && item.ends.isBefore(_endDate, 'day') ? item.ends : _endDate.subtract( at === "EndofDay" ? 0 : 1, "day");
 
     const spanInDays = localEndDate.diff(localStartDate, "day");
 
@@ -83,7 +88,6 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
         vers.forEach((v) => { verifiedAmount += v.amount });
         sumDeltas += verifiedAmount * (item.type === "expense" ? -1 : 1);
         sumDeltas += (numOccurrences - vers.length) * item.amount * (item.type === "expense" ? -1 : 1)
-
       } else {
         sumDeltas += numOccurrences * item.amount * (item.type === "expense" ? -1 : 1);
       }
@@ -217,7 +221,7 @@ export const getUpcomingBudgetItems = (from: Dayjs, toInDays: number, items: Bud
       // console.log("%s - from: %s, days: %s, occurrence day: %s", _item.name, from.format("YYYY-MM-DD"), days, from.add(days, 'day').format("YYYY-MM-DD"));
       upcomingItems.push({ days, item: _item });
     } else {
-      console.log("GOT ERROR: %s, item: %s", days, _item.name);
+      // console.log("GOT ERROR: %s, item: %s", days, _item.name);
     }
   }
 
@@ -256,7 +260,7 @@ export const getFriday = (from: Dayjs): Dayjs => {
 }
 
 
-export const calculateBalanceOver = (dates: Dayjs[], startingBalance: number, startdate: Dayjs, lineItems: BudgetItem[], addStartDate: boolean = true): { dates: Dayjs[], balances: (number | null)[] } => {
+export const calculateBalanceOver = (dates: Dayjs[], startingBalance: number, startdate: Dayjs, lineItems: BudgetItem[], addStartDate: boolean = true, at: CalculateBalanceAt = "StartofDay"): { dates: Dayjs[], balances: (number | null)[] } => {
   let returnDates: Dayjs[] = [];
   let balances: (number | null)[] = [];
   let runningBalance: number | null = null;
@@ -267,18 +271,22 @@ export const calculateBalanceOver = (dates: Dayjs[], startingBalance: number, st
       balances.push(startingBalance);
 
     } else if (_date.isAfter(startdate, 'day')) {
-      // console.log( dates, startdate );
       // Account for if budget started between the last date and this one.
       if (addStartDate && i !== 0 && startdate.isBetween(dates[i - 1], _date, 'day', "()")) {
         returnDates.push(startdate);
         balances.push(startingBalance);
       }
 
-      const lowerBound = i === 0 || runningBalance === null ? startdate : dates[i - 1];
+      //  If "at" is set to EndofDay, then the date would have already been calculated on the last run.
+      //  Increase the lower bound by one day so we don't double count.
+      const lowerBound = i === 0 || runningBalance === null ? 
+        startdate : 
+        dates[i - 1].add( at === "EndofDay" ? 1 : 0, "day" );
+
       const upperBound = _date
       const balance = i === 0 || runningBalance === null ? startingBalance : runningBalance;
-      const calculatedBalance = calculateBalance(lowerBound, balance, lineItems, upperBound);
-
+      
+      const calculatedBalance = calculateBalance(lowerBound, balance, lineItems, upperBound, at);
       returnDates.push(_date);
       balances.push(numberOrNull(calculatedBalance));
       runningBalance = numberOrNull(calculatedBalance);
@@ -361,8 +369,6 @@ export const JSONtoBudgetItem = (json: string): BudgetItem|undefined => {
     }
     
     return item
-    // const goodItem: BudgetItem = item as BudgetItem;
-    // console.log(goodItem);
 
   } catch (e) {
     if (typeof e === "string") {
@@ -403,23 +409,35 @@ export const budgetItemToRecord = (item: BudgetItem): Record<string, string> => 
     return obj;
 }
 
-// export const isBudgetItem = (json:string): boolean => {
-//   try {
-//     const obj = JSON.parse( json );
-//     if ( obj ){
-//       if 
-//     }
+type DatesBelowThresholdReturn = {status: "success", data: {date: Dayjs, balance: number}[]} | x25Error;
+export const datesBelowThreshold = (budget: Budget, start: Dayjs, end: Dayjs, threshold: number = 0 ): DatesBelowThresholdReturn => {
+  const { startDate: budgetStart, startingBalance, items } = budget;
 
-//   } catch (e) {
-//     if (typeof e === "string") {
-//       console.log(e);
-    
-//     } else if (e instanceof Error) {
-//       console.log( e.message );
+  if ( end.isBefore( start, 'date' )){
+    return {status: "fail", message: "End date must be after start date. datesBelowThreshold()"};
+  }
 
-//     } else {
-//       console.log( "An unknown error occurred getting the budgets." );
-//     }
-//     return false;
-//   }
-// }
+  if ( budgetStart.isAfter( end, 'date' )){
+    return {status: "fail", message: "Budget is not active on given date range. datesBelowThreshold()"};
+  }
+
+  const _start = budgetStart.isAfter( start, 'day' ) ? budgetStart : start;
+  const days = end.diff( _start , 'day' );
+  
+  const dates = [_start, ...Array(days).fill(0).map((_, i) => _start.add(i + 1, 'days'))];
+  const balances = calculateBalanceOver(dates, startingBalance, budgetStart, items, false, "EndofDay" );
+  
+  return {
+    status: "success",
+    data: balances.balances
+      .map(( a,i ) => ({date: balances.dates[i], balance: a }))
+      .filter( (a): a is { date: Dayjs, balance: number } => typeof a.balance === "number" && a.balance <= threshold )
+  }
+}
+
+// Get dates and amounts
+// Check if person is in excess or underage
+// Excess = all over threshold. Else --> underage.
+// Get dollar per day for each underage instance
+// If overage, tell them how much per week/month they can spare over a certain period of time.
+// If underage, tell them how much extra to put in per week/month for how long to not be in underage.

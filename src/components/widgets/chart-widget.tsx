@@ -1,4 +1,4 @@
-import React, { FC, useState, useContext } from "react"
+import React, { FC, useState, useContext, useEffect } from "react"
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import dayjs, { Dayjs } from 'dayjs'
@@ -13,8 +13,8 @@ import { Menu, MenuItem } from "../floating-menu";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
-
-// type ChartWidgetSpan = "-3Y" | "-1Y" | "YTD" | "1Y" | "3Y"
+// TODO:
+//  - Chart data not right on simulations.
 
 export const ChartWidget: FC = () => {
 
@@ -31,39 +31,36 @@ export const ChartWidget: FC = () => {
   }
 
   enum Period { 
-    n3Y = "-3Y", 
-    n1Y = "-1Y", 
+    last3Y = "-3Y", 
+    last1Y = "-1Y", 
     YTD = "YTD", 
-    p1Y = "1Y", 
-    p3Y = "3Y" 
+    next1Y = "1Y", 
+    next3Y = "3Y" 
   };
   const format = ("MM/DD/YYYY");
 
   const { startingBalance, startDate, items } = budget;
 
   const [period, setPeriod] = useState<Period>(Period.YTD);
-  // const [menuIsOpen, setMenuIsOpen] = React.useState(false);
 
   const theme = getTheme("light");
-  
 
-  // const onClick = (period: Period) => {
-    // setMenuIsOpen(false);
-    // setSpan(timeSpan);
-  // }
+  // useEffect(() => {
+  //   console.log("date changed. period: %s", period);
+  // }, [date])
 
   const getPeriodRanges = (): Dayjs[] => {
-    if (period === Period.n3Y) {
+    if (period === Period.last3Y) {
       return [...Array(6).fill(0).map((_, i) => { return date.subtract(6 * (6-i), "month") }), date];
 
-    } else if (period === Period.p3Y) {
+    } else if (period === Period.next3Y) {
       return [ date, ...Array(6).fill(0).map((_, i) => { return date.add(6 * (i + 1), "month") })];
 
-    } else if (period === Period.n1Y) {
+    } else if (period === Period.last1Y) {
       return [ ...Array(11).fill(0).map((_, i) => { return date.subtract(12 - i, "month") }), date ];
 
-    } else if (period === Period.p1Y) {
-      return [ date, ...Array(11).fill(0).map((_, i) => { return date.add(i + 1, "month") }), date ];
+    } else if (period === Period.next1Y) {
+      return [ date, ...Array(12).fill(0).map((_, i) => { return date.add(i + 1, "month") }) ];
 
     } else {
       const j1 = date.set( 'month', 0 ).set( 'date', 1 );

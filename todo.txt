@@ -1,0 +1,5 @@
+- Multiple select on items page and get metrics on selected (like SUM, MAX, etc)
+- List times when balance dips below a threshold value
+- Give dollar figure of how much (per week and or month?) they can limit expenses or increase income to not go under
+- Replace breadcrumbs with segmented index. Maybe have tabs for Forecasting, Past (accounting), Verifications
+- On simulations have chart with new budget overlayed on parent budget chart

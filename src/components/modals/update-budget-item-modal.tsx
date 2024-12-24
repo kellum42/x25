@@ -14,7 +14,9 @@ import { budgetItemToRecord } from "../../utils/budget";
 //  - Finish form validation
 //  - Make "starts" date range for datepicker begin on budget start date.
 //  - When item start date is set to date in past, show message budget will reflect this item charges.
-
+//  - Duplicated monthly item, and the frequency of the duplicate was "once". 
+//  - Same as above, but with "dates" field.
+//  - "Day" field is not on biweekly frequency. defaults to friday though.
 
 type UpdateBudgetItemProps = {
   onCancel: () => void,
@@ -35,7 +37,7 @@ export const UpdateBudgetItem: React.FC<UpdateBudgetItemProps> = (props) => {
   const { fields, screen, next, back, update, error, save } = useUpdateBudgetItem(
     mode === "edit" && currentItem ?
       budgetItemToRecord( currentItem ) :
-      { "type": "expense", "ends": "-1", "day": "Friday" }
+      { "type": "expense", "ends": "-1", "day": "Friday", "dates": "1" }
   );
 
   const screens = [

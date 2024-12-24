@@ -6,15 +6,17 @@ import {
   getVerificationOn,
   getVerificationsBetween,
   calculateBalance,
-  JSONtoBudgetItem
+  JSONtoBudgetItem,
+  datesBelowThreshold
 } from "../../utils/budget";
 // import {
 //   BudgetItem,
 //   BudgetItemFrequency,
 //   WeeklyBudgetLineItemDays,
 // } from "../../hooks/useBudgetDetails";
-import { BudgetItem, BudgetItemFrequency } from '../../utils/schemas';
+import { Budget, BudgetItem, BudgetItemFrequency } from '../../utils/schemas';
 import { sampleBudgetTwoItems } from '../../utils/sample-budget-two';
+import { sampleBudgetThreeItems } from '../../utils/sample-budget-3';
 
 describe('daysTillFirstOccurrence()', () => {
   test('it gives 18 days between April 27th and a monthly bill due on May 15th', () => {
@@ -75,7 +77,17 @@ describe('calculateBalance()', () => {
     expect(balance).toBe(44072.30);
   });
 
-  const verifiedSampleBudgetTwoItems = sampleBudgetTwoItems.map((item) => {
+
+  // Must make deep copies of vers.
+  const verifiedSampleBudgetTwoItems = sampleBudgetTwoItems.map( item => {
+    return {
+      ...item,
+      vers: {
+        ...item.vers
+      }
+    }
+  });
+  verifiedSampleBudgetTwoItems.forEach( item => {
     if (item.name === "Apple Music") {
       item.vers = {
         "2024": {
@@ -92,8 +104,7 @@ describe('calculateBalance()', () => {
         }
       }
     }
-    return item;
-  })
+  });
 
   test('computes balance correctly with verifications', () => {
     const balance = calculateBalance(dayjs("03-01-2024"), 2000, verifiedSampleBudgetTwoItems, dayjs("03-15-2024"));
@@ -103,6 +114,14 @@ describe('calculateBalance()', () => {
   test('computes balance correctly with verifications again', () => {
     const balance = calculateBalance(dayjs("03-14-2024"), 382.79, verifiedSampleBudgetTwoItems, dayjs("07-01-2024"));
     expect(balance).toBe(16482.82);
+  });
+
+  test( 'gets correct end of day balance', () => {
+    let balance = calculateBalance( dayjs("2024-09-01"), 4000, sampleBudgetThreeItems, dayjs("2024-09-06"), "EndofDay" );
+    expect( balance ).toBe( -894.00 );
+
+    balance = calculateBalance( dayjs("2024-09-01"), 4000, sampleBudgetThreeItems, dayjs("2025-04-05"), "EndofDay" );
+    expect( balance ).toBe( -1941.48 );
   });
 });
 
@@ -124,13 +143,90 @@ describe('JSONtoBudgetItem()', () => {
   });
 });
 
-// test( 'it calculates daily periods and balances correctly for sample budget #2', () => {
+describe( 'calculateBalanceOver()', () => {
+  test( 'it calculates daily periods and balances correctly for sample budget #2', () => {
+  
+    const { balances, dates } = calculateBalanceOver( [dayjs('2024-5-16')], 2000, dayjs('2024-3-1'), sampleBudgetTwoItems, );
+    expect( dates.length ).toBe( 1 );
+    expect( dates[0].format('M/D/YY') ).toBe( '5/16/24' );
+    expect( balances[0] ).toEqual( 10718.29 );
+  });
 
-//   const { balances, dates } = calculateBalanceOver( [dayjs('2024-5-16')], 2000, dayjs('2024-3-1'), sampleBudgetTwoItems, );
-//   expect( dates.length ).toBe( 1 );
-//   expect( dates[0].format('M/D/YY') ).toBe( '5/16/24' );
-//   // expect( balances[0] ).toEqual( 10718.29 );
-// });
+  // Also tests we get null before the start date.
+  test( 'calculates balance over the next year correctly', () => {
+    const date = dayjs("2024-07-12");
+    const periods = [ date, ...Array(12).fill(0).map((_, i) => { return date.add(i + 1, "month") }) ];
+    const { balances } = calculateBalanceOver( periods, 4000, dayjs("2024-09-01"), sampleBudgetThreeItems, false );
+    expect( balances[0] ).toEqual( null );
+    expect( balances[1] ).toEqual( null );
+    expect( balances[2] ).toEqual( 2161.51 );
+    expect( balances[3] ).toEqual( 3552.27 );
+    expect( balances[4] ).toEqual( 3406.73 );
+    expect( balances[5] ).toEqual( 3261.19 );
+    expect( balances[6] ).toEqual( 1550.65 );
+    expect( balances[7] ).toEqual( 1405.11 );
+    expect( balances[8] ).toEqual( 1259.57 );
+    expect( balances[9] ).toEqual( 2650.33 );
+    expect( balances[10] ).toEqual( 2504.79 );
+    expect( balances[11] ).toEqual( 2359.25 );
+    expect( balances[12] ).toEqual( 648.71 );
+    // expect( balances[11] ).toEqual( 2503.17 );
+    // expect( balances[12] ).toEqual( 7366.79 );
+  });
+
+  test( 'calculates end of day balance correctly', () => {
+    const _dates = [
+      ["2024/09/05", 671.00],
+      ["2024/09/06", -894.00],
+      ["2024/09/10", 2161.51],
+      ["2024/09/22", -737.35],
+      ["2024/09/25", 2318.16 ],
+      ["2024/10/01", 1855.46 ],
+      ["2024/11/08", 351.22 ],
+      ["2024/12/27", 1852.84 ],
+      ["2025/01/10", 1550.65],
+      ["2025/06/22", -539.61],
+      ["2025/08/15", 4539.47],
+      ["2026/10/28", 34489.56],
+    ];
+    const { balances, dates } = calculateBalanceOver(
+      _dates.map( d => dayjs( d[0] )),
+      4000,
+      dayjs( "2024/09/01" ),
+      sampleBudgetThreeItems,
+      false,
+      "EndofDay"
+    );
+    _dates.map( (d,i) => {
+      expect( dates[i].format("YYYY/MM/DD") ).toBe( _dates[i][0]);
+      expect( balances[i] ).toBe( _dates[i][1])
+    })
+  });
+});
+
+test( 'datesBelowThreshold()', () => {
+  const budget: Budget = {
+    id: "1",
+    title: "TESTING",
+    slug: "TESTING",
+    startingBalance: 4000,
+    startDate: dayjs("09/01/24"),
+    items: sampleBudgetThreeItems
+  };
+
+  const results = datesBelowThreshold(budget, dayjs( "2024-09-01"), dayjs( "2025-01-01"));
+  expect( results.status).toBe("success");
+  
+  if ( results.status === "success" ){
+    results.data.map( result => {
+      console.log( "Date: %s, Balance: %d", result.date.format("YYYY-MM-DD"), result.balance)
+      return result;
+    })
+    expect( results.data.length).toBe( 3 );
+  }
+});
+
+
 
 // test( 'it shows the correct items for the week of 4/5/24 for sample budget #2 via getThisWeeksBudgetLineItems()', () => {
 //   const items = getWeeksBudgetLineItems( dayjs( '4/8/24' ), dayjs( '1/1/24' ), sampleBudgetTwoItems );
@@ -150,70 +246,58 @@ describe('JSONtoBudgetItem()', () => {
 //   expect( items[3].item.name ).toBe( 'Paycheck' );
 // });
 
-// const mockItemWithVerifications: BudgetLineItem = {
-//   id: "1",
-//   name: "Car Insurance",
-//   amount: 198.65,
-//   frequency: BudgetLineItemFrequency.Monthly,
-//   dates: [15],
-//   type: "expense",
-//   starts: dayjs('2024-01-01'),
-//   ends: -1,
-//   vers: { 
-//     "2024": { 
-//       "1": {
-//         "15": 186.80
-//       },
-//       "5": {
-//         "15": 210.84
-//       },
-//       "10": {
-//         "15": 211.22
-//       },
-//       "11": {},
-//       "12": {
-//         "15": 232.99
-//       }
-//     },
-//     "2025": {
-//       "4": {
-//         "15": 222.17
-//       },
-//       "5": {
-//         "15": 220.94
-//       }
-//     }
-//   }
-// }
+const mockItemWithVerifications: BudgetItem = {
+  id: "1",
+  name: "Car Insurance",
+  amount: 198.65,
+  frequency: BudgetItemFrequency.monthly,
+  dates: ["15"],
+  type: "expense",
+  starts: dayjs('2024-01-01'),
+  ends: "-1",
+  vers: { 
+    "2024": { 
+      "1": {
+        "15": 186.80
+      },
+      "5": {
+        "15": 210.84
+      },
+      "10": {
+        "15": 211.22
+      },
+      "11": {},
+      "12": {
+        "15": 232.99
+      }
+    },
+    "2025": {
+      "4": {
+        "15": 222.17
+      },
+      "5": {
+        "15": 220.94
+      }
+    }
+  }
+}
 
-// test( 'getVerificationOn() gets correct value', () => {
-//   const result1 = getVerificationOn( dayjs( "05/15/2024" ), mockItemWithVerifications );
-//   expect( result1 ).toBe( 210.84 );
+test( 'getVerificationOn() gets correct value', () => {
+  const result1 = getVerificationOn( dayjs( "05/15/2024" ), mockItemWithVerifications );
+  expect( result1 ).toBe( 210.84 );
 
-// });
+});
 
-// test( 'getVerificationBetween() gets correct values', () => {
-//   const result2 = getVerificationsBetween( [ dayjs("3/15/24"), dayjs("5/1/25" ) ], mockItemWithVerifications );
-//   expect( result2!.length ).toBe( 4 );
-//   expect( result2 ).toEqual([ 
-//     { date: "2024-May-15", amount: 210.84 }, 
-//     { date: "2024-Oct-15", amount: 211.22 }, 
-//     { date: "2024-Dec-15", amount: 232.99 }, 
-//     { date: "2025-Apr-15", amount: 222.17 } 
-//   ])
-// });
-
-
-
-
-
-
-
-
-
-
-
-
+test( 'getVerificationBetween() gets correct values', () => {
+  const result2 = getVerificationsBetween( [ dayjs("3/15/24"), dayjs("5/1/25" ) ], mockItemWithVerifications );
+  expect( result2!.length ).toBe( 4 );
+  expect( result2 ).toEqual([ 
+    { date: "2024-May-15", amount: 210.84 }, 
+    { date: "2024-Oct-15", amount: 211.22 }, 
+    { date: "2024-Dec-15", amount: 232.99 }, 
+    { date: "2025-Apr-15", amount: 222.17 } 
+  ])
+});
 
 
 
@@ -255,7 +339,7 @@ describe('JSONtoBudgetItem()', () => {
 
 
 // test('it gives $5358.26 for the balance.', () => {
-//   const budgetLineItems: BudgetLineItem[] = getSampleBudgetLineItems();
+//   // const budgetLineItems: BudgetItem[] = getSampleBudgetLineItems();
 
 //   const monthBalance = calculateBalance(dayjs('2024-08-23'), 5346.14, budgetLineItems, dayjs('2024-10-10')); // entire span
 //   expect(monthBalance).toBe(5358.26);
