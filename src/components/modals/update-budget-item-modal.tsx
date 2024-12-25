@@ -14,9 +14,6 @@ import { budgetItemToRecord } from "../../utils/budget";
 //  - Finish form validation
 //  - Make "starts" date range for datepicker begin on budget start date.
 //  - When item start date is set to date in past, show message budget will reflect this item charges.
-//  - Duplicated monthly item, and the frequency of the duplicate was "once". 
-//  - Same as above, but with "dates" field.
-//  - "Day" field is not on biweekly frequency. defaults to friday though.
 
 type UpdateBudgetItemProps = {
   onCancel: () => void,
@@ -31,12 +28,12 @@ export const UpdateBudgetItem: React.FC<UpdateBudgetItemProps> = (props) => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  
+
 
   const { mode, onCancel, currentItem } = props;
   const { fields, screen, next, back, update, error, save } = useUpdateBudgetItem(
     mode === "edit" && currentItem ?
-      budgetItemToRecord( currentItem ) :
+      budgetItemToRecord(currentItem) :
       { "type": "expense", "ends": "-1", "day": "Friday", "dates": "1" }
   );
 
@@ -146,7 +143,20 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
   const day = fields.day ?? "Friday";
 
   const dateFormat = "YYYY-MM-DD";
-  const isWeekly = frequency === "Weekly" || frequency === "Biweekly";
+  const isWeekly = frequency === BudgetItemFrequency.weekly || frequency === BudgetItemFrequency.biweekly;
+
+  const prettyDate = (_date: string|number): string => {
+    const date = typeof _date === "number" ? _date.toString() : _date;
+    const suffix = ["1", "21", "31"].includes(date) ?
+      "st" :
+      ["2", "22"].includes(date) ?
+        "nd" :
+        ["3", "23"].includes(date) ?
+          "rd" :
+          "th"
+      ;
+    return date + suffix;
+  }
 
   return (
     <div>
@@ -154,7 +164,11 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
         <label className="required fs-5 fw-semibold mb-2">Frequency</label>
         <p className="fs-7 fw-semibold text-muted">How often will this item occur?</p>
         <Select
-          defaultValue={{ label: "Once", value: "Once" }}
+          defaultValue={
+            "frequency" in fields ?
+              { label: frequency, value: frequency } :
+              { label: "Once", value: "Once" }
+          }
           options={
             Object.keys(BudgetItemFrequency).map(
               key => ({
@@ -187,23 +201,19 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
                 <label className="required fs-6 fw-semibold">Dates</label>
                 <div className="fs-7 fw-semibold text-muted">What dates will this occur? (ex. 1st of month)</div>
                 <Select
-                  defaultValue={{ label: "1st", value: "1" }}
-                  isMulti
-                  options={
-                    Array(31).fill(0).map((_, _i) => {
-                      const i = _i + 1;
-                      const suffix = [1, 21, 31].includes(i) ?
-                        "st" :
-                        [2, 22].includes(i) ?
-                          "nd" :
-                          [3, 23].includes(i) ?
-                            "rd" :
-                            "th"
-                        ;
-                      return { label: i + suffix, value: i.toString() }
-                    })
+                  defaultValue={
+                    "dates" in fields ?
+                    fields.dates?.split(",").map( date => ({ label: prettyDate(date), value: date })) :
+                    { label: "1st", value: "1" }
                   }
-                  onChange={(newValue) => update("dates", newValue.map(v => v.value).join(","))}
+                isMulti
+                options={
+                  Array(31).fill(0).map((_, _i) => {
+                    const i = _i + 1;
+                    return { label: prettyDate(i), value: i.toString() }
+                  })
+                }
+                onChange={(newValue) => update("dates", newValue.map(v => v.value).join(","))}
                 />
               </div>
             }

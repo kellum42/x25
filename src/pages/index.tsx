@@ -1,10 +1,13 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import type { HeadFC, PageProps } from "gatsby"
 
 import BudgetCard from '../components/budget-card'
 import { Layout } from "../components/layout"
-import { getBudgets } from "../utils/localStorage"
-import { AddNewBudget } from "../components/modals/add-new-budget"
+import { getBudgets, saveBudget } from "../utils/localStorage"
+import { UpdateBudget } from "../components/modals/update-budget"
+import { Budget, x25Error } from "../utils/schemas"
+import { generateAvatar, getUniqueID, slugify } from "../utils/util"
+import dayjs from "dayjs"
 
 // TODO:
 //  - Get popup on budget cards working
@@ -12,8 +15,22 @@ import { AddNewBudget } from "../components/modals/add-new-budget"
 
 const IndexPage: React.FC<PageProps> = () => {
   const [createNewBudget, setCreateNewBudget] = useState<boolean>(false);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [error, setError] = useState<x25Error>();
 
-  const response = getBudgets();
+  const fetchBudgets = () => {
+    const response = getBudgets();
+    if ( response.status === "success" ){
+      const _budgets = Object.values(response.data).filter(budget => budget.parent === undefined);
+      setBudgets(_budgets);
+    } else {
+      setError(response);
+    }
+  }
+
+  useEffect(() => {
+    fetchBudgets();
+  },[])
 
   return (
     <Layout>
@@ -25,17 +42,40 @@ const IndexPage: React.FC<PageProps> = () => {
       </div>
 
       <div className="row">
-        {response.status === "fail" && <p>{response.message}</p>}
-        {response.status === "success" && Object.values(response.data).filter(budget => budget.parent === undefined).map(budget => (
-          <BudgetCard budget={budget} />
-        ))}
+        {error && <p>{error.message}</p>}
+        { budgets.map( budget => (
+          <BudgetCard budget={budget} onDeleteSuccess={() => fetchBudgets()} />
+        ))} 
       </div>
 
       {createNewBudget &&
-        <AddNewBudget 
+        <UpdateBudget
+          mode="create"
           onCancel={() => setCreateNewBudget(false)}
-          onNewBudgetCreated={() => {
-            console.log("yay new budget created.");
+          onReadyToUpdate={(title, startingBalance, startDate) => {
+            const budget: Record<string,any> = {
+              id: getUniqueID(),
+              title,
+              slug: slugify(title),
+              startingBalance: parseInt(startingBalance),
+              startDate: dayjs(startDate),
+              items: [],
+              createDate: dayjs(),
+              avatar: generateAvatar()
+            }
+            const response = Budget.safeParse( budget );
+            if ( response.success ){
+              const saved = saveBudget( budget as Budget );
+              if ( saved.status === "success" ){
+                fetchBudgets();
+        
+              } else {
+                setError(saved);
+              }
+            } else {
+              // error with budget schema.
+              setError({ status: "fail", message: "Budget is invalid." });
+            }
             setCreateNewBudget(false);
           }}
         />

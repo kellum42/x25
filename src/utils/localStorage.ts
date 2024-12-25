@@ -111,7 +111,19 @@ export const saveBudget = (budget: Budget): SaveResponse => {
 
   const budgets = response.data;
 
-  budgets[budget.id] = budget;
+  if ( budget.id in budgets ){
+    // Update
+    const _budget = budgets[budget.id];
+    budgets[budget.id] = {
+      ..._budget,
+      ...budget
+    }
+
+  } else {
+    // Create
+    budgets[budget.id] = budget;
+  }
+  
   localStorage.setItem(budgetsKey, JSON.stringify(budgets));
   localStorage.setItem(intialUseKey, "initial");
 
@@ -146,5 +158,26 @@ export const deleteBudgetItem = (id: string, itemId: string ): {status: "success
     
   } else {
     return { status: "fail", message: "Could not find budget." };
+  }
+}
+
+export const deleteBudget = (id: string): {status: "success"} | x25Error => {
+  const response = getBudgets();
+
+  if (response.status === "fail") {
+    return { status: "fail", message: "Error occurred deleting budget. Please try again later." };
+  }
+
+  const budgets = response.data;
+
+  if ( id in budgets ){
+    delete budgets[id];
+    localStorage.setItem(budgetsKey, JSON.stringify(budgets));
+    localStorage.setItem(intialUseKey, "initial");
+
+    return {status: "success"};
+
+  } else {
+    return { status: "fail", message: "Could not find budget. Please try again later." };
   }
 }

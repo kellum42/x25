@@ -3,54 +3,38 @@ import dayjs from "dayjs";
 
 import { Modal } from "./modal"
 import { FormDatePicker } from "../form-datepicker";
-import { generateAvatar, getUniqueID, slugify } from "../../utils/util";
-import { Budget } from "../../utils/schemas";
-import { saveBudget } from "../../utils/localStorage";
 
-type AddNewBudgetProps = {
+type UpdateBudgetProps = {
   onCancel: () => void,
-  onNewBudgetCreated: () => void
+  onReadyToUpdate: (title: string, startingBalance: string, startDate: string) => void,
+  mode: "create" | "update",
+  defaults?: Record<string,string>
 }
 
 // TODO:
 //    - Handle validation errors.
+//  - Update budget. Issue with items deep copy.
+//  - Delete budget.
 
-export const AddNewBudget: React.FC<AddNewBudgetProps> = (props) => {
-  const [title, setTitle] = useState<string>("");
-  const [amount, setAmount] = useState<string>("");
-  const [startDate, setStartDate] = useState<string>(dayjs().format("MM/DD/YYYY"));
+export const UpdateBudget: React.FC<UpdateBudgetProps> = (props) => {
+  const defaults = props.defaults ?? {};
 
-  const createNewBudget = () => {
-    const budget: Record<string,any> = {
-      id: getUniqueID(),
-      title,
-      slug: slugify(title),
-      startingBalance: parseInt(amount),
-      startDate: dayjs(startDate),
-      items: [],
-      createDate: dayjs(),
-      avatar: generateAvatar()
-    }
-    const response = Budget.safeParse( budget );
-    if ( response.success ){
-      const saved = saveBudget( budget as Budget );
-      if ( saved.status === "success" ){
-        props.onNewBudgetCreated();
-
-      } else {
-        console.log(saved.message);
-      }
-    } else {
-      console.log(response.error);
-    }
-  }
+  const [title, setTitle] = useState<string>(defaults["title"] ?? "");
+  const [amount, setAmount] = useState<string>(defaults["amount"] ?? "");
+  const [startDate, setStartDate] = useState<string>(
+    dayjs(defaults["startDate"] ?? undefined ).format("MM/DD/YYYY")
+  );    
 
   return (
     <Modal
-      title="Create New Budget"
+      title={(props.mode === "create" ? "Create New" : "Update") + " Budget"}
       isOpen={true}
       setIsOpen={props.onCancel}
-      action={{ label: "Submit", cancel: "Cancel", actionFn: createNewBudget }}
+      action={{ 
+        label: "Submit", 
+        cancel: "Cancel", 
+        actionFn: () => { props.onReadyToUpdate(title, amount, startDate) }
+      }}
     >
       <div>
         <div className="mb-5 fv-row fv-plugins-icon-container">

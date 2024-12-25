@@ -8,6 +8,7 @@ import { Layout } from "../../components/layout"
 import { WeeklyWidget } from "../../components/widgets/weekly-widget"
 import { SummaryWidget } from "../../components/widgets/summary-widget"
 import { SimulationsWidget } from "../../components/widgets/simulations-widget"
+import { UpdateBudget } from "../../components/modals/update-budget"
 // import { Budget } from "../../utils/schemas"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
@@ -21,7 +22,9 @@ const BudgetDashboard: React.FC = () => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { budget } = context;
+  const { budget, updateBudget, error } = context;
+
+  const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
 
   return (
     budget ?
@@ -37,27 +40,51 @@ const BudgetDashboard: React.FC = () => {
             </ul>
           </div>
           <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
-            <a href="#" className="btn bg-body btn-color-gray-700 btn-active-primary me-4">Edit Items</a>
+            <button onClick={() => setIsEditingBudget(true)} className="btn bg-body btn-color-gray-700 btn-active-primary me-4">Edit Budget</button>
             <Link to={`/budget/${budget.slug}/items`} className="btn btn-primary">View Items</Link>
           </div>
         </div>
         <div className="mt-8">
-          <div className="row">
-            <div className="col-lg-6">
-              <SummaryWidget />
-              <ChartWidget />
-              <div className="d-none d-lg-block">
-                <SimulationsWidget />
+          {budget.parent && 
+            <div className="row">
+              <div className="col">
+                <ChartWidget height="300px" />
               </div>
             </div>
-            <div className="col-lg-6">
-              <WeeklyWidget />
-              <div className="d-lg-none">
-                <SimulationsWidget />
+          }
+          {budget.parent === undefined &&
+            <div className="row">
+              <div className="col-lg-6">
+                <SummaryWidget />
+                <ChartWidget />
+                <div className="d-none d-lg-block">
+                  <SimulationsWidget />
+                </div>
+              </div>
+              <div className="col-lg-6">
+                <WeeklyWidget />
+                <div className="d-lg-none">
+                  <SimulationsWidget />
+                </div>
               </div>
             </div>
-          </div>
+          }
         </div>
+        {isEditingBudget &&
+          <UpdateBudget
+            mode="update"
+            onReadyToUpdate={(title, startingBalance, startDate) => { 
+              updateBudget({ title, startingBalance, startDate });
+              setIsEditingBudget(false);
+            }}
+            onCancel={() => setIsEditingBudget(false)}
+            defaults={{
+              title: budget.title,
+              amount: budget.startingBalance.toString(),
+              startDate: budget.startDate.format("YYYY-MM-DD")
+            }}
+          />
+        }
       </div>
       :
       <></>

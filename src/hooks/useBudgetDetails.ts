@@ -5,13 +5,15 @@ import { saveBudget, getBudget } from '../utils/localStorage';
 import { x25Error, Budget, BudgetItem } from '../utils/schemas';
 import { getUniqueID } from '../utils/util';
 
+
 export type UseBudgetDetails = {
   budget?: Budget,
   error?: x25Error,
   verifyAmount: (date: Dayjs, item: BudgetItem, amount: number | null) => void,
   duplicateBudgetItem: (item: BudgetItem) => void,
   deleteBudgetItem: (item: BudgetItem) => void,
-  updateBudgetItem: (item: BudgetItem) => void
+  updateBudgetItem: (item: BudgetItem) => void,
+  updateBudget: (updates: Record<string,string>) => void
 }
 
 export const useBudgetDetails = (slug: string): UseBudgetDetails => {
@@ -127,6 +129,37 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     _updateBudgetItem(item);
   }
 
+  const updateBudget = (_updates: Record<string,string>) => {
+    if ( data === undefined ){
+      setError({ status: "fail", message: "Can't update budget. It does not exist" });
+    
+    } else {
+      
+      const updates: Budget = {...data, items: data.items, avatar: data.avatar };
+
+      for ( const key in _updates ){
+        if ( "startingBalance" === key ){
+          updates.startingBalance = parseFloat( _updates[key] );
+        
+        } else if ( "startDate" === key ){
+          updates.startDate = dayjs( _updates[key] );
+        
+        } else if ( "title" === key ){
+          updates.title = _updates[key];
+
+        } else if ( "slug" === key ){
+          updates.slug = _updates[key];
+        }
+      }
+
+      setData(prev => (
+        prev === undefined ?
+          undefined :
+          {...prev, ...updates}
+      ))
+    }
+  }
+
   const deleteBudgetItem = (item: BudgetItem) => {
     if (data) {
       const items = data.items.filter((_item) => _item.id !== item.id);
@@ -158,5 +191,13 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }
   }, [data]);
 
-  return { budget: data, error, verifyAmount, duplicateBudgetItem, deleteBudgetItem, updateBudgetItem };
+  return { 
+    budget: data, 
+    error, 
+    verifyAmount,
+    updateBudget, 
+    duplicateBudgetItem, 
+    deleteBudgetItem, 
+    updateBudgetItem 
+  };
 }

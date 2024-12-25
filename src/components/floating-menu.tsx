@@ -24,6 +24,7 @@ import {
   useTypeahead
 } from "@floating-ui/react";
 import * as React from "react";
+import { MenuButton } from "./menu-button";
 
 const MenuContext = React.createContext<{
   getItemProps: (
@@ -46,6 +47,7 @@ interface MenuProps {
   nested?: boolean;
   rootMenuButton?: React.ReactNode;
   children?: React.ReactNode;
+  showLabel?: boolean;
 }
 
 export const MenuComponent = React.forwardRef<
@@ -152,10 +154,10 @@ export const MenuComponent = React.forwardRef<
         data-open={isOpen ? "" : undefined}
         data-nested={isNested ? "" : undefined}
         data-focus-inside={hasFocusInside ? "" : undefined}
-        className={ 
-          rootMenuButton && !isNested 
-          ? "tn btn-sm btn-icon btn-color-light-dark btn-active-light-primary" 
-          : isNested ? "menu-item px-3" : ""}
+        className={
+          // rootMenuButton && !isNested ? 
+          // "tn btn-sm btn-icon btn-color-light-dark btn-active-light-primary" : 
+          isNested ? "menu-item px-3" : ""}
         type="button"
         // className={
         //   { rootMenuButton && !isNested && "" }
@@ -175,20 +177,16 @@ export const MenuComponent = React.forwardRef<
           })
         )}
       >
-        {rootMenuButton && !isNested ?
-          rootMenuButton :
-          <a className="menu-link px-3">
-            {isNested ? <span className="menu-title">{label}</span> : label}
-            {isNested && (
-              <span className="menu-arrow"></span>
-            )}
-          </a>
-          // <a className="menu-link px-3">
-          //   <span className="menu-title">{label}</span>
-          //   <span className="menu-arrow"></span>
-          // </a> :
-
+        { 
+          ( isNested || props.showLabel ) ?
+          <a className={`menu-link px-3 ${props.className ?? ""}`}>
+            <span className="menu-title">{label}</span>
+            <span className="menu-arrow"></span>
+          </a> :
+          <MenuButton />
         }
+        
+
         {/* <a className="menu-link px-3">
           { isNested ? <span className="menu-title">{label}</span> : label }
           {isNested && (
@@ -245,14 +243,14 @@ export const MenuItem = React.forwardRef<
   const item = useListItem({ label: disabled ? null : label });
   const tree = useFloatingTree();
   const isActive = item.index === menu.activeIndex;
-
+  
   return (
     <button
       {...props}
       ref={useMergeRefs([item.ref, forwardedRef])}
       type="button"
       role="menuitem"
-      className="menu-item px-3"
+      className={`menu-item px-3 ${props.className ?? ""}`}
       tabIndex={isActive ? 0 : -1}
       disabled={disabled}
       style={{ background: "none", border: "none" }}

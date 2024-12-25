@@ -13,10 +13,11 @@ import { Menu, MenuItem } from "../floating-menu";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
-// TODO:
-//  - Chart data not right on simulations.
+type ChartWidgetProps = {
+  height?: string
+}
 
-export const ChartWidget: FC = () => {
+export const ChartWidget: FC<ChartWidgetProps> = (props) => {
 
   const _context = useContext(BudgetContext);
 
@@ -41,59 +42,52 @@ export const ChartWidget: FC = () => {
 
   const { startingBalance, startDate, items } = budget;
 
-  const [period, setPeriod] = useState<Period>(Period.YTD);
+  const [period, setPeriod] = useState<Period>(Period.next1Y);
 
   const theme = getTheme("light");
 
-  // useEffect(() => {
-  //   console.log("date changed. period: %s", period);
-  // }, [date])
-
   const getPeriodRanges = (): Dayjs[] => {
     if (period === Period.last3Y) {
-      return [...Array(6).fill(0).map((_, i) => { return date.subtract(6 * (6-i), "month") }), date];
+      return [...Array(36).fill(0).map((_, i) => { return date.subtract(36-i, "month") }), date];
 
     } else if (period === Period.next3Y) {
-      return [ date, ...Array(6).fill(0).map((_, i) => { return date.add(6 * (i + 1), "month") })];
+      return [ date, ...Array(36).fill(0).map((_, i) => { return date.add(i + 1, "month") })];
 
     } else if (period === Period.last1Y) {
-      return [ ...Array(11).fill(0).map((_, i) => { return date.subtract(12 - i, "month") }), date ];
+      return [ ...Array(365).fill(0).map((_, i) => { return date.subtract(365 - i, "day") }), date ];
 
     } else if (period === Period.next1Y) {
-      return [ date, ...Array(12).fill(0).map((_, i) => { return date.add(i + 1, "month") }) ];
+      return [ date, ...Array(365).fill(0).map((_, i) => { return date.add(i + 1, "day") }) ];
 
     } else {
       const j1 = date.set( 'month', 0 ).set( 'date', 1 );
-      return Array(13).fill(0).map((_, i) => { return j1.add(i, 'month' )} )
+      return Array(365).fill(0).map((_, i) => { return j1.add(i, 'day' )} )
     }
   }
 
   const { dates, balances } = calculateBalanceOver(getPeriodRanges(), startingBalance, startDate, items);
-  const cleanDatapoints: number[] = balances.filter((n) => n != null); // remove nulls
 
   const options: ApexOptions = {
     series: [{
-      name: 'Balance',
-      data: balances
+      name: undefined,
+      data: balances.map((bal,i) => {
+        return {x: dates[i].toDate().getTime(), y: bal }
+      })
     }],
     chart: {
       fontFamily: 'inherit',
       type: 'area',
-      height: '300px',
-      width: '100%',
-      toolbar: {
-        show: false
-      },
+      // height: '300px',
+      // width: '100%',
+      // toolbar: {
+      //   show: false
+      // },
+      // zoom: {
+      //   enabled: false
+      // },
       zoom: {
-        enabled: false
-      },
-      sparkline: {
-        enabled: true
+        autoScaleYaxis: true
       }
-    },
-    plotOptions: {},
-    legend: {
-      show: false
     },
     dataLabels: {
       enabled: false
@@ -109,20 +103,12 @@ export const ChartWidget: FC = () => {
       colors: [theme.primary]
     },
     xaxis: {
-      categories: dates.map((_d) => { return _d.format(format) }),
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false
-      },
-      labels: {
-        show: false,
-        style: {
-          colors: theme["grey-500"],
-          fontSize: '12px',
-        }
-      },
+      type: 'datetime',
+      // labels: {
+      //   datetimeFormatter: {
+      //     month: 'MMM' // Show only the 3-letter month abbreviation
+      //   }
+      // },
       crosshairs: {
         show: false,
         position: 'front',
@@ -132,56 +118,29 @@ export const ChartWidget: FC = () => {
           dashArray: 3
         }
       },
-      tooltip: {
-        enabled: true,
-        formatter: undefined,
-        offsetY: 0,
-        style: {
-          fontSize: '12px'
-        }
-      }
     },
     yaxis: {
-      min: Math.min(...cleanDatapoints) < 0 ? Math.min(...cleanDatapoints) - 100 : 0,
-      max: Math.max(...cleanDatapoints) + 250,
       labels: {
-        show: false,
-        style: {
-          colors: theme["grey-500"],
-          fontSize: '12px'
-        }
-      }
-    },
-    states: {
-      normal: {
-        filter: {
-          type: 'none',
-          value: 0
+        formatter: function (value) {
+          if (value > -1000 && value < 1000) {
+            return value.toFixed(0); // Return the number as is
+          }
+        
+          const kValue = value / 1000;
+          return (value % 1000 === 0 ? kValue : kValue.toFixed(1)) + "k"; // Return the number with "k" suffix
         }
       },
-      hover: {
-        filter: {
-          type: 'none',
-          value: 0
-        }
-      },
-      active: {
-        allowMultipleDataPointsSelection: false,
-        filter: {
-          type: 'none',
-          value: 0
-        }
-      }
     },
     tooltip: {
       style: {
         fontSize: '12px'
       },
-      // y: {
-      //   formatter: function (val: string) {
-      //     return "$" + val + " sales"
-      //   }
-      // }
+      y: {
+        formatter: function (val: number | null) {
+          if ( val === null ){ return "--"; }
+          return "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 })
+        }
+      }
     },
     colors: [theme.primary],
     markers: {
@@ -197,11 +156,17 @@ export const ChartWidget: FC = () => {
         <div className="d-flex flex-stack flex-grow-1 p-10">
           <div className="symbol symbol-45px">
             <div className="symbol-label">
-              <Menu label={period} >
-                { Object.keys(Period).map( (key,i) => { 
-                  const value = Period[key as keyof typeof Period];
-                  return <MenuItem label={value} key={i} onClick={() => setPeriod(value)} /> 
-                })}
+              <Menu label={period} className="fw-bold text-gray-500" showLabel={true}>
+                { Object.keys(Period)
+                    .filter( 
+                      key => budget.parent === undefined || 
+                      [Period.YTD, Period.next1Y, Period.next3Y].includes( Period[key as keyof typeof Period] )
+                    )
+                    .map( (key,i) => { 
+                      const value = Period[key as keyof typeof Period];
+                      return <MenuItem label={value} key={i} onClick={() => setPeriod(value)} /> 
+                    })
+                }
               </Menu>
             </div>
           </div>
@@ -216,7 +181,7 @@ export const ChartWidget: FC = () => {
           options={options}
           series={options.series}
           type="area"
-          height="150"
+          height={props.height ?? ""}
         />
       </div>
     </div>

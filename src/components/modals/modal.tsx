@@ -42,7 +42,7 @@ export const Modal: React.FC<ModalProps> = (props) => {
               </div>
             </div>
             <div className="modal-body py-10 px-lg-17">
-              <div className="scroll-y me-n7 pe-7">
+              <div className="me-n7 pe-7">
                 {children}
               </div>
             </div>
