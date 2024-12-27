@@ -89,6 +89,23 @@ export const getBudget = (slug: string): GetBudgetResponse => {
   return budget;
 }
 
+export const getBudgetByID = (id: string): GetBudgetResponse => {
+  const response = getBudgets();
+
+  if (response.status === "fail") {
+    return response;
+  }
+  const budgets = response.data;
+  if ( id in budgets ){
+    return { status: "success", data: budgets[id] }
+  } else {
+    return {
+      status: "fail",
+      message: `Budget with ID '${id}' could not be found.`
+    }
+  }
+}
+
 export const getSimulationsForBudget = (id?: string): {status: "success", sims: Budget[]} | x25Error => {
   if ( id === undefined ){
     return {status: "fail", message: "Can't get simulations for invalid budget id."};

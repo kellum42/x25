@@ -30,3 +30,16 @@ export const generateAvatar = (): { color: string, bg: string, svg: number } => 
   const color = colors[Math.floor(Math.random() * colors.length)];
   return { ...color, svg: Math.floor(Math.random() * svgs.length) }
 };
+
+
+export const addDateSuffix = (date: string): string => {
+  const suffix = ["1", "21", "31"].includes(date) ?
+  "st" :
+  ["2", "22"].includes(date) ?
+    "nd" :
+    ["3", "23"].includes(date) ?
+      "rd" :
+      "th"
+  ;
+  return date + suffix;
+}

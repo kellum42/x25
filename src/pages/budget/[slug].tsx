@@ -9,6 +9,8 @@ import { WeeklyWidget } from "../../components/widgets/weekly-widget"
 import { SummaryWidget } from "../../components/widgets/summary-widget"
 import { SimulationsWidget } from "../../components/widgets/simulations-widget"
 import { UpdateBudget } from "../../components/modals/update-budget"
+import { SimulationsSummaryWidget } from "../../components/widgets/simulation-summary-widget"
+import { SimulationChangesWidget } from "../../components/widgets/simulation-changes-widget"
 // import { Budget } from "../../utils/schemas"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
@@ -25,6 +27,8 @@ const BudgetDashboard: React.FC = () => {
   const { budget, updateBudget, error } = context;
 
   const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
+  
+  const isSimulation = budget?.parent !== undefined;
 
   return (
     budget ?
@@ -40,19 +44,27 @@ const BudgetDashboard: React.FC = () => {
             </ul>
           </div>
           <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
-            <button onClick={() => setIsEditingBudget(true)} className="btn bg-body btn-color-gray-700 btn-active-primary me-4">Edit Budget</button>
+            <button onClick={() => setIsEditingBudget(true)} className="btn bg-body btn-color-gray-700 btn-active-primary me-4">
+              Edit { isSimulation ? "Simulation" : "Budget" }
+            </button>
             <Link to={`/budget/${budget.slug}/items`} className="btn btn-primary">View Items</Link>
           </div>
         </div>
         <div className="mt-8">
-          {budget.parent && 
+          {isSimulation && 
             <div className="row">
-              <div className="col">
+              <div className="col-md-4">
+                <SimulationsSummaryWidget />
+              </div>
+              <div className="col-md-8">
                 <ChartWidget height="300px" />
+              </div>
+              <div className="col-12">
+                <SimulationChangesWidget />
               </div>
             </div>
           }
-          {budget.parent === undefined &&
+          {!isSimulation &&
             <div className="row">
               <div className="col-lg-6">
                 <SummaryWidget />

@@ -158,6 +158,7 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
             <div className="symbol-label">
               <Menu label={period} className="fw-bold text-gray-500" showLabel={true}>
                 { Object.keys(Period)
+                  // Filter limits options to YTD, 1Y, and 3Y for simulations.
                     .filter( 
                       key => budget.parent === undefined || 
                       [Period.YTD, Period.next1Y, Period.next3Y].includes( Period[key as keyof typeof Period] )

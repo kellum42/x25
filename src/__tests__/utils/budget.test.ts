@@ -7,7 +7,6 @@ import {
   getVerificationsBetween,
   calculateBalance,
   JSONtoBudgetItem,
-  datesBelowThreshold
 } from "../../utils/budget";
 // import {
 //   BudgetItem,
@@ -202,28 +201,6 @@ describe( 'calculateBalanceOver()', () => {
       expect( balances[i] ).toBe( _dates[i][1])
     })
   });
-});
-
-test( 'datesBelowThreshold()', () => {
-  const budget: Budget = {
-    id: "1",
-    title: "TESTING",
-    slug: "TESTING",
-    startingBalance: 4000,
-    startDate: dayjs("09/01/24"),
-    items: sampleBudgetThreeItems
-  };
-
-  const results = datesBelowThreshold(budget, dayjs( "2024-09-01"), dayjs( "2025-01-01"));
-  expect( results.status).toBe("success");
-  
-  if ( results.status === "success" ){
-    results.data.map( result => {
-      console.log( "Date: %s, Balance: %d", result.date.format("YYYY-MM-DD"), result.balance)
-      return result;
-    })
-    expect( results.data.length).toBe( 3 );
-  }
 });
 
 

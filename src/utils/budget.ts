@@ -409,31 +409,6 @@ export const budgetItemToRecord = (item: BudgetItem): Record<string, string> => 
     return obj;
 }
 
-type DatesBelowThresholdReturn = {status: "success", data: {date: Dayjs, balance: number}[]} | x25Error;
-export const datesBelowThreshold = (budget: Budget, start: Dayjs, end: Dayjs, threshold: number = 0 ): DatesBelowThresholdReturn => {
-  const { startDate: budgetStart, startingBalance, items } = budget;
-
-  if ( end.isBefore( start, 'date' )){
-    return {status: "fail", message: "End date must be after start date. datesBelowThreshold()"};
-  }
-
-  if ( budgetStart.isAfter( end, 'date' )){
-    return {status: "fail", message: "Budget is not active on given date range. datesBelowThreshold()"};
-  }
-
-  const _start = budgetStart.isAfter( start, 'day' ) ? budgetStart : start;
-  const days = end.diff( _start , 'day' );
-  
-  const dates = [_start, ...Array(days).fill(0).map((_, i) => _start.add(i + 1, 'days'))];
-  const balances = calculateBalanceOver(dates, startingBalance, budgetStart, items, false, "EndofDay" );
-  
-  return {
-    status: "success",
-    data: balances.balances
-      .map(( a,i ) => ({date: balances.dates[i], balance: a }))
-      .filter( (a): a is { date: Dayjs, balance: number } => typeof a.balance === "number" && a.balance <= threshold )
-  }
-}
 
 // Get dates and amounts
 // Check if person is in excess or underage

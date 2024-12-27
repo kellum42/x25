@@ -12,3 +12,4 @@
 - Remove simulations widget on slug.tsx page for simulations
 - Error handling on index.tsx
 - Show differences from parent budget on simulation
+- On delete budget item, confirmation popup doesnt go away after submit.
