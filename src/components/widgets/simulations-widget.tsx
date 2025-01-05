@@ -5,7 +5,6 @@ import { AddNewSimulation } from "../modals/add-new-simulation";
 import { Budget } from "../../utils/schemas";
 import { BudgetContext } from "../../contexts/budgetContext";
 import { getSimulationsForBudget } from "../../utils/localStorage";
-import dayjs from "dayjs";
 import { Link } from "gatsby";
 
 // TODO:

@@ -140,3 +140,8 @@ export const getSimulationDiffs = (simulation: Budget): GetSimulationDiffsRespon
     return { status: "fail", message: "Only simulations can get differences." };
   }
 }
+
+// export const convertToBudget = (simulation: Budget) => {
+//   delete simulation.parent;
+
+// }

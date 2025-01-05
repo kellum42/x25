@@ -65,7 +65,7 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
 
     if ( item.frequency == BudgetItemFrequency.weekly || item.frequency == BudgetItemFrequency.biweekly ) {
       // calculate the first occurrence of line item.
-      const daysUntilFirstOccurrence = daysTillFirstOccurrence(item, localStartDate);
+      const daysUntilFirstOccurrence = daysTillNextOccurrence(item, localStartDate);
       if (typeof daysUntilFirstOccurrence === 'string') { error = daysUntilFirstOccurrence; return; }
 
       // the days remaining in the time range after the first occurrence.
@@ -96,8 +96,8 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
       item.dates.forEach((_, i) => {
         // calculate the first occurrence of line item.
         // this will be our frame of reference for calculating future occurrences.
-        //  i is needed to tell daysTillFirstOccurrence which MonthlyBudgetItem.dates[] we're using.
-        const daysUntilFirstOccurrence = daysTillFirstOccurrence(item, localStartDate, i);
+        //  i is needed to tell daysTillNextOccurrence which MonthlyBudgetItem.dates[] we're using.
+        const daysUntilFirstOccurrence = daysTillNextOccurrence(item, localStartDate, i);
         if (typeof daysUntilFirstOccurrence === 'string') { error = daysUntilFirstOccurrence; return; }
 
         const firstOccurrence = localStartDate.add(daysUntilFirstOccurrence, 'day');
@@ -134,8 +134,8 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
   return Math.round((sumDeltas + startingAmount) * 100) / 100;
 }
 
-export const daysTillFirstOccurrence = (item: BudgetItem, startDate: Dayjs, i?: number): number | string => {
-  if (item.frequency == "Weekly" || item.frequency == BudgetItemFrequency.biweekly ) {
+export const daysTillNextOccurrence = (item: BudgetItem, from: Dayjs, i?: number): number | string => {
+  if (item.frequency == BudgetItemFrequency.weekly || item.frequency == BudgetItemFrequency.biweekly ) {
     
     const getDayAsInt = (day: string ):number => {
       if ( day === "Sunday" ){ return 0; }
@@ -147,44 +147,76 @@ export const daysTillFirstOccurrence = (item: BudgetItem, startDate: Dayjs, i?: 
       else { return 6; }
     }
 
+    // Take into account item start and end dates.
+    if ( item.ends !== "-1" && item.ends.isBefore( from )){ return -1; }
+
+    let delta = 0;
+    if ( from.isBefore( item.starts, 'day' )){
+      delta = (item.starts.unix() - from.unix()) / (3600 * 24 );
+      delta = Math.round(delta);
+      console.log("%s -- diff: %d, item starts: %s, from: %s", item.name, delta, item.starts.format("YYYY-MM-DD"), from.format("YYYY-MM-DD"))
+    }
+
+
     // start of calculation time range.
-    const startDay = startDate.day();
+    const startDay = (delta > 0 ? item.starts : from).day();
     const firstOccurrence = getDayAsInt( item.day );
 
     const isBiWeekly = item.frequency === BudgetItemFrequency.biweekly;
-    const occursThisWeek = (startDate.isoWeek() - item.starts.isoWeek()) % 2 === 0 // for biweekly line items
+    const occursThisWeek = (from.isoWeek() - item.starts.isoWeek()) % 2 === 0 // for biweekly line items
 
     // is upcoming this week
     if (firstOccurrence >= startDay) {
-      return firstOccurrence - startDay + ((isBiWeekly && !occursThisWeek) ? 7 : 0);
+      const days = firstOccurrence - startDay + delta + ((isBiWeekly && !occursThisWeek) ? 7 : 0);
+      // console.log("%s -- day: %s, start: %d, first occurrence: %d, delta: %d, from: %s, isBiweekly: %s. days: %d", item.name, item.day, startDay, firstOccurrence, delta, from.format("YYYY-MM-DD"), isBiWeekly, days);
+      return days;
     } else {
       // occurrence has already passed this week.
       // Add the remaining days of the current week to the day of the week of the first occurrence.
       // If biweekly, it has already occurred this week. It won't occur again next week, so a 7 day offset is needed.
-      return (7 - startDay) + firstOccurrence + (isBiWeekly && occursThisWeek ? 7 : 0);
+      const days = (7 - startDay) + firstOccurrence + delta + (isBiWeekly && occursThisWeek ? 7 : 0);
+      return days;
     }
 
-  } else if (item.frequency == "Monthly" ) {
+  } else if (item.frequency == BudgetItemFrequency.monthly ) {
     const _i = i ?? -1;
     if (_i >= 0 && _i <= item.dates.length) {
-      const _startDate = startDate.date();
-      const firstOccurrence = parseInt( item.dates[_i] );
+      const fromDate = from.date();
+      const occurrenceDate = parseInt( item.dates[_i] );
 
-      if (firstOccurrence >= _startDate) {
-        return firstOccurrence - _startDate;
+      // Take into account item start and end dates.
+      if ( item.ends !== "-1" && item.ends.isBefore( from )){ return -1; }
 
+      // Sum days between from date and when the item starts.
+      if ( from.isBefore( item.starts, 'day' )){
+        let firstOccurrence = item.starts
+          .set('date', occurrenceDate )
+          .add( occurrenceDate < item.starts.date() ? 1: 0, 'month' );
+
+        const diff = Math.round((firstOccurrence.unix() - from.unix()) / (3600 * 24));
+        return diff;
+      
       } else {
-        // Get the rest of the days to finish out the month.
-        // Add those days to the date of the occurrence.
-        return startDate.daysInMonth() - _startDate + firstOccurrence;
+        if (occurrenceDate >= fromDate) {
+          return occurrenceDate - fromDate;
+  
+        } else {
+          // Get the rest of the days to finish out the month.
+          // Add those days to the date of the occurrence.
+          return from.daysInMonth() - fromDate + occurrenceDate;
+        }
       }
+
     } else {
       return "A valid iterator is required for MonthlyBudgetItems.";
     }
 
-  } else {
-    return "Offset can only be calculated for reoccurring BudgetItems.";
+  } else if ( item.frequency === BudgetItemFrequency.once ){
+    // return "Offset can only be calculated for reoccurring BudgetItems.";
+    return item.date.diff( from, 'day' );
   }
+  // Should never get here.
+  return "";
 }
 
 // Weekly, Bi-weekly, and monthly items occurs on or after budget start date.
@@ -202,7 +234,7 @@ export const itemIsActive = (on: Dayjs, budgetStart: Dayjs, item: BudgetItem,): 
   }
 }
 
-type UpcomingBudgetItem = {
+export type UpcomingBudgetItem = {
   days: number,
   item: BudgetItem
 }
@@ -216,19 +248,14 @@ export const getUpcomingBudgetItems = (from: Dayjs, toInDays: number, items: Bud
   let upcomingItems: UpcomingBudgetItem[] = [];
 
   const addItem = (_item: BudgetItem, _j?: number) => {
-    const days = daysTillFirstOccurrence(_item, from, _j);
+    const days = daysTillNextOccurrence(_item, from, _j);
     if (typeof days === 'number' && days >= 0 && days <= toInDays) {
-      // console.log("%s - from: %s, days: %s, occurrence day: %s", _item.name, from.format("YYYY-MM-DD"), days, from.add(days, 'day').format("YYYY-MM-DD"));
       upcomingItems.push({ days, item: _item });
     } else {
-      // console.log("GOT ERROR: %s, item: %s", days, _item.name);
     }
   }
 
   items.forEach((item, _) => {
-    // if ( itemIsActive( date, item ) ){
-
-    // For one-time items, ensure the item occurs within the range.
     if (item.frequency === "Once") {
       const toDate = from.add(toInDays, 'day');
       if (item.date.isBetween(from, toDate, "day", "[]")) {
@@ -242,7 +269,6 @@ export const getUpcomingBudgetItems = (from: Dayjs, toInDays: number, items: Bud
     } else {
       addItem(item);
     }
-    // }
   });
 
   upcomingItems.sort((a, b) => {

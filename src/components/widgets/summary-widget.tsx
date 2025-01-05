@@ -4,7 +4,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween';
 
 import { BudgetContext } from "../../contexts/budgetContext";
-import { calculateBalance, daysTillFirstOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getUpcomingBudgetItems } from "../../utils/budget";
+import { calculateBalance, daysTillNextOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getUpcomingBudgetItems } from "../../utils/budget";
 import { DateChanger } from "../datechanger";
 // import { BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
 import { BudgetItemFrequency } from "../../utils/schemas";
@@ -60,7 +60,7 @@ export const SummaryWidget: FC = () => {
 
         const i = item.frequency === BudgetItemFrequency.monthly ? item.dates.length : 1;
         for (let _i = 0; _i < i; _i++) {
-          const _daysTillFirstOccurrence = daysTillFirstOccurrence(item, _start, _i);
+          const _daysTillFirstOccurrence = daysTillNextOccurrence(item, _start, _i);
           if (typeof _daysTillFirstOccurrence === 'string') { return; }
 
           const rangeInDays = _rangeInDays - _daysTillFirstOccurrence;

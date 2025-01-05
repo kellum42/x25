@@ -2,9 +2,8 @@ import React, { FC, useContext, useEffect, useState } from "react"
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
-// import { BudgetLineItem, BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
 import { BudgetItem, BudgetItemFrequency } from "../../utils/schemas";
-import { calculateBalance, getFriday, getVerificationOn, getUpcomingBudgetItems } from "../../utils/budget";
+import { calculateBalance, getFriday, getVerificationOn, getUpcomingBudgetItems, UpcomingBudgetItem } from "../../utils/budget";
 import { numberOrNull } from "../../utils/util";
 
 import "../../styles/weekly-widget.css"
@@ -48,11 +47,11 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   const { item, hideWeeklyItems, isNewDay, endingBalance, days } = props;
   const show: boolean = !(item.frequency === BudgetItemFrequency.weekly && hideWeeklyItems);
   const currentDay = getFriday(date).add(days, 'day');
-  const verifiedAmt = getVerificationOn( currentDay, item );
+  const verifiedAmt = getVerificationOn(currentDay, item);
   const verified = verifiedAmt !== null;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [textInput, setTextInput] = useState<string>( item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) );
+  const [textInput, setTextInput] = useState<string>(item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }));
   const [loading, setIsLoading] = useState(false);
 
   const toggleOpen = () => {
@@ -60,28 +59,28 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   }
 
   const handleTextInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTextInput( event.target.value );
+    setTextInput(event.target.value);
   };
 
   const verify = (unverify: boolean = false) => {
     let value: number | null;
 
-    if ( unverify ){
+    if (unverify) {
       value = null;
 
     } else {
       // Check for empty strings
-      if ( textInput.trim() === "" ){ 
-        setTextInput( "" );  
-        return; 
+      if (textInput.trim() === "") {
+        setTextInput("");
+        return;
       }
 
       const cleanedString = textInput.replace(/[^0-9.]/g, '');
-      
+
       // Convert the cleaned string to a number
-      const num = parseFloat( cleanedString );
-      if ( isNaN( num ) ){
-        setTextInput( "" );
+      const num = parseFloat(cleanedString);
+      if (isNaN(num)) {
+        setTextInput("");
         return;
       }
       value = num;
@@ -94,8 +93,8 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   }
 
   useEffect(() => {
-    setTextInput( item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) );
-    setIsOpen( false );
+    setTextInput(item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+    setIsOpen(false);
 
   }, [props.item]);
 
@@ -199,52 +198,67 @@ export const WeeklyWidget: FC = () => {
     return <></>;
   }
 
+  const { startDate: startdate, startingBalance } = budget;
+
+  const friday = getFriday(date);
+  const nextFriday = friday.add(7, 'day');
+  const budgetInProgress = !startdate.isAfter(friday);
+  const budgetStartsThisWeek = !startdate.isBefore(friday) && startdate.isBefore(nextFriday);
+  const budgetNotThisWeek = !startdate.isBefore(nextFriday);
+
+  const [items, setItems] = useState<UpcomingBudgetItem[]>([]);
+
   const getWeekStartingBalance = (): number | null => {
-    if (date.isSame(budget.startDate, 'day')) {
-      return budget.startingBalance;
-
-    } else if (date.isAfter(budget.startDate, 'day')) {
-      return numberOrNull(calculateBalance(budget.startDate, budget.startingBalance, budget.items, friday));
-
+    if (budgetInProgress) {
+      const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, friday);
+      return numberOrNull(balance);
     }
     return null;
   }
-
-  const { startDate: startdate, items } = budget;
 
   const [hideWeeklyItems, setHideWeeklyItems] = useState(false);
 
   // const currentItems = getWeeksBudgetLineItems(date, startdate, items);
-  const friday = getFriday(date);
 
   // Ensure we don't get items that occur before the start date.
-  const currentItems = getUpcomingBudgetItems(friday, 6, items)
-    // .filter( item => {
-    //   const starts = item.item.frequency === BudgetItemFrequency.once ? item.item.date : item.item.starts;
-    //   return starts
-    // })
-    // .filter( _item => !friday.add( _item.days, 'day').isBefore( startdate ) );
+  // Do this by getting days to start date if not already occurred. If more than 6, return nothing.
+  useEffect(() => {
+    setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
+
+  }, [date]);
+
+  useEffect(() => {
+    setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
+  }, []);
+
+
   const weekStartingBalance = getWeekStartingBalance();
-
   const balanceAfterItem = (i: number): number | null => {
-    if (weekStartingBalance) {
-      let _balanceAfterItem: number = weekStartingBalance;
-      let j = i;
+    if (budgetNotThisWeek) { return null; }
 
-      // Tally balance.
-      while (j >= 0) {
-        const _item = currentItems[j];
-        // const verifiedAmount = getVerifiedAmt( _item.item, friday.add( _item.days, 'day' ));
-        const verifiedAmount = getVerificationOn( friday.add( _item.days, 'day' ), _item.item );
-        _balanceAfterItem += (verifiedAmount ?? _item.item.amount) * (_item.item.type === "expense" ? -1 : 1);
-        j--;
+    let runningBalance: number | null = weekStartingBalance;
+    let j = i;
+
+    // Tally balance.
+    while (j >= 0) {
+      const _item = items[j];
+      const verifiedAmount = getVerificationOn(friday.add(_item.days, 'day'), _item.item);
+
+      if (runningBalance === null && budgetStartsThisWeek) {
+        if (friday.add(_item.days, 'day').isSame(startdate, 'date')) {
+          runningBalance = startingBalance;
+        }
       }
-      return _balanceAfterItem;
+
+      if (runningBalance !== null) {
+        runningBalance += (verifiedAmount ?? _item.item.amount) * (_item.item.type === "expense" ? -1 : 1);
+      }
+      j--;
     }
-    return null;
+    return runningBalance;
   }
 
-  const endingBalance: number | null = balanceAfterItem(currentItems.length - 1);
+  const endingBalance: number | null = balanceAfterItem(items.length - 1);
 
   return (
     // print line items for this week in order.
@@ -266,9 +280,9 @@ export const WeeklyWidget: FC = () => {
         <div className="d-flex flex-wrap py-2">
           <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
             <div className="d-flex align-items-center">
-              <div className="fs-2 fw-bold counted">{currentItems.length}</div>
+              <div className="fs-2 fw-bold counted">{items.length}</div>
             </div>
-            <div className="fw-semibold fs-6 text-gray-400">Budget Item{currentItems.length > 1 && <span>s</span>}</div>
+            <div className="fw-semibold fs-6 text-gray-400">Budget Item{items.length > 1 && <span>s</span>}</div>
           </div>
           {weekStartingBalance &&
             <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
@@ -304,18 +318,17 @@ export const WeeklyWidget: FC = () => {
         </div>
 
         <div className="d-flex flex-column">
-          {weekStartingBalance && currentItems.map((_item, i) => {
-            // console.log("GOT AN ITEM: %s", _item.item.name);
+          {items.map((_item, i) => {
             const endingBalance = balanceAfterItem(i);
             const hasPassed: boolean = dayjs().isSameOrAfter(friday.add(_item.days, 'day'));
 
-            let isNewDay = i === 0 || _item.days !== currentItems[i - 1].days
+            let isNewDay = i === 0 || _item.days !== items[i - 1].days
               ? friday.add(_item.days, 'day').format('dddd, M/D')
               : null
 
             return (
+              <div key={i}>
                 <WeeklyWidgetLineItem
-                  key={i}
                   item={_item.item}
                   days={_item.days}
                   isNewDay={isNewDay}
@@ -323,6 +336,7 @@ export const WeeklyWidget: FC = () => {
                   endingBalance={endingBalance}
                   hasPassed={hasPassed}
                 />
+              </div>
             )
           })}
         </div>

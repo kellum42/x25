@@ -11,6 +11,8 @@ import { SimulationsWidget } from "../../components/widgets/simulations-widget"
 import { UpdateBudget } from "../../components/modals/update-budget"
 import { SimulationsSummaryWidget } from "../../components/widgets/simulation-summary-widget"
 import { SimulationChangesWidget } from "../../components/widgets/simulation-changes-widget"
+import { Menu, MenuItem } from "../../components/floating-menu"
+import { Modal } from "../../components/modals/modal"
 // import { Budget } from "../../utils/schemas"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
@@ -24,19 +26,34 @@ const BudgetDashboard: React.FC = () => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { budget, updateBudget, error } = context;
+  const { budget, updateBudget, error, convertToBudget } = context;
 
   const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
+  const [isConvertingSim, setIsConvertingSim] = useState<boolean>(false);
   
   const isSimulation = budget?.parent !== undefined;
+
+  const convertSimulationToBudget = () => {
+    convertToBudget();
+    setIsConvertingSim( false );
+
+    if ( error ){
+      console.log(error);
+    }
+  }
 
   return (
     budget ?
       <div>
         <div className="d-flex flex-row flex-stack">
           <div>
-            <h1 className="text-dark fw-bold mb-4 fs-2">{budget.title}</h1>
-            <ul className="breadcrumb fw-semibold fs-base my-1">
+            <div className="d-flex flex-row align-items-center">
+              <h1 className="text-dark fw-bold mb-0 fs-2 me-2">{budget.title}</h1>
+              <Menu label="">
+                <MenuItem label="Convert to Budget" onClick={() => setIsConvertingSim(true)} />
+              </Menu>
+            </div>
+            <ul className="breadcrumb fw-semibold fs-base my-1 mt-4">
               <li className="breadcrumb-item text-muted">
                 <Link to="/" className="text-muted text-hover-primary">Home</Link>
               </li>
@@ -96,6 +113,20 @@ const BudgetDashboard: React.FC = () => {
               startDate: budget.startDate.format("YYYY-MM-DD")
             }}
           />
+        }
+        { isSimulation && isConvertingSim && 
+          <Modal 
+            title="Convert Simulation" 
+            isOpen={true} 
+            setIsOpen={() => setIsConvertingSim(false)} 
+            action={{
+              label: "Convert",
+              actionFn: () => { convertSimulationToBudget() },
+              cancel: "Cancel"
+            }}  
+          >
+            <p>Are you sure you want to convert this simulation to a budget? This cannot be undone. </p>
+          </Modal>
         }
       </div>
       :

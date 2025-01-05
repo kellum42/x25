@@ -13,7 +13,9 @@ export type UseBudgetDetails = {
   duplicateBudgetItem: (item: BudgetItem) => void,
   deleteBudgetItem: (item: BudgetItem) => void,
   updateBudgetItem: (item: BudgetItem) => void,
-  updateBudget: (updates: Record<string,string>) => void
+  updateBudget: (updates: Record<string,string>) => void,
+  convertToBudget: () => void,
+  refresh: () => void
 }
 
 export const useBudgetDetails = (slug: string): UseBudgetDetails => {
@@ -167,13 +169,35 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }
   }
 
-  useEffect(() => {
+  const convertToBudget = () => {
+    if ( data ){
+      const updates: Budget = {...data, items: data.items, avatar: data.avatar };
+      delete updates.parent;
+      setData(prev => (
+        prev === undefined ?
+          undefined :
+          {...updates}
+      ))
+    }
+  }
+
+  const refresh = () => {
     const response = getBudget(slug);
     if (response.status === "success") {
       setData(response.data);
     } else {
       setError(response);
     }
+  }
+
+  useEffect(() => {
+    refresh();
+    // const response = getBudget(slug);
+    // if (response.status === "success") {
+    //   setData(response.data);
+    // } else {
+    //   setError(response);
+    // }
 
   }, []);
 
@@ -198,6 +222,8 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     updateBudget, 
     duplicateBudgetItem, 
     deleteBudgetItem, 
-    updateBudgetItem 
+    updateBudgetItem,
+    convertToBudget,
+    refresh 
   };
 }

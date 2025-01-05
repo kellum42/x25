@@ -13,3 +13,6 @@
 - Error handling on index.tsx
 - Show differences from parent budget on simulation
 - On delete budget item, confirmation popup doesnt go away after submit.
+- *** Can't make one-time event in simulation. Can edit to one-time event from other frequency.
+- Make datepicker start at populated date, if populated in "edit budget item".
+- Create budget from simulation

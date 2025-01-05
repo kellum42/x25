@@ -128,11 +128,12 @@ export const saveBudget = (budget: Budget): SaveResponse => {
 
   const budgets = response.data;
 
+  
   if ( budget.id in budgets ){
     // Update
     const _budget = budgets[budget.id];
     budgets[budget.id] = {
-      ..._budget,
+      // ..._budget,
       ...budget
     }
 
