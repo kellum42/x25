@@ -154,7 +154,6 @@ export const daysTillNextOccurrence = (item: BudgetItem, from: Dayjs, i?: number
     if ( from.isBefore( item.starts, 'day' )){
       delta = (item.starts.unix() - from.unix()) / (3600 * 24 );
       delta = Math.round(delta);
-      console.log("%s -- diff: %d, item starts: %s, from: %s", item.name, delta, item.starts.format("YYYY-MM-DD"), from.format("YYYY-MM-DD"))
     }
 
 
@@ -213,7 +212,9 @@ export const daysTillNextOccurrence = (item: BudgetItem, from: Dayjs, i?: number
 
   } else if ( item.frequency === BudgetItemFrequency.once ){
     // return "Offset can only be calculated for reoccurring BudgetItems.";
-    return item.date.diff( from, 'day' );
+    // return item.date.diff( from, 'day' );
+    return Math.round(( item.date.unix() - from.unix()) / (3600 * 24 ));
+      // delta = Math.round(delta);
   }
   // Should never get here.
   return "";
@@ -256,13 +257,14 @@ export const getUpcomingBudgetItems = (from: Dayjs, toInDays: number, items: Bud
   }
 
   items.forEach((item, _) => {
-    if (item.frequency === "Once") {
-      const toDate = from.add(toInDays, 'day');
-      if (item.date.isBetween(from, toDate, "day", "[]")) {
-        upcomingItems.push({ days: item.date.diff(from, "date"), item });
-      }
+    // if (item.frequency === "Once") {
+    //   const toDate = from.add(toInDays, 'day');
+    //   if (item.date.isBetween(from, toDate, "day", "[]")) {
+    //     upcomingItems.push({ days: item.date.diff(from, "date"), item });
+    //   }
 
-    } else if (item.frequency === "Monthly") {
+    // } else 
+    if (item.frequency === "Monthly") {
       item.dates.forEach((_, j) => {
         addItem(item, j)
       })

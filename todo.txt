@@ -8,11 +8,10 @@
 - Change verifyAmount to verifyBudgetItem in useBudgetDetails.ts
 - Error handling on UpdateBudget
 - Populate BudgetCard with correct data.
-- *** Title doesn't refresh on slug.tsx when arriving from clicking on simulation url.
-- Remove simulations widget on slug.tsx page for simulations
 - Error handling on index.tsx
-- Show differences from parent budget on simulation
 - On delete budget item, confirmation popup doesnt go away after submit.
-- *** Can't make one-time event in simulation. Can edit to one-time event from other frequency.
 - Make datepicker start at populated date, if populated in "edit budget item".
-- Create budget from simulation
+- Navigate to next and past week on weekly widget
+- Ensure "verifications due" and "past verifications" are calculating correctly on weekly widget.
+- Notes widget on dashboard page. Be able to tag budget items (and maybe tag simulations).
+- Add tags to budget items. (ex. "Out of Budget" for budget items that weren't accounted for)

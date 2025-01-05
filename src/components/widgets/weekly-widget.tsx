@@ -16,7 +16,6 @@ dayjs.extend(isSameOrAfter);
 type WeeklyWidgetLineItemProps = {
   item: BudgetItem,
   days: number,
-  hideWeeklyItems: boolean,
   isNewDay: string | null,
   endingBalance: number | null,
   hasPassed: boolean
@@ -44,8 +43,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   }
 
   const theme = getTheme("light");
-  const { item, hideWeeklyItems, isNewDay, endingBalance, days } = props;
-  const show: boolean = !(item.frequency === BudgetItemFrequency.weekly && hideWeeklyItems);
+  const { item, isNewDay, endingBalance, days, hasPassed } = props;
   const currentDay = getFriday(date).add(days, 'day');
   const verifiedAmt = getVerificationOn(currentDay, item);
   const verified = verifiedAmt !== null;
@@ -100,9 +98,9 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
 
 
   return (
-    <div className="line-item-wrapper" style={{ display: show ? "block" : "none" }}>
+    <div className="line-item-wrapper">
       {isNewDay && <div className="newday mt-6 text-center fs-6 text-gray-400 fw-bold py-2">{isNewDay}</div>}
-      <div className="line-item px-1 py-4 position-relative">
+      <div className={`line-item px-1 py-4 position-relative ${hasPassed ? 'bg-gray-100' : ''}`}>
         <div className="d-flex justify-content-between flex-row align-items-center px-4">
           <div className={"line-item-info fw-semibold d-flex flex-row " + (isOpen ? "show" : "")}>
             <div className="me-2 rotate-90">
@@ -206,7 +204,7 @@ export const WeeklyWidget: FC = () => {
   const budgetStartsThisWeek = !startdate.isBefore(friday) && startdate.isBefore(nextFriday);
   const budgetNotThisWeek = !startdate.isBefore(nextFriday);
 
-  const [items, setItems] = useState<UpcomingBudgetItem[]>([]);
+  // const [items, setItems] = useState<UpcomingBudgetItem[]>([]);
 
   const getWeekStartingBalance = (): number | null => {
     if (budgetInProgress) {
@@ -216,20 +214,19 @@ export const WeeklyWidget: FC = () => {
     return null;
   }
 
-  const [hideWeeklyItems, setHideWeeklyItems] = useState(false);
-
-  // const currentItems = getWeeksBudgetLineItems(date, startdate, items);
+  const items = getUpcomingBudgetItems(getFriday(date), 6, budget.items);
+  console.log(items);
 
   // Ensure we don't get items that occur before the start date.
   // Do this by getting days to start date if not already occurred. If more than 6, return nothing.
-  useEffect(() => {
-    setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
+  // useEffect(() => {
+  //   setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
 
-  }, [date]);
+  // }, [date]);
 
-  useEffect(() => {
-    setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
-  }, []);
+  // useEffect(() => {
+  //   setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
+  // }, []);
 
 
   const weekStartingBalance = getWeekStartingBalance();
@@ -264,8 +261,8 @@ export const WeeklyWidget: FC = () => {
     // print line items for this week in order.
 
     <div className="x25-line-item-list">
-      <div className="card card-flush p-10">
-        <div className="card-header px-0">
+      <div className="card card-flush p-4">
+        <div className="card-header px-6">
           <div className="card-title flex-column">
             <h3 className="fw-bold mb-1">This Week</h3>
             {/* <div className="fs-6 text-gray-400">{currentBudgetLineItems.length} Budget Items</div> */}
@@ -275,9 +272,9 @@ export const WeeklyWidget: FC = () => {
           </div>
         </div>
 
-        <div className="mb-4"><span className="badge badge-lg badge-light-warning fw-bold">XX Verifications Due</span></div>
+        <div className="px-6 mb-4"><span className="badge badge-lg badge-light-warning fw-bold">XX Verifications Due</span></div>
 
-        <div className="d-flex flex-wrap py-2">
+        <div className="d-flex flex-wrap py-2 px-6">
           <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
             <div className="d-flex align-items-center">
               <div className="fs-2 fw-bold counted">{items.length}</div>
@@ -332,7 +329,6 @@ export const WeeklyWidget: FC = () => {
                   item={_item.item}
                   days={_item.days}
                   isNewDay={isNewDay}
-                  hideWeeklyItems={hideWeeklyItems}
                   endingBalance={endingBalance}
                   hasPassed={hasPassed}
                 />

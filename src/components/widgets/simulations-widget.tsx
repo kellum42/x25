@@ -35,7 +35,7 @@ export const SimulationsWidget: FC = () => {
       </div>
       <div className="pt-10">
         <div className="pb-5 position-relative">
-          {simulations.status === "success" && simulations.sims.length === 0 && 
+          {simulations.status === "success" && simulations.sims.length === 0 &&
             <p className="text-muted">You currently have no simulations. Add a new simulation today and start predicting your budget.</p>
           }
           {simulations.status === "success" && simulations.sims.map(sim => (
@@ -49,22 +49,27 @@ export const SimulationsWidget: FC = () => {
                   </span>
                 </div>
                 <div>
-                  <Link to={`/budget/${sim.slug}`} className="fs-5 text-gray-800 text-hover-primary fw-bolder">{sim.title}</Link>
-                  {/* <a href="#" className="fs-5 text-gray-800 text-hover-primary fw-bolder">{sim.title}</a> */}
+                  {/* <Link to={`/budget/${sim.slug}`} className="fs-5 text-gray-800 text-hover-primary fw-bolder">{sim.title}</Link> */}
+                  <a href={`/budget/${sim.slug}`} className="fs-5 text-gray-800 text-hover-primary fw-bolder">{sim.title}</a>
+                  {/* <div onClick={() => onSimulationClicked(sim)} className="fs-5 text-gray-800 text-hover-primary fw-bolder">{sim.title}</div> */}
                   <div className="fs-7 text-gray-400 fw-semibold mt-1">
-                    { sim.createDate && `Created ${sim.createDate.format('MMM D, YYYY')}`}.
+                    {sim.createDate && `Created ${sim.createDate.format('MMM D, YYYY')}`}.
                     0 changes
-                    </div>
+                  </div>
                 </div>
               </div>
-              <Link to={`/budget/${sim.slug}`} className="btn btn-icon btn-light btn-sm">
-                <span className="svg-icon svg-icon-4 svg-icon-gray-400">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="currentColor"></rect>
-                    <path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="currentColor"></path>
-                  </svg>
-                </span>
-              </Link>
+              <a href={`/budget/${sim.slug}`} className="btn btn-icon btn-light btn-sm">
+                {/* <Link to={`/budget/${sim.slug}`} className="btn btn-icon btn-light btn-sm"> */}
+                {/* <button onClick={() => onSimulationClicked(sim)} className="btn btn-icon btn-light btn-sm"> */}
+                  <span className="svg-icon svg-icon-4 svg-icon-gray-400">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="currentColor"></rect>
+                      <path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="currentColor"></path>
+                    </svg>
+                  </span>
+                {/* </button> */}
+                {/* </Link> */}
+              </a>
             </div>
           ))}
         </div>

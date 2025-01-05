@@ -34,7 +34,7 @@ export const UpdateBudgetItem: React.FC<UpdateBudgetItemProps> = (props) => {
   const { fields, screen, next, back, update, error, save } = useUpdateBudgetItem(
     mode === "edit" && currentItem ?
       budgetItemToRecord(currentItem) :
-      { "type": "expense", "ends": "-1", "day": "Friday", "dates": "1" }
+      { "type": "expense", "ends": "-1", "day": "Friday", "dates": "1", "frequency": BudgetItemFrequency.once }
   );
 
   const screens = [

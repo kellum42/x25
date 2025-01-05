@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import type { PageProps } from "gatsby"
 import { Link } from "gatsby"
 
@@ -13,7 +13,6 @@ import { SimulationsSummaryWidget } from "../../components/widgets/simulation-su
 import { SimulationChangesWidget } from "../../components/widgets/simulation-changes-widget"
 import { Menu, MenuItem } from "../../components/floating-menu"
 import { Modal } from "../../components/modals/modal"
-// import { Budget } from "../../utils/schemas"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
@@ -135,6 +134,10 @@ const BudgetDashboard: React.FC = () => {
 }
 
 const BudgetBySlugPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
+  useEffect(() => {
+    console.log("SLUG CHANGED ON PAGE");
+  }, [slug])
+
   return (
     <Layout>
       <BudgetContextProvider slug={slug}>

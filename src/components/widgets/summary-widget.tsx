@@ -89,7 +89,7 @@ export const SummaryWidget: FC = () => {
       <div className="card-header p-10 pb-2">
         <div className="card-title d-block">
           <h3 className="m-0 text-gray-900">Summary</h3>
-          <p className="text-gray-400 fw-semibold fs-6 mt-2">As of {date.format("MMM D, YYYY")}</p>
+          <p className="text-gray-400 fw-semibold fs-6 mt-2">As of {date.format("dddd, MMM D, YYYY")}</p>
         </div>
         {/* <div className="card-toolbar">
               <ul className="nav nav-tabs nav-line-tabs nav-stretch border-transparent fs-5 fw-bold" id="kt_security_summary_tabs" role="tablist">

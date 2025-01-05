@@ -155,16 +155,8 @@ export const MenuComponent = React.forwardRef<
         data-nested={isNested ? "" : undefined}
         data-focus-inside={hasFocusInside ? "" : undefined}
         className={
-          // rootMenuButton && !isNested ? 
-          // "tn btn-sm btn-icon btn-color-light-dark btn-active-light-primary" : 
           isNested ? "menu-item px-3" : ""}
         type="button"
-        // className={
-        //   { rootMenuButton && !isNested && "" }
-        //   { isNested && "menu-item px-3" }
-        //     ? "menu-item px-3"
-        //     : "RootMenu"
-        // }
         style={{ background: "none", border: "none" }}
         {...getReferenceProps(
           parent.getItemProps({
@@ -179,20 +171,14 @@ export const MenuComponent = React.forwardRef<
       >
         { 
           ( isNested || props.showLabel ) ?
-          <a className={`menu-link px-3 ${props.className ?? ""}`}>
-            <span className="menu-title">{label}</span>
-            <span className="menu-arrow"></span>
-          </a> :
-          <MenuButton />
+            <a className={`menu-link px-3 ${props.className ?? ""}`}>
+              <span className="menu-title">{label}</span>
+              <span className="menu-arrow"></span>
+            </a> :
+            rootMenuButton ?
+              rootMenuButton :
+              <MenuButton />
         }
-        
-
-        {/* <a className="menu-link px-3">
-          { isNested ? <span className="menu-title">{label}</span> : label }
-          {isNested && (
-            <span className="menu-arrow"></span>
-          )}
-        </a> */}
       </button>
       <MenuContext.Provider
         value={{
