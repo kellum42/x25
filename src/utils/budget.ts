@@ -134,7 +134,9 @@ export const calculateBalance = (startDate: Dayjs, startingAmount: number, items
   return Math.round((sumDeltas + startingAmount) * 100) / 100;
 }
 
-export const daysTillNextOccurrence = (item: BudgetItem, from: Dayjs, i?: number): number | string => {
+export const daysTillNextOccurrence = (item: BudgetItem, _from: Dayjs, i?: number): number | string => {
+  const from = _from.set('hour', 0).set('minutes', 0).set('seconds', 0);
+
   if (item.frequency == BudgetItemFrequency.weekly || item.frequency == BudgetItemFrequency.biweekly ) {
     
     const getDayAsInt = (day: string ):number => {
@@ -150,19 +152,20 @@ export const daysTillNextOccurrence = (item: BudgetItem, from: Dayjs, i?: number
     // Take into account item start and end dates.
     if ( item.ends !== "-1" && item.ends.isBefore( from )){ return -1; }
 
+    const starts = item.starts.set('hour', 0).set('minutes', 0).set('seconds', 0);
     let delta = 0;
-    if ( from.isBefore( item.starts, 'day' )){
-      delta = (item.starts.unix() - from.unix()) / (3600 * 24 );
+
+    if ( from.isBefore( starts, 'day' )){
+      delta = (starts.unix() - from.unix()) / (3600 * 24 );
       delta = Math.round(delta);
     }
 
-
     // start of calculation time range.
-    const startDay = (delta > 0 ? item.starts : from).day();
+    const startDay = (delta > 0 ? starts : from).day();
     const firstOccurrence = getDayAsInt( item.day );
 
     const isBiWeekly = item.frequency === BudgetItemFrequency.biweekly;
-    const occursThisWeek = (from.isoWeek() - item.starts.isoWeek()) % 2 === 0 // for biweekly line items
+    const occursThisWeek = (from.isoWeek() - starts.isoWeek()) % 2 === 0 // for biweekly line items
 
     // is upcoming this week
     if (firstOccurrence >= startDay) {
@@ -190,9 +193,13 @@ export const daysTillNextOccurrence = (item: BudgetItem, from: Dayjs, i?: number
       if ( from.isBefore( item.starts, 'day' )){
         let firstOccurrence = item.starts
           .set('date', occurrenceDate )
+          .set('hour', 0)
+          .set('minutes', 0)
+          .set('seconds', 0)
           .add( occurrenceDate < item.starts.date() ? 1: 0, 'month' );
 
         const diff = Math.round((firstOccurrence.unix() - from.unix()) / (3600 * 24));
+        // console.log("%s -- first occurrence: %s, from: %s, days: %d", item.name, firstOccurrence.format("YYYY-MM-DD HH:mm:ss"), _from.format("YYYY-MM-DD HH:mm:ss"), diff)
         return diff;
       
       } else {
@@ -202,7 +209,7 @@ export const daysTillNextOccurrence = (item: BudgetItem, from: Dayjs, i?: number
         } else {
           // Get the rest of the days to finish out the month.
           // Add those days to the date of the occurrence.
-          return from.daysInMonth() - fromDate + occurrenceDate;
+          return _from.daysInMonth() - fromDate + occurrenceDate;
         }
       }
 
@@ -250,10 +257,12 @@ export const getUpcomingBudgetItems = (from: Dayjs, toInDays: number, items: Bud
 
   const addItem = (_item: BudgetItem, _j?: number) => {
     const days = daysTillNextOccurrence(_item, from, _j);
-    if (typeof days === 'number' && days >= 0 && days <= toInDays) {
+    if ( typeof days === 'number' && days >= 0 && ( toInDays === -1 || days <= toInDays )){
       upcomingItems.push({ days, item: _item });
-    } else {
     }
+    // if ( && days >= 0 && days <= toInDays) {
+    //   upcomingItems.push({ days, item: _item });
+    // }
   }
 
   items.forEach((item, _) => {

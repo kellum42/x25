@@ -11,7 +11,9 @@
 - Error handling on index.tsx
 - On delete budget item, confirmation popup doesnt go away after submit.
 - Make datepicker start at populated date, if populated in "edit budget item".
-- Navigate to next and past week on weekly widget
-- Ensure "verifications due" and "past verifications" are calculating correctly on weekly widget.
 - Notes widget on dashboard page. Be able to tag budget items (and maybe tag simulations).
 - Add tags to budget items. (ex. "Out of Budget" for budget items that weren't accounted for)
+- Add notes field to budget items
+- Change "Edit Budget" button to "Add Item". Add "Edit Budget" to menu button next to title on dashboard page.
+- List day item occurs for (bi)weekly items for "Upcoming" filter on items page.
+- (Bi)Weekly items only occur once on "Upcoming" filter on items page.

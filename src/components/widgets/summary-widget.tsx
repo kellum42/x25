@@ -24,13 +24,14 @@ export const SummaryWidget: FC = () => {
     return <></>;
   }
 
+  const friday = getFriday(date);
   const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, date);
 
   // Gets the verifications due this week.
   // Friday is the first day of the week.
   const getVersDue = (): number => {
-    const friday = getFriday(date);
-    const items = getUpcomingBudgetItems(friday, 7, budget.items)
+    // const friday = getFriday(date);
+    const items = getUpcomingBudgetItems(friday, 6, budget.items)
     // const items = getWeeksBudgetLineItems(date, budget.startDate, budget.items);
     const idealVerCount = items.length;
     let actualVerCount = 0;
@@ -45,7 +46,7 @@ export const SummaryWidget: FC = () => {
     let vers: number = 0;
     let expectedVers: number = 0;
     const start = date.subtract(3, 'month');
-    const end = date;
+    const end = friday.subtract(1, 'day');
 
     budget.items.forEach((item, _) => {
       if (item.frequency === BudgetItemFrequency.once) {

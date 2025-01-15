@@ -190,7 +190,7 @@ export const WeeklyWidget: FC = () => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { date, budget } = context;
+  const { date, budget, setDate } = context;
 
   if (!budget) {
     return <></>;
@@ -204,8 +204,6 @@ export const WeeklyWidget: FC = () => {
   const budgetStartsThisWeek = !startdate.isBefore(friday) && startdate.isBefore(nextFriday);
   const budgetNotThisWeek = !startdate.isBefore(nextFriday);
 
-  // const [items, setItems] = useState<UpcomingBudgetItem[]>([]);
-
   const getWeekStartingBalance = (): number | null => {
     if (budgetInProgress) {
       const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, friday);
@@ -215,19 +213,6 @@ export const WeeklyWidget: FC = () => {
   }
 
   const items = getUpcomingBudgetItems(getFriday(date), 6, budget.items);
-  console.log(items);
-
-  // Ensure we don't get items that occur before the start date.
-  // Do this by getting days to start date if not already occurred. If more than 6, return nothing.
-  // useEffect(() => {
-  //   setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
-
-  // }, [date]);
-
-  // useEffect(() => {
-  //   setItems(getUpcomingBudgetItems(getFriday(date), 6, budget.items));
-  // }, []);
-
 
   const weekStartingBalance = getWeekStartingBalance();
   const balanceAfterItem = (i: number): number | null => {
@@ -239,10 +224,11 @@ export const WeeklyWidget: FC = () => {
     // Tally balance.
     while (j >= 0) {
       const _item = items[j];
-      const verifiedAmount = getVerificationOn(friday.add(_item.days, 'day'), _item.item);
+      const today = friday.add(_item.days, 'day');
+      const verifiedAmount = getVerificationOn(today, _item.item);
 
-      if (runningBalance === null && budgetStartsThisWeek) {
-        if (friday.add(_item.days, 'day').isSame(startdate, 'date')) {
+      if (runningBalance === null) {
+        if (budgetStartsThisWeek && !today.isBefore(startdate, 'date')) {
           runningBalance = startingBalance;
         }
       }
@@ -250,6 +236,7 @@ export const WeeklyWidget: FC = () => {
       if (runningBalance !== null) {
         runningBalance += (verifiedAmount ?? _item.item.amount) * (_item.item.type === "expense" ? -1 : 1);
       }
+
       j--;
     }
     return runningBalance;
@@ -257,14 +244,40 @@ export const WeeklyWidget: FC = () => {
 
   const endingBalance: number | null = balanceAfterItem(items.length - 1);
 
+  type WeekChangerProps = {
+    mode?: "prev" | "next",
+    onChange: (direction: "prev"|"next") => void
+  }
+  const WeekChanger: FC<WeekChangerProps> = (props) => {
+    const { mode, onChange } = props;
+
+    return (
+      <button onClick={() => onChange(mode ?? "next")} className="btn btn-icon btn-light btn-sm">
+        <span className="svg-icon svg-icon-4 svg-icon-gray-400">
+          { 
+            mode && mode === "prev" ?
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.2657 11.4343L15.45 7.25C15.8642 6.83579 15.8642 6.16421 15.45 5.75C15.0358 5.33579 14.3642 5.33579 13.95 5.75L8.40712 11.2929C8.01659 11.6834 8.01659 12.3166 8.40712 12.7071L13.95 18.25C14.3642 18.6642 15.0358 18.6642 15.45 18.25C15.8642 17.8358 15.8642 17.1642 15.45 16.75L11.2657 12.5657C10.9533 12.2533 10.9533 11.7467 11.2657 11.4343Z" fill="currentColor"/>
+            </svg> :
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.6343 12.5657L8.45001 16.75C8.0358 17.1642 8.0358 17.8358 8.45001 18.25C8.86423 18.6642 9.5358 18.6642 9.95001 18.25L15.4929 12.7071C15.8834 12.3166 15.8834 11.6834 15.4929 11.2929L9.95001 5.75C9.5358 5.33579 8.86423 5.33579 8.45001 5.75C8.0358 6.16421 8.0358 6.83579 8.45001 7.25L12.6343 11.4343C12.9467 11.7467 12.9467 12.2533 12.6343 12.5657Z" fill="currentColor" />
+          </svg>
+          }
+        </span>
+      </button>
+    )
+  }
+
   return (
     // print line items for this week in order.
 
     <div className="x25-line-item-list">
       <div className="card card-flush p-4">
         <div className="card-header px-6">
-          <div className="card-title flex-column">
-            <h3 className="fw-bold mb-1">This Week</h3>
+          <div className="card-title flex-row d-flex">
+            <WeekChanger mode="prev" onChange={(_) => setDate(date.subtract(1, 'week'))} />
+            <h3 className="fw-bold mb-1 mx-7">This Week</h3>
+            <WeekChanger onChange={(_) => setDate(date.add(1, 'week'))}  />
             {/* <div className="fs-6 text-gray-400">{currentBudgetLineItems.length} Budget Items</div> */}
           </div>
           <div className="card-toolbar">
@@ -316,11 +329,12 @@ export const WeeklyWidget: FC = () => {
 
         <div className="d-flex flex-column">
           {items.map((_item, i) => {
+            const current = friday.add(_item.days, 'day');
             const endingBalance = balanceAfterItem(i);
-            const hasPassed: boolean = dayjs().isSameOrAfter(friday.add(_item.days, 'day'));
+            const hasPassed: boolean = dayjs().isSameOrAfter(current);
 
             let isNewDay = i === 0 || _item.days !== items[i - 1].days
-              ? friday.add(_item.days, 'day').format('dddd, M/D')
+              ? current.format('dddd, M/D')
               : null
 
             return (
