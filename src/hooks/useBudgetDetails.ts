@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { saveBudget, getBudget } from '../utils/localStorage';
-import { x25Error, Budget, BudgetItem } from '../utils/schemas';
+import { x25Error, Budget, BudgetItem, BudgetNote } from '../utils/schemas';
 import { getUniqueID } from '../utils/util';
 
 
@@ -15,7 +15,9 @@ export type UseBudgetDetails = {
   updateBudgetItem: (item: BudgetItem) => void,
   updateBudget: (updates: Record<string,string>) => void,
   convertToBudget: () => void,
-  refresh: () => void
+  refresh: () => void,
+  addNote: (note: BudgetNote) => void,
+  deleteNote: (note: BudgetNote) => void
 }
 
 export const useBudgetDetails = (slug: string): UseBudgetDetails => {
@@ -23,7 +25,7 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
   const [data, setData] = useState<Budget>();
   const [error, setError] = useState<x25Error>();
 
-  const _updateBudget = (key: keyof Budget, value: string | number | Dayjs | BudgetItem[]) => {
+  const _updateBudget = (key: keyof Budget, value: string | number | Dayjs | BudgetItem[] | BudgetNote[]) => {
     setData(prev => (
       prev === undefined ?
         undefined :
@@ -62,29 +64,6 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
             items
           }
       ))
-      // if (item.id in data.items) {
-      //   setData( prev => (
-      //     prev === undefined ?
-      //     undefined :
-      //     {
-      //       ...prev,
-      //       items: prev.items.map(( _item) => (
-      //         item.id === _item.id ? item: _item
-      //       ))
-      //     }
-      //   ))
-      // } else {
-      //   const items = data.items;
-      // items.push(item);
-      // setData( prev => (
-      //   prev === undefined ?
-      //   undefined :
-      //   {
-      //     ...prev,
-      //     items
-      //   }
-      // ))
-      // }
     }
   }
 
@@ -190,15 +169,27 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     }
   }
 
+  const addNote = (note: BudgetNote) => {
+    if ( data ){
+      const notes = data.notes ?? [];
+      const exists = notes.filter((n) => n.id === note.id );
+
+      if (exists.length === 0){
+        notes.push(note);
+        _updateBudget("notes", notes);
+      }
+    }
+  }
+
+  const deleteNote = (note: BudgetNote) => {
+    if ( data ){
+      const notes = (data.notes ?? []).filter((n) => n.id !== note.id );
+      _updateBudget("notes", notes);
+    }
+  }
+
   useEffect(() => {
     refresh();
-    // const response = getBudget(slug);
-    // if (response.status === "success") {
-    //   setData(response.data);
-    // } else {
-    //   setError(response);
-    // }
-
   }, []);
 
   useEffect(() => {
@@ -224,6 +215,8 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     deleteBudgetItem, 
     updateBudgetItem,
     convertToBudget,
-    refresh 
+    refresh,
+    addNote,
+    deleteNote
   };
 }

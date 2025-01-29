@@ -45,7 +45,12 @@ export const getBudgets = (): GetBudgetsResponse => {
 
             }
             return _item;
-          })
+          }),
+          notes: _budget.notes?.map(( _note) => ({
+            id: _note.id,
+            body: _note.body,
+            date: dayjs(_note.date)
+          }))
         }
 
         if ( budgets[_id].createDate !== undefined ){

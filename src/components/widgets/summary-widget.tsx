@@ -42,20 +42,26 @@ export const SummaryWidget: FC = () => {
     return idealVerCount - actualVerCount;
   };
 
-  const getPastDueVers = (): number => {
+  const getPastDueVers = (): { items: number, amount: number } => {
     let vers: number = 0;
     let expectedVers: number = 0;
+
+    let pastDue: number = 0;
+    let pastDueAmount: number = 0;
+    
     const start = date.subtract(3, 'month');
     const end = friday.subtract(1, 'day');
 
     budget.items.forEach((item, _) => {
       if (item.frequency === BudgetItemFrequency.once) {
         if (item.date.isBetween(start, end, 'day', '[]')) {
-          expectedVers++;
-          vers += getVerificationOn(item.date, item) === null ? 0 : 1;
+          if (null === getVerificationOn(item.date, item)){
+            pastDue += 1;
+            pastDueAmount += item.amount;
+          }
         }
       } else {
-        const _start = start.isBefore(item.starts) ? start : item.starts;
+        const _start = start.isBefore(item.starts) ? item.starts : start;
         const _end = item.ends !== "-1" && item.ends.isBefore(end) ? item.ends : end;
         const _rangeInDays = _end.diff(_start, 'day');
 
@@ -72,16 +78,22 @@ export const SummaryWidget: FC = () => {
             ? _end.diff(firstOccurrence, 'month') + 1
             : Math.floor(rangeInDays / (item.frequency == BudgetItemFrequency.weekly ? 7 : 14)) + 1
 
-          expectedVers += numOccurrences;
-          const _vers = getVerificationsBetween([firstOccurrence, _end], item);
-          vers += _vers ? _vers.length : 0;
+          const itemVers = getVerificationsBetween([firstOccurrence, _end], item);
+          if ( itemVers && itemVers.length < numOccurrences ){
+            pastDue += numOccurrences - itemVers.length;
+            pastDueAmount += ( numOccurrences - itemVers.length ) * item.amount;
+            if ( item.type === "income" ){
+              console.log(firstOccurrence, _end);
+              console.log("PAST DUE - %s, occurrences: %d, verifications: %d, amount: %s", item.name, numOccurrences, itemVers.length, item.amount);
+            }
+          }
         }
       }
     });
-    return expectedVers - vers;
+    return { items: pastDue, amount: pastDueAmount };
   };
 
-  const pastDueVers = getPastDueVers();
+  const pastDue = getPastDueVers();
 
   return (
     // <div className="row g-xxl-9">
@@ -123,6 +135,7 @@ export const SummaryWidget: FC = () => {
                   <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
                     <span className="fs-6 fw-semibold text-success d-block">Current Balance</span>
                     <span className="fs-2hx fw-bold text-gray-900 counted">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    {pastDue.items > 0 && <div className="text-white">-</div>}
                   </div>
                 </div>
               }
@@ -130,16 +143,18 @@ export const SummaryWidget: FC = () => {
               {/* begin::Col */}
               <div className="col p-2">
                 <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                  <span className="fs-6 fw-semibold text-warning d-block">Verifications Due</span>
+                  <span className="fs-6 fw-semibold text-warning d-block">Items Due</span>
                   <span className="fs-2hx fw-bold text-gray-900 counted">{getVersDue()}</span>
+                  {pastDue.items > 0 && <div className="text-white">-</div>}
                 </div>
               </div>
               {/* end::Col */}
               {/* begin::Col */}
               <div className="col p-2">
                 <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                  <span className="fs-6 fw-semibold text-danger d-block">Past Due Verifications</span>
-                  <span className="fs-2hx fw-bold text-gray-900 counted">{pastDueVers > 100 ? "100+" : pastDueVers}</span>
+                  <span className="fs-6 fw-semibold text-danger d-block">Past Due Items</span>
+                  <span className="fs-2hx fw-bold text-gray-900 counted">{pastDue.items > 100 ? "100+" : pastDue.items}</span>
+                  {pastDue.items > 0 && <div className="fw-semibold fs-6 text-gray-400">${ pastDue.amount.toLocaleString( undefined, { minimumFractionDigits: 2 }) }</div>}
                 </div>
               </div>
               {/* end::Col */}

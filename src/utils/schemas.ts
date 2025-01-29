@@ -23,15 +23,20 @@ export const BudgetItemFrequency = {
 } as const;
 
 export const WeekDays = {
-  monday: "Monday", 
-  tuesday: "Tuesday", 
-  wednesday: "Wednesday", 
-  thursday: "Thursday", 
-  friday: "Friday", 
-  saturday: "Saturday", 
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
   sunday: "Sunday"
 } as const;
 
+const zBudgetNote = z.object({
+  id: z.string(),
+  date: zDayjs,
+  body: z.string()
+});
 
 const zOneTimeBudgetItem = z.object({
   id: z.string(),
@@ -63,7 +68,7 @@ const zWeeklyBudgetItem = z.object({
     )
   )),
   frequency: z.enum([BudgetItemFrequency.weekly, BudgetItemFrequency.biweekly]),
-  day: z.nativeEnum( WeekDays ),
+  day: z.nativeEnum(WeekDays),
   starts: zDayjs,
   ends: zDayjs.or(z.literal("-1"))
 })
@@ -111,6 +116,7 @@ export const Budget = z.object({
   startingBalance: z.number(),
   startDate: zDayjs,
   items: zBudgetItem.array(),
+  notes: zBudgetNote.array().optional(),
   createDate: zDayjs.optional(),
   parent: z.string().optional(),
   changes: z.string().array().optional(),
@@ -133,6 +139,7 @@ export const Budget = z.object({
 //   })
 // );
 
+export type BudgetNote = z.infer<typeof zBudgetNote>;
 export type BudgetItem = z.infer<typeof zBudgetItem>;
 export type Budget = z.infer<typeof Budget>;
 export type BudgetItemFrequency = typeof BudgetItemFrequency[keyof typeof BudgetItemFrequency];
@@ -161,9 +168,9 @@ const GetBudgetResponse = z.discriminatedUnion("status", [
 ]);
 export type GetBudgetResponse = z.infer<typeof GetBudgetResponse>;
 
-const SaveResponse = z.discriminatedUnion( "status", [
+const SaveResponse = z.discriminatedUnion("status", [
   z.object({
-    status: z.literal( "success" )
+    status: z.literal("success")
   }),
   x25Error
 ])

@@ -42,7 +42,7 @@ export const useUpdateBudgetItem = (defaults: Record<string, string|undefined> =
 
   const save = (): boolean => {
     setError(null);
-
+    
     const obj: Record<string, any> = { "id": getUniqueID() };
 
     Object.keys(fields ?? {}).map((key) => {
@@ -64,6 +64,9 @@ export const useUpdateBudgetItem = (defaults: Record<string, string|undefined> =
 
       } else if ("dates" === key && value !== undefined) {
         obj[key] = value.split(",");
+
+      } else if ( "vers" === key && value !== undefined ){
+        obj[key] = JSON.parse( value );
 
       } else {
         obj[key] = value;
