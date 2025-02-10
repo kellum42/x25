@@ -8,6 +8,7 @@ import { UpdateBudget } from "../components/modals/update-budget"
 import { Budget, x25Error } from "../utils/schemas"
 import { generateAvatar, getUniqueID, slugify } from "../utils/util"
 import dayjs from "dayjs"
+import { APIResult, budgetTox25, get } from "../utils/strapi";
 
 // TODO:
 //  - Get popup on budget cards working
@@ -18,13 +19,14 @@ const IndexPage: React.FC<PageProps> = () => {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [error, setError] = useState<x25Error>();
 
-  const fetchBudgets = () => {
-    const response = getBudgets();
-    if ( response.status === "success" ){
-      const _budgets = Object.values(response.data).filter(budget => budget.parent === undefined);
-      setBudgets(_budgets);
+  const fetchBudgets = async () => {
+    const result: APIResult<"budget", "many"> = await get("http://localhost:1337/api/budgets");
+    if ( result.status === "success" ){
+      const budgets: Budget[] = result.data.map( budget => budgetTox25(budget)).filter( budget => budget !== null )
+      setBudgets(budgets);
+
     } else {
-      setError(response);
+      console.log(result.error);
     }
   }
 

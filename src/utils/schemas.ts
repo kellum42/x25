@@ -112,8 +112,10 @@ export const zBudgetItem = z.discriminatedUnion(
 export const Budget = z.object({
   id: z.string().nonempty(),
   title: z.string().nonempty(),
-  slug: z.string().nonempty(),
+  // slug: z.string().nonempty(),
   startingBalance: z.number(),
+  currentBalance: z.number().optional(),
+  itemCount: z.number().optional(),
   startDate: zDayjs,
   items: zBudgetItem.array(),
   notes: zBudgetNote.array().optional(),

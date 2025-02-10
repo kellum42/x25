@@ -71,7 +71,7 @@ const BudgetDashboard: React.FC = () => {
           </div>
           <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
             <Link
-              to={`/budget/${budget.slug}/items`}
+              to={`/budget/${budget.id}/items`}
               className="btn bg-body btn-color-gray-700 btn-active-primary me-4 w-125px">
               View Items
             </Link>
