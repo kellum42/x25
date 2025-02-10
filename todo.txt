@@ -20,6 +20,8 @@
 - Select & sum weekly budget items for calculations 
 - Include income items in past due verification totals?
 - * Current balance on summary widget seems to not include verifications
+- Close button on notes slider doesn't work.
+- Add tags. Would be so we can label what card things are coming out on.
 
 
 Done:
