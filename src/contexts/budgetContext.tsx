@@ -1,7 +1,7 @@
 import React, { ReactNode, useState, createContext, useEffect } from "react";
 import dayjs, { Dayjs } from "dayjs";
 
-import { useBudgetDetails, UseBudgetDetails } from "../hooks/useBudgetDetails";
+import { useBudgetDetails, UseBudgetDetails } from "../hooks/useBudget";
 
 type BudgetContextProps = {
   date: Dayjs,

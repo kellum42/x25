@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 import {
   useBudgetDetails,
   UseBudgetDetails,
-} from "../../hooks/useBudgetDetails";
+} from "../../hooks/useBudget";
 import { Budget, BudgetItemFrequency } from "../../utils/schemas";
 import * as localStorage from "../../utils/localStorage";
 

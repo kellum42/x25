@@ -154,7 +154,8 @@ const BudgetDashboard: React.FC = () => {
           </Modal>
         }
         {isShowingNotes && <div style={{ zIndex: 109 }} className="drawer-overlay" onClick={() => { setIsShowingNotes(false) }}></div>}
-        <NoteDrawer open={isShowingNotes} notes={budget.notes} save={addNote} error={error} deleteNote={deleteNote} />
+        {/* <NoteDrawer open={isShowingNotes} notes={budget.notes} save={addNote} error={error} deleteNote={deleteNote} /> */}
+        <NoteDrawer open={isShowingNotes} notes={budget.notes} save={addNote} deleteNote={deleteNote} />
       </div>
       :
       <></>

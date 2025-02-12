@@ -1,7 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import dayjs from 'dayjs'
 
-import { BudgetItemFrequency } from "../../hooks/useBudgetDetails";
+import { BudgetItemFrequency } from "../../hooks/useBudget";
 import { useNewBudgetItem, UseNewBudgetItemType } from "../../hooks/useUpdateBudgetItem";
 import * as localStorage from "../../utils/localStorage";
 

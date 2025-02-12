@@ -1,29 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
-import { saveBudget, getBudget } from '../utils/localStorage';
+// import { saveBudget, getBudget } from '../utils/localStorage';
+import { APIResult, budgetTox25, get } from '../utils/strapi';
 import { x25Error, Budget, BudgetItem, BudgetNote } from '../utils/schemas';
 import { getUniqueID } from '../utils/util';
 
 
 export type UseBudgetDetails = {
   budget?: Budget,
-  error?: x25Error,
+  // error?: x25Error,
+  error?: string,
   verifyAmount: (date: Dayjs, item: BudgetItem, amount: number | null) => void,
   duplicateBudgetItem: (item: BudgetItem) => void,
   deleteBudgetItem: (item: BudgetItem) => void,
   updateBudgetItem: (item: BudgetItem) => void,
-  updateBudget: (updates: Record<string,string>) => void,
+  updateBudget: (updates: Record<string, string>) => void,
   convertToBudget: () => void,
   refresh: () => void,
   addNote: (note: BudgetNote) => void,
   deleteNote: (note: BudgetNote) => void
 }
 
-export const useBudgetDetails = (slug: string): UseBudgetDetails => {
+export const useBudgetDetails = (id: string): UseBudgetDetails => {
 
   const [data, setData] = useState<Budget>();
-  const [error, setError] = useState<x25Error>();
+  const [error, setError] = useState<string>();
 
   const _updateBudget = (key: keyof Budget, value: string | number | Dayjs | BudgetItem[] | BudgetNote[]) => {
     setData(prev => (
@@ -38,10 +40,10 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
 
   const _updateBudgetItem = (item: BudgetItem) => {
     if (data === undefined) {
-      setError({
-        status: "fail",
-        message: "ERROR: Data is undefined. updateBudgetItem() -> useBudgetDetails"
-      })
+      // setError({
+      //   status: "fail",
+      //   message: "ERROR: Data is undefined. updateBudgetItem() -> useBudgetDetails"
+      // })
     } else {
       let itemFound = false;
       const items = data.items.map(_item => {
@@ -110,33 +112,34 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     _updateBudgetItem(item);
   }
 
-  const updateBudget = (_updates: Record<string,string>) => {
-    if ( data === undefined ){
-      setError({ status: "fail", message: "Can't update budget. It does not exist" });
-    
-    } else {
-      
-      const updates: Budget = {...data, items: data.items, avatar: data.avatar };
+  const updateBudget = (_updates: Record<string, string>) => {
+    if (data === undefined) {
+      // setError({ status: "fail", message: "Can't update budget. It does not exist" });
 
-      for ( const key in _updates ){
-        if ( "startingBalance" === key ){
-          updates.startingBalance = parseFloat( _updates[key] );
-        
-        } else if ( "startDate" === key ){
-          updates.startDate = dayjs( _updates[key] );
-        
-        } else if ( "title" === key ){
+    } else {
+
+      const updates: Budget = { ...data, items: data.items, avatar: data.avatar };
+
+      for (const key in _updates) {
+        if ("startingBalance" === key) {
+          updates.startingBalance = parseFloat(_updates[key]);
+
+        } else if ("startDate" === key) {
+          updates.startDate = dayjs(_updates[key]);
+
+        } else if ("title" === key) {
           updates.title = _updates[key];
 
-        } else if ( "slug" === key ){
-          updates.slug = _updates[key];
         }
+        // else if ( "slug" === key ){
+        //   updates.slug = _updates[key];
+        // }
       }
 
       setData(prev => (
         prev === undefined ?
           undefined :
-          {...prev, ...updates}
+          { ...prev, ...updates }
       ))
     }
   }
@@ -149,32 +152,53 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
   }
 
   const convertToBudget = () => {
-    if ( data ){
-      const updates: Budget = {...data, items: data.items, avatar: data.avatar };
+    if (data) {
+      const updates: Budget = { ...data, items: data.items, avatar: data.avatar };
       delete updates.parent;
       setData(prev => (
         prev === undefined ?
           undefined :
-          {...updates}
+          { ...updates }
       ))
     }
   }
 
-  const refresh = () => {
-    const response = getBudget(slug);
-    if (response.status === "success") {
-      setData(response.data);
+  const refresh = async () => {
+    // const response = getBudget(id);
+    // if (response.status === "success") {
+    //   setData(response.data);
+    // } else {
+    //   setError(response);
+    // }
+    const endpoint = `http://localhost:1337/api/budgets/${id}`;
+    const result: APIResult<"budget", "one"> = await get(endpoint);
+    if (result.status === "success") {
+      const budget = result.data;
+      if ( budget ){
+        const x25Budget = budgetTox25( budget );
+        if ( x25Budget ){
+          console.log(x25Budget);
+          console.log(budget);
+          setData(x25Budget);
+
+        } else {
+          setError("Error getting budget. [Error converting APIResponseSchema<budget> to Budget]");
+        }
+      } else {
+        setError("Error getting budget. [Unable to fetch budget from api]");
+      }
+
     } else {
-      setError(response);
+      console.log(result.error);
     }
   }
 
   const addNote = (note: BudgetNote) => {
-    if ( data ){
+    if (data) {
       const notes = data.notes ?? [];
-      const exists = notes.filter((n) => n.id === note.id );
+      const exists = notes.filter((n) => n.id === note.id);
 
-      if (exists.length === 0){
+      if (exists.length === 0) {
         notes.push(note);
         _updateBudget("notes", notes);
       }
@@ -182,8 +206,8 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
   }
 
   const deleteNote = (note: BudgetNote) => {
-    if ( data ){
-      const notes = (data.notes ?? []).filter((n) => n.id !== note.id );
+    if (data) {
+      const notes = (data.notes ?? []).filter((n) => n.id !== note.id);
       _updateBudget("notes", notes);
     }
   }
@@ -198,21 +222,21 @@ export const useBudgetDetails = (slug: string): UseBudgetDetails => {
     setError(undefined)
 
     if (data) {
-      const response = saveBudget(data);
-      if (response.status === "fail") {
-        setError(response);
-        console.log("ERROR ON BUDGET SAVE: %s", response.message);
-      }
+      // const response = saveBudget(data);
+      // if (response.status === "fail") {
+      //   setError(response);
+      //   console.log("ERROR ON BUDGET SAVE: %s", response.message);
+      // }
     }
   }, [data]);
 
-  return { 
-    budget: data, 
-    error, 
+  return {
+    budget: data,
+    error,
     verifyAmount,
-    updateBudget, 
-    duplicateBudgetItem, 
-    deleteBudgetItem, 
+    updateBudget,
+    duplicateBudgetItem,
+    deleteBudgetItem,
     updateBudgetItem,
     convertToBudget,
     refresh,

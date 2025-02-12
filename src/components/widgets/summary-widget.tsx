@@ -25,7 +25,7 @@ export const SummaryWidget: FC = () => {
   }
 
   const friday = getFriday(date);
-  const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, date);
+  // const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, date);
 
   // Gets the verifications due this week.
   // Friday is the first day of the week.
@@ -130,11 +130,11 @@ export const SummaryWidget: FC = () => {
             {/* begin::Row */}
             <div className="row p-0 mb-5 px-9">
               {/* begin::Col */}
-              {typeof balance === 'number' &&
+              {budget.currentBalance &&
                 <div className="col p-2">
                   <div className="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
                     <span className="fs-6 fw-semibold text-success d-block">Current Balance</span>
-                    <span className="fs-2hx fw-bold text-gray-900 counted">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    <span className="fs-2hx fw-bold text-gray-900 counted">${budget.currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                     {pastDue.items > 0 && <div className="text-white">-</div>}
                   </div>
                 </div>
@@ -179,13 +179,13 @@ export const SummaryWidget: FC = () => {
         <div className="separator separator-dashed"></div>
 
         <div className="fs-6 d-flex justify-content-between my-4">
-          <Link to={`/budget/${budget.slug}/items`} className="hover text-primary">Budget Items</Link>
-          <div className="d-flex">{ budget.items.length }</div>
+          <Link to={`/budget/${budget.id}/items`} className="hover text-primary">Budget Items</Link>
+          <div className="d-flex">{ budget.itemCount ?? "--" }</div>
         </div>
         <div className="separator separator-dashed"></div>
 
         <div className="fs-6 d-flex justify-content-between my-4">
-          <Link to={`/budget/${budget.slug}#sims`} className="hover text-primary">Simulations</Link>
+          <Link to={`/budget/${budget.id}#sims`} className="hover text-primary">Simulations</Link>
           <div className="d-flex">0</div>
         </div>
       </div>
