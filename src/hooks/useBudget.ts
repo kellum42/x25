@@ -2,16 +2,26 @@ import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
 // import { saveBudget, getBudget } from '../utils/localStorage';
-import { APIResult, budgetTox25, get } from '../utils/strapi';
+import { APIResult, APISchemas, budgetTox25, get, itemTox25 } from '../utils/strapi';
 import { x25Error, Budget, BudgetItem, BudgetNote } from '../utils/schemas';
 import { getUniqueID } from '../utils/util';
+import { calculateOccurrences, daysTillNextOccurrence, itemIsActive } from '../utils/budget';
+import { x25log } from '../utils/log';
+import { boolean } from 'zod';
 
+export type Occurrence = {
+  date: Dayjs,
+  item: BudgetItem,
+  verification?: APISchemas["verification"]
+}
 
-export type UseBudgetDetails = {
+type x25Result<T> = { status: "success", data: T } | { status: "fail", error: string }
+
+export type UseBudget = {
   budget?: Budget,
   // error?: x25Error,
   error?: string,
-  verifyAmount: (date: Dayjs, item: BudgetItem, amount: number | null) => void,
+  verify: (occurrence: Occurrence, amount: string) => Promise<x25Result<boolean>>,
   duplicateBudgetItem: (item: BudgetItem) => void,
   deleteBudgetItem: (item: BudgetItem) => void,
   updateBudgetItem: (item: BudgetItem) => void,
@@ -19,12 +29,19 @@ export type UseBudgetDetails = {
   convertToBudget: () => void,
   refresh: () => void,
   addNote: (note: BudgetNote) => void,
-  deleteNote: (note: BudgetNote) => void
+  deleteNote: (note: BudgetNote) => void,
+
+  // pastDueItems: Occurrence[],
+  // upcomingItems: Occurrence[],
+  // budget: () => Budget,
+  items: (active: boolean) => BudgetItem[]
+  getOccurrencesBetween: (start: Dayjs, end: Dayjs) => Promise<x25Result<Occurrence[]>>
 }
 
-export const useBudgetDetails = (id: string): UseBudgetDetails => {
+export const useBudget = (id: string): UseBudget => {
 
   const [data, setData] = useState<Budget>();
+  const [items, setItems] = useState<BudgetItem[]>();
   const [error, setError] = useState<string>();
 
   const _updateBudget = (key: keyof Budget, value: string | number | Dayjs | BudgetItem[] | BudgetNote[]) => {
@@ -55,48 +72,30 @@ export const useBudgetDetails = (id: string): UseBudgetDetails => {
         }
       });
 
-      if (!itemFound) {
-        items.push(item);
-      }
-      setData(prev => (
-        prev === undefined ?
-          undefined :
-          {
-            ...prev,
-            items
-          }
-      ))
+      // if (!itemFound) {
+      //   items.push(item);
+      // }
+      // setData(prev => (
+      //   prev === undefined ?
+      //     undefined :
+      //     {
+      //       ...prev,
+      //       items
+      //     }
+      // ))
     }
   }
 
-  // Also unverifies.
-  const verifyAmount = (date: Dayjs, item: BudgetItem, amount: number | null) => {
-    // Save --> setData?
-    const year = date.get('year');
-    const month = date.get('month') + 1;
-    const day = date.get('date');
 
-    if (item.vers !== undefined) {
-      if (amount === null) {
-        const verificationExists = year in item.vers && month in item.vers[year] && day in item.vers[year][month];
-        if (verificationExists) {
-          delete item.vers[year][month][day];
-        }
-      } else {
-        if (undefined === item.vers[year]) {
-          item.vers[year] = {};
-        }
-        if (undefined === item.vers[year][month]) {
-          item.vers[year][month] = {};
-        }
-        item.vers[year][month][day] = amount;
-      }
+  const verify = async (occurrence: Occurrence, amount: number): Promise<x25Result<boolean>> => {
+    // create.
+    if ( occurrence.verification === null ){
+
     } else {
-      if (amount !== null) {
-        item.vers = { [year]: { [month]: { [day]: amount } } };
-      }
+      // update.
     }
-    _updateBudgetItem(item);
+
+    // _updateBudgetItem(item);
   }
 
   const duplicateBudgetItem = (item: BudgetItem) => {
@@ -145,10 +144,10 @@ export const useBudgetDetails = (id: string): UseBudgetDetails => {
   }
 
   const deleteBudgetItem = (item: BudgetItem) => {
-    if (data) {
-      const items = data.items.filter((_item) => _item.id !== item.id);
-      _updateBudget("items", items);
-    }
+    // if (data) {
+    //   const items = data.items.filter((_item) => _item.id !== item.id);
+    //   _updateBudget("items", items);
+    // }
   }
 
   const convertToBudget = () => {
@@ -170,15 +169,13 @@ export const useBudgetDetails = (id: string): UseBudgetDetails => {
     // } else {
     //   setError(response);
     // }
-    const endpoint = `http://localhost:1337/api/budgets/${id}`;
+    const endpoint = `http://localhost:1337/api/budgets/${id}?status=published&populate=items`;
     const result: APIResult<"budget", "one"> = await get(endpoint);
     if (result.status === "success") {
       const budget = result.data;
-      if ( budget ){
-        const x25Budget = budgetTox25( budget );
-        if ( x25Budget ){
-          console.log(x25Budget);
-          console.log(budget);
+      if (budget) {
+        const x25Budget = budgetTox25(budget);
+        if (x25Budget) {
           setData(x25Budget);
 
         } else {
@@ -194,23 +191,108 @@ export const useBudgetDetails = (id: string): UseBudgetDetails => {
   }
 
   const addNote = (note: BudgetNote) => {
-    if (data) {
-      const notes = data.notes ?? [];
-      const exists = notes.filter((n) => n.id === note.id);
+    // if (data) {
+    //   const notes = data.notes ?? [];
+    //   const exists = notes.filter((n) => n.id === note.id);
 
-      if (exists.length === 0) {
-        notes.push(note);
-        _updateBudget("notes", notes);
-      }
-    }
+    //   if (exists.length === 0) {
+    //     notes.push(note);
+    //     _updateBudget("notes", notes);
+    //   }
+    // }
   }
 
   const deleteNote = (note: BudgetNote) => {
+    // if (data) {
+    //   const notes = (data.notes ?? []).filter((n) => n.id !== note.id);
+    //   _updateBudget("notes", notes);
+    // }
+  }
+
+  const getOccurrencesBetween = async (start: Dayjs, end: Dayjs): Promise<x25Result<Occurrence[]>> => {
+    x25log.d("Entered getOccurrencesBetween() in UpcomingItemsWidget. Start: %s, end: %s", start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"));
+    
+    const itemIsActive = (item: BudgetItem, s: Dayjs, e: Dayjs) => {
+      if (item.frequency === "Once"){
+        return item.date.isBetween(s, e, "date", "[]");
+      
+      } else {
+        return !item.starts.isAfter(e) && (item.ends === "-1" || !item.ends.isBefore(s));
+      } 
+    }
+
     if (data) {
-      const notes = (data.notes ?? []).filter((n) => n.id !== note.id);
-      _updateBudget("notes", notes);
+      const occurrences: Occurrence[] = []
+      const adjStart = data.startDate.isAfter(start) ? data.startDate : start;
+      const endpoint = `http://localhost:1337/api/items?status=published&filters[budget][documentId][$eq]=${data.id}`
+      const result = await get<"item", "many">(endpoint);
+      if (result.status === "success") {
+        x25log.d("Fetched %d items from endpoint %s", result.data.length, endpoint);
+        
+        const items: BudgetItem[] = result.data
+          .map(item => itemTox25(item))
+          .filter(item => item !== null)
+          .filter(item => itemIsActive(item, adjStart, end))
+        ;
+
+        x25log.d("%d/%d budget items are active.", items.length, result.data.length);
+
+        // get verifications
+        const v_endpoint = `http://localhost:1337/api/verifications?filters[item][budget][documentId][$eq]=${data.id}&filters[date][$between][0]=${start.format('YYYY-MM-DD')}&filters[date][$between][1]=${end.format('YYYY-MM-DD')}&populate[item][fields][0]=name`
+        x25log.d("Fetching verifications from endpoint %s", v_endpoint);
+
+        const verificationsResult = await get<"verification", "many">(v_endpoint);
+
+        if (verificationsResult.status === "success") {
+          x25log.d("Fetched %d verifications.", verificationsResult.data.length);
+
+          const vMap: Record<string, Record<string, APISchemas["verification"]>> = {}
+          verificationsResult.data.forEach(v => {
+            if (v.date !== undefined && v.item !== undefined && v.amount !== undefined) {
+              const date = dayjs(v.date).format("YYYY-MM-DD");
+              if (undefined === vMap[date]) {
+                vMap[date] = {};
+              }
+              // if (undefined === vMap[date][v.item.documentId]) {
+                // vMap[date][v.item.documentId] = v.amount;
+              // }
+              vMap[date][v.item.documentId] = v;
+            }
+          })
+
+          // calculate occurrences between start and end.
+          // ensure items are active.
+          items.forEach(item => {
+            const cOccurrences = calculateOccurrences(item, start, end)
+            x25log.d("[getOccurrencesBetween][useBudget.ts]: %s occurrs %d times. Range: %s -> %s. Dates: %s", item.name, cOccurrences.length, start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"), cOccurrences.map( d => d.format("YYYY-MM-DD")).join(", "))
+            
+            cOccurrences.map( occ => { 
+              const occdate = occ.format("YYYY-MM-DD");
+
+              const missingVerification = vMap[occdate] === undefined || vMap[occdate][item.id] === undefined;
+              if (missingVerification){
+                x25log.d("%s item is missing verification on %s", item.name, occ.format("YYYY-MM-DD"));
+              }         
+              occurrences.push({
+                date: occ,
+                item,
+                verification: missingVerification ? undefined : vMap[occdate][item.id]
+              })
+            });
+          });
+        } 
+        return {status: "success", data: occurrences};
+
+      } else {
+        x25log.d("Error fetching items. endpoint: %s, msg: %s", endpoint, result.error )
+        return { status: "fail", error: "Error fetching items. Details " + result.error }
+      }
+
+    } else {
+      return { status: "fail", error: "Budget does not exist." }
     }
   }
+
 
   useEffect(() => {
     refresh();
@@ -233,7 +315,7 @@ export const useBudgetDetails = (id: string): UseBudgetDetails => {
   return {
     budget: data,
     error,
-    verifyAmount,
+    verify,
     updateBudget,
     duplicateBudgetItem,
     deleteBudgetItem,
@@ -241,6 +323,7 @@ export const useBudgetDetails = (id: string): UseBudgetDetails => {
     convertToBudget,
     refresh,
     addNote,
-    deleteNote
+    deleteNote,
+    getOccurrencesBetween
   };
 }

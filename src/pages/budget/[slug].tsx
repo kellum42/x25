@@ -14,6 +14,7 @@ import { SimulationChangesWidget } from "../../components/widgets/simulation-cha
 import { Menu, MenuItem } from "../../components/floating-menu"
 import { Modal } from "../../components/modals/modal"
 import { NoteDrawer } from "../../components/drawers/note"
+import { UpcomingItemsWidget } from "../../components/widgets/upcoming-items-widget"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
@@ -109,7 +110,8 @@ const BudgetDashboard: React.FC = () => {
           {!isSimulation &&
             <div className="row">
               <div className="col-lg-6">
-                <SummaryWidget />
+                {/* <SummaryWidget /> */}
+                <UpcomingItemsWidget />
                 <ChartWidget />
                 <div className="d-none d-lg-block">
                   <SimulationsWidget />
