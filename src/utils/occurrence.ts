@@ -28,10 +28,8 @@ const first = <T>(arr?: T[]): T|undefined => {
   return undefined;
 }
 
-// { [P in Exclude<keyof T, K>]: T[P]; } & { [P in Extract<keyof T, K>]-?: T[P]; }
 type Requires<T, K extends keyof T> = Omit<T, K> & Required<Pick<T,K>>
-// type R = Partial
-// type OccurrenceItem = Omit<Schema<"item">, "type"|"amount"> & {type: "income"|"expense", amount: number};
+
 export type Occurrence = {
   date: Dayjs,
   item: Requires<Schema<"item">, "type"|"amount">,
