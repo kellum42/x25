@@ -7,7 +7,7 @@ import {
   getVerificationsBetween,
   calculateBalance,
   JSONtoBudgetItem,
-} from "../../utils/budget";
+} from "../../utils/occurrence";
 import { BudgetItem, BudgetItemFrequency, WeekDays } from '../../utils/schemas';
 import { sampleBudgetTwoItems } from '../../utils/sample-budget-two';
 import { sampleBudgetThreeItems } from '../../utils/sample-budget-3';

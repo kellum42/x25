@@ -4,27 +4,32 @@ import { BudgetItem } from "../utils/schemas"
 import dayjs, { Dayjs } from "dayjs"
 import { Occurrence } from "../hooks/useBudget"
 import { getTheme } from "../utils/theme"
+import { Schema } from "../utils/strapi"
 
 type OccurrenceCardProps = {
   date: Dayjs,
   occurrence: Occurrence,
   isNewDay: boolean,
-  balance: number | null,
+  balance?: number,
 }
 
 export const OccurrenceCard: FC<OccurrenceCardProps> = (props) => {
   const { isNewDay, occurrence, balance, date } = props;
+  const { item } = occurrence;
 
-  const theme = getTheme("light");
-  const hasPassed = !occurrence.date.isBefore(date);
-  const { item, verification } = occurrence;
-  const isVerified = verification && verification.amount !== undefined;
-
+  const [verification, setVerification] = useState<Schema<"verification">|undefined>(occurrence.verification)
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
-  const [newVerification, setNewVerification] = useState<string>(
+  const [newVerification, setNewVerification] = useState<string|undefined>(
+    item.amount === undefined ?
+    undefined :
     item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })
   );
   const [loading, setIsLoading] = useState(false);
+
+  const isVerified = verification && verification.amount !== undefined;
+  const theme = getTheme("light");
+  const hasPassed = !occurrence.date.isBefore(date);
+  const itemAmountString = item.amount === undefined ? "--" : item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })
 
   const onVerifiedCheckboxChange = (wasChecked: boolean) => {
     console.log("checkbox is checked: %s", wasChecked);
@@ -72,7 +77,7 @@ export const OccurrenceCard: FC<OccurrenceCardProps> = (props) => {
                 >
                   <span className="text-decoration-line-through me-2 fs-6">
                     {item.type === "income" && <span>+</span>}
-                    ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    ${itemAmountString}
                   </span>
                   <span style={{ color: theme.primary }}>
                     {item.type === "income" && <span>+</span>}
@@ -84,7 +89,7 @@ export const OccurrenceCard: FC<OccurrenceCardProps> = (props) => {
                   className="fs-5 fw-bold"
                 >
                   {item.type === "income" && <span>+</span>}
-                  ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  ${itemAmountString}
                 </div>
               }
               {balance && <div className="text-gray-400 running-balance fs-7">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>}

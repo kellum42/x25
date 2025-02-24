@@ -15,6 +15,7 @@ import { Menu, MenuItem } from "../../components/floating-menu"
 import { Modal } from "../../components/modals/modal"
 import { NoteDrawer } from "../../components/drawers/note"
 import { UpcomingItemsWidget } from "../../components/widgets/upcoming-items-widget"
+import dayjs from "dayjs"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
@@ -56,7 +57,7 @@ const BudgetDashboard: React.FC = () => {
           <div>
             <div className="d-flex flex-row align-items-center">
               <h1 className="text-dark fw-bold mb-0 fs-2 me-1">{budget.title}</h1>
-              {budget.notes && budget.notes.length > 0 && <span className="badge badge-primary fs-7 mb-6">{budget.notes.length}</span>}
+              {/* {budget.notes && budget.notes.length > 0 && <span className="badge badge-primary fs-7 mb-6">{budget.notes.length}</span>} */}
               <Menu label="">
                 <MenuItem label={`Edit ${isSimulation ? 'Simulation' : 'Budget'}`} onClick={() => setIsEditingBudget(true)} />
                 <MenuItem label="View Notes" onClick={() => { setIsShowingNotes(true) }} />
@@ -109,7 +110,7 @@ const BudgetDashboard: React.FC = () => {
           }
           {!isSimulation &&
             <div className="row">
-              <div className="col-lg-6">
+              <div className="col-lg-12">
                 {/* <SummaryWidget /> */}
                 <UpcomingItemsWidget />
                 <ChartWidget />
@@ -135,9 +136,9 @@ const BudgetDashboard: React.FC = () => {
             }}
             onCancel={() => setIsEditingBudget(false)}
             defaults={{
-              title: budget.title,
-              amount: budget.startingBalance.toString(),
-              startDate: budget.startDate.format("YYYY-MM-DD")
+              title: budget.title ?? "",
+              amount: (budget.startAmount ?? "").toString(),
+              startDate: dayjs(budget.startDate).format("YYYY-MM-DD")
             }}
           />
         }
@@ -155,9 +156,9 @@ const BudgetDashboard: React.FC = () => {
             <p>Are you sure you want to convert this simulation to a budget? This cannot be undone. </p>
           </Modal>
         }
-        {isShowingNotes && <div style={{ zIndex: 109 }} className="drawer-overlay" onClick={() => { setIsShowingNotes(false) }}></div>}
+        {/* {isShowingNotes && <div style={{ zIndex: 109 }} className="drawer-overlay" onClick={() => { setIsShowingNotes(false) }}></div>} */}
         {/* <NoteDrawer open={isShowingNotes} notes={budget.notes} save={addNote} error={error} deleteNote={deleteNote} /> */}
-        <NoteDrawer open={isShowingNotes} notes={budget.notes} save={addNote} deleteNote={deleteNote} />
+        {/* <NoteDrawer open={isShowingNotes} notes={budget.notes} save={addNote} deleteNote={deleteNote} /> */}
       </div>
       :
       <></>

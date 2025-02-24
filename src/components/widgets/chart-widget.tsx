@@ -6,7 +6,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isBetween from 'dayjs/plugin/isBetween';
 
 import { getTheme } from "../../utils/theme";
-import { calculateBalanceOver } from "../../utils/budget";
+// import { calculateBalanceOver } from "../../utils/budget";
 import { BudgetContext } from "../../contexts/budgetContext";
 import { Menu, MenuItem } from "../floating-menu";
 
@@ -40,7 +40,7 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
   };
   const format = ("MM/DD/YYYY");
 
-  const { startingBalance, startDate, items } = budget;
+  // const { startAmount, startDate, items } = budget;
 
   const [period, setPeriod] = useState<Period>(Period.next1Y);
 
@@ -65,95 +65,83 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
     }
   }
 
-  const { dates, balances } = calculateBalanceOver(getPeriodRanges(), startingBalance, startDate, items);
+  // const { dates, balances } = calculateBalanceOver(getPeriodRanges(), startingBalance, startDate, items);
 
-  const options: ApexOptions = {
-    series: [{
-      name: undefined,
-      data: balances.map((bal,i) => {
-        return {x: dates[i].toDate().getTime(), y: bal }
-      })
-    }],
-    chart: {
-      fontFamily: 'inherit',
-      type: 'area',
-      // height: '300px',
-      // width: '100%',
-      // toolbar: {
-      //   show: false
-      // },
-      // zoom: {
-      //   enabled: false
-      // },
-      zoom: {
-        autoScaleYaxis: true
-      }
-    },
-    dataLabels: {
-      enabled: false
-    },
-    fill: {
-      type: 'solid',
-      opacity: 0.075
-    },
-    stroke: {
-      curve: 'smooth',
-      show: true,
-      width: 3,
-      colors: [theme.primary]
-    },
-    xaxis: {
-      type: 'datetime',
-      // labels: {
-      //   datetimeFormatter: {
-      //     month: 'MMM' // Show only the 3-letter month abbreviation
-      //   }
-      // },
-      crosshairs: {
-        show: false,
-        position: 'front',
-        stroke: {
-          color: theme["grey-200"],
-          width: 1,
-          dashArray: 3
-        }
-      },
-    },
-    yaxis: {
-      labels: {
-        formatter: function (value) {
-          if (value > -1000 && value < 1000) {
-            return value.toFixed(0); // Return the number as is
-          }
+  // const options: ApexOptions = {
+  //   series: [{
+  //     name: undefined,
+  //     data: balances.map((bal,i) => {
+  //       return {x: dates[i].toDate().getTime(), y: bal }
+  //     })
+  //   }],
+  //   chart: {
+  //     fontFamily: 'inherit',
+  //     type: 'area',
+  //     zoom: {
+  //       autoScaleYaxis: true
+  //     }
+  //   },
+  //   dataLabels: {
+  //     enabled: false
+  //   },
+  //   fill: {
+  //     type: 'solid',
+  //     opacity: 0.075
+  //   },
+  //   stroke: {
+  //     curve: 'smooth',
+  //     show: true,
+  //     width: 3,
+  //     colors: [theme.primary]
+  //   },
+  //   xaxis: {
+  //     type: 'datetime',
+  //     crosshairs: {
+  //       show: false,
+  //       position: 'front',
+  //       stroke: {
+  //         color: theme["grey-200"],
+  //         width: 1,
+  //         dashArray: 3
+  //       }
+  //     },
+  //   },
+  //   yaxis: {
+  //     labels: {
+  //       formatter: function (value) {
+  //         if (value > -1000 && value < 1000) {
+  //           return value.toFixed(0); // Return the number as is
+  //         }
         
-          const kValue = value / 1000;
-          return (value % 1000 === 0 ? kValue : kValue.toFixed(1)) + "k"; // Return the number with "k" suffix
-        }
-      },
-    },
-    tooltip: {
-      style: {
-        fontSize: '12px'
-      },
-      y: {
-        formatter: function (val: number | null) {
-          if ( val === null ){ return "--"; }
-          return "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 })
-        }
-      }
-    },
-    colors: [theme.primary],
-    markers: {
-      colors: [theme["primary-light"]],
-      strokeColors: [theme.primary],
-      strokeWidth: 3
-    }
-  };
+  //         const kValue = value / 1000;
+  //         return (value % 1000 === 0 ? kValue : kValue.toFixed(1)) + "k"; // Return the number with "k" suffix
+  //       }
+  //     },
+  //   },
+  //   tooltip: {
+  //     style: {
+  //       fontSize: '12px'
+  //     },
+  //     y: {
+  //       formatter: function (val: number | null) {
+  //         if ( val === null ){ return "--"; }
+  //         return "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 })
+  //       }
+  //     }
+  //   },
+  //   colors: [theme.primary],
+  //   markers: {
+  //     colors: [theme["primary-light"]],
+  //     strokeColors: [theme.primary],
+  //     strokeWidth: 3
+  //   }
+  // };
 
   return (
     <div className="card card-xl-stretch mb-6">
       <div className="card-body p-0 d-flex justify-content-between flex-column">
-        <div className="d-flex flex-stack flex-grow-1 p-10">
+        <h1>chart widget coming soon</h1>
+        {/* <div className="d-flex flex-stack flex-grow-1 p-10">
           <div className="symbol symbol-45px">
             <div className="symbol-label">
               <Menu label={period} className="fw-bold text-gray-500" showLabel={true}>
@@ -183,7 +171,7 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
           series={options.series}
           type="area"
           height={props.height ?? ""}
-        />
+        /> */}
       </div>
     </div>
   )

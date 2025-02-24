@@ -3,7 +3,7 @@ import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 import { BudgetItem, BudgetItemFrequency } from "../../utils/schemas";
-import { calculateBalance, getFriday, getVerificationOn, getUpcomingBudgetItems, UpcomingBudgetItem } from "../../utils/budget";
+import { getFriday, getVerificationOn, UpcomingBudgetItem } from "../../utils/occurrence";
 import { numberOrNull } from "../../utils/util";
 
 import "../../styles/weekly-widget.css"
@@ -36,7 +36,7 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { date, budget, verifyAmount } = context;
+  const { date, budget } = context;
 
   if (!budget) {
     return <></>;
@@ -61,33 +61,33 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   };
 
   const verify = (unverify: boolean = false) => {
-    let value: number | null;
+    // let value: number | null;
 
-    if (unverify) {
-      value = null;
+    // if (unverify) {
+    //   value = null;
 
-    } else {
-      // Check for empty strings
-      if (textInput.trim() === "") {
-        setTextInput("");
-        return;
-      }
+    // } else {
+    //   // Check for empty strings
+    //   if (textInput.trim() === "") {
+    //     setTextInput("");
+    //     return;
+    //   }
 
-      const cleanedString = textInput.replace(/[^0-9.]/g, '');
+    //   const cleanedString = textInput.replace(/[^0-9.]/g, '');
 
-      // Convert the cleaned string to a number
-      const num = parseFloat(cleanedString);
-      if (isNaN(num)) {
-        setTextInput("");
-        return;
-      }
-      value = num;
-    }
+    //   // Convert the cleaned string to a number
+    //   const num = parseFloat(cleanedString);
+    //   if (isNaN(num)) {
+    //     setTextInput("");
+    //     return;
+    //   }
+    //   value = num;
+    // }
 
-    setIsLoading(true);
-    verifyAmount(currentDay, item, value);
-    setIsLoading(false);
-    setIsOpen(false);
+    // setIsLoading(true);
+    // verifyAmount(currentDay, item, value);
+    // setIsLoading(false);
+    // setIsOpen(false);
   }
 
   useEffect(() => {
@@ -196,53 +196,53 @@ export const WeeklyWidget: FC = () => {
     return <></>;
   }
 
-  const { startDate: startdate, startingBalance } = budget;
+  // const { startDate: startdate, startAmount } = budget;
 
   const friday = getFriday(date);
   const nextFriday = friday.add(7, 'day');
-  const budgetInProgress = !startdate.isAfter(friday);
-  const budgetStartsThisWeek = !startdate.isBefore(friday) && startdate.isBefore(nextFriday);
-  const budgetNotThisWeek = !startdate.isBefore(nextFriday);
+  // const budgetInProgress = !startdate.isAfter(friday);
+  // const budgetStartsThisWeek = !startdate.isBefore(friday) && startdate.isBefore(nextFriday);
+  // const budgetNotThisWeek = !startdate.isBefore(nextFriday);
 
   const getWeekStartingBalance = (): number | null => {
-    if (budgetInProgress) {
-      const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, friday);
-      return numberOrNull(balance);
-    }
+    // if (budgetInProgress) {
+    //   const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, friday);
+    //   return numberOrNull(balance);
+    // }
     return null;
   }
 
-  const items = getUpcomingBudgetItems(getFriday(date), 6, budget.items);
+  // const items = getUpcomingBudgetItems(getFriday(date), 6, budget.items);
 
   const weekStartingBalance = getWeekStartingBalance();
   const balanceAfterItem = (i: number): number | null => {
-    if (budgetNotThisWeek) { return null; }
+    // if (budgetNotThisWeek) { return null; }
 
     let runningBalance: number | null = weekStartingBalance;
     let j = i;
 
     // Tally balance.
-    while (j >= 0) {
-      const _item = items[j];
-      const today = friday.add(_item.days, 'day');
-      const verifiedAmount = getVerificationOn(today, _item.item);
+    // while (j >= 0) {
+    //   const _item = items[j];
+    //   const today = friday.add(_item.days, 'day');
+    //   const verifiedAmount = getVerificationOn(today, _item.item);
 
-      if (runningBalance === null) {
-        if (budgetStartsThisWeek && !today.isBefore(startdate, 'date')) {
-          runningBalance = startingBalance;
-        }
-      }
+    //   if (runningBalance === null) {
+    //     if (budgetStartsThisWeek && !today.isBefore(startdate, 'date')) {
+    //       runningBalance = startingBalance;
+    //     }
+    //   }
 
-      if (runningBalance !== null) {
-        runningBalance += (verifiedAmount ?? _item.item.amount) * (_item.item.type === "expense" ? -1 : 1);
-      }
+    //   if (runningBalance !== null) {
+    //     runningBalance += (verifiedAmount ?? _item.item.amount) * (_item.item.type === "expense" ? -1 : 1);
+    //   }
 
-      j--;
-    }
+    //   j--;
+    // }
     return runningBalance;
   }
 
-  const endingBalance: number | null = balanceAfterItem(items.length - 1);
+  // const endingBalance: number | null = balanceAfterItem(items.length - 1);
 
   type WeekChangerProps = {
     mode?: "prev" | "next",
@@ -272,13 +272,12 @@ export const WeeklyWidget: FC = () => {
     // print line items for this week in order.
 
     <div className="x25-line-item-list">
-      <div className="card card-flush p-4">
+      {/* <div className="card card-flush p-4">
         <div className="card-header px-6">
           <div className="card-title flex-row d-flex">
             <WeekChanger mode="prev" onChange={(_) => setDate(date.subtract(1, 'week'))} />
             <h3 className="fw-bold mb-1 mx-7">This Week</h3>
             <WeekChanger onChange={(_) => setDate(date.add(1, 'week'))}  />
-            {/* <div className="fs-6 text-gray-400">{currentBudgetLineItems.length} Budget Items</div> */}
           </div>
           <div className="card-toolbar">
             <a href="#" className="btn btn-bg-light btn-active-color-primary btn-sm">View All</a>
@@ -350,7 +349,7 @@ export const WeeklyWidget: FC = () => {
             )
           })}
         </div>
-      </div>
+      </div> */}
     </div>
   )
 };

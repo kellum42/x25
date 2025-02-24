@@ -1,3 +1,4 @@
+import { Dayjs } from "dayjs";
 import { svgs } from "./svg";
 
 export const getUniqueID = (): string => {
@@ -42,4 +43,9 @@ export const addDateSuffix = (date: string): string => {
       "th"
   ;
   return date + suffix;
+}
+
+export const getFriday = (from: Dayjs): Dayjs => {
+  const daysFromFriday = (from.day() + 2) % 7;
+  return from.subtract(daysFromFriday, 'day');
 }

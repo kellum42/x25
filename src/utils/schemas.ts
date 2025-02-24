@@ -5,6 +5,10 @@ import { z } from "zod";
 //  - make a validation to ensure slug has no spaces or non-url characters
 //  - make create date required on all budgets and simulations.
 
+// export type WeekDays = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+
+
+
 // Errors
 const x25Error = z.object({
   status: z.literal("fail"),

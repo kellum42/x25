@@ -7,7 +7,7 @@ import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetCo
 import { BudgetItem } from "../../../utils/schemas"
 import { BudgetItemQuery } from "../../../components/budget-item-query"
 import { BudgetItemCard } from "../../../components/budget-item-card"
-import { ytd } from "../../../utils/budget";
+import { ytd } from "../../../utils/occurrence";
 // import { AddNewBudgetItem } from "../../../components/modals/add-new-budget-item-modal"
 import { Popup } from "../../../components/popups/popup"
 import { deleteBudgetItem } from "../../../utils/localStorage"

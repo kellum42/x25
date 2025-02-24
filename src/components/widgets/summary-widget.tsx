@@ -4,7 +4,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween';
 
 import { BudgetContext } from "../../contexts/budgetContext";
-import { calculateBalance, daysTillNextOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getUpcomingBudgetItems } from "../../utils/budget";
+import { calculateBalance, daysTillNextOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getUpcomingBudgetItems } from "../../utils/occurrence";
 import { DateChanger } from "../datechanger";
 // import { BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
 import { BudgetItemFrequency } from "../../utils/schemas";

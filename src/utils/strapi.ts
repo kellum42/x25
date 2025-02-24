@@ -1,18 +1,24 @@
 import dayjs from "dayjs";
 import { Budget, BudgetItem } from "./schemas";
 
-export type APISchemas = {
-  "budget": BaseAPIResponse & {
+
+type BaseSchema = {
+  id: string;
+  documentId: string;
+  publishedAt?: string;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+type PersistentSchema = {
+  "budget": {
     startAmount?: number;
     startDate?: string;
     title?: string;
-    current?: number;
-    startOfWeek?: number;
-    itemCount?: number;
-    items?: APISchemas["item"][];
-    parent?: APISchemas["budget"]
+    items?: Schemas["item"][];
+    parent?: Schemas["budget"]
   },
-  "item": BaseAPIResponse & {
+  "item": {
     amount?: number;
     frequency?: "Once" | "Weekly" | "Bi-weekly" | "Monthly";
     name?: string;
@@ -22,53 +28,41 @@ export type APISchemas = {
     day?: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
     starts?: string;
     ends?: string;
-    budget?: APISchemas["budget"];
-    verifications?: APISchemas["verification"][]
+    budget?: Schemas["budget"];
+    verifications?: Schemas["verification"][]
   },
-  "verification": BaseAPIResponse & {
+  "verification": {
     amount?: number;
     date?: string;
-    item?: APISchemas["item"];
+    item?: Schemas["item"];
   }
 }
 
-type BaseAPIResponse = {
-  id: string;
-  documentId: string;
-  publishedAt?: string;
-  updatedAt?: string;
-  createdAt?: string;
+type NonPersistentSchema = {
+  "budget": {
+    // current?: number;
+    // startOfWeek?: number;
+    // itemCount?: number;
+  },
+  "item": {},
+  "verification": {}
 }
 
-export type APICategory = keyof APISchemas;
+export type Schemas = {
+  "budget": BaseSchema & PersistentSchema["budget"],
+  "item": BaseSchema & PersistentSchema["item"],
+  "verification": BaseSchema & PersistentSchema["verification"]
+}
 
-// type BudgetAPIResponse = BaseAPIResponse & APISchemas["budget"] & {
-//   current?: number;
-//   startOfWeek?: number;
-//   itemCount?: number;
-// }
-// type ItemAPIResponse = BaseAPIResponse & APISchemas["item"] & {
-//   date?: string;
-//   dates?: string;
-//   day?: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
-//   starts?: string;
-//   ends?: string;
-// }
-
-
-
-export type APIResponseSchema<TCategory extends APICategory> = APISchemas[TCategory];
-export type APIResponseType = "one" | "many"
-export type APIResponse<TCategory extends APICategory, TType extends APIResponseType> = TType extends "one" ? APIResponseSchema<TCategory> | null : APIResponseSchema<TCategory>[];
-export type APIResult<TCategory extends APICategory = APICategory, TType extends APIResponseType = APIResponseType> = 
-  { status: "success", data: APIResponse<TCategory, TType> } |
-  { status: "fail", error: string }
-
-
+export type SchemaCategory = keyof Schemas;
+export type Schema<TCategory extends SchemaCategory> = Schemas[TCategory];
+export type ResponseType = "one" | "many"
+export type Response<TCategory extends SchemaCategory, TType extends ResponseType> = TType extends "one" ? Schema<TCategory> | null : Schema<TCategory>[];
+export type x25Result<T> = { status: "success", data: T } | { status: "fail", error: string }
 
 const token = process.env.GATSBY_STRAPI_API_KEY;
 
-export const get = async <TCategory extends APICategory, TType extends APIResponseType>(endpoint: string): Promise<APIResult<TCategory, TType>> => {
+export const get = async <TCategory extends SchemaCategory, TType extends ResponseType>(endpoint: string): Promise<x25Result<Response<TCategory, TType>>> => {
   try {
     const response = await fetch(endpoint, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -78,7 +72,7 @@ export const get = async <TCategory extends APICategory, TType extends APIRespon
       return { status: "fail", error: `HTTP error! status: ${response.status}`}
     }
   
-    const data: { data: APIResponse<TCategory, TType>} = await response.json();
+    const data: { data: Response<TCategory, TType>} = await response.json();
     return { status: "success", data: data.data };
   
   } catch (err) {
@@ -86,7 +80,15 @@ export const get = async <TCategory extends APICategory, TType extends APIRespon
   }
 }
 
-const modify = async <TCategory extends APICategory, TMethod extends "POST"|"PUT">(endpoint: string, body: {data: Required<APISchemas[TCategory]>}, method: TMethod): Promise<APIResult<TCategory, "one">> => {
+// Makes relations on any Schema a string. 
+export type CreateableSchema<TCategory extends keyof PersistentSchema> = Required<{
+  [P in keyof PersistentSchema[TCategory]]: P extends keyof PersistentSchema 
+    ? string
+    : PersistentSchema[TCategory][P]
+}>
+export type UpdateableSchema<TCategory extends SchemaCategory> = CreateableSchema<TCategory>;
+
+const modify = async <TCategory extends SchemaCategory, TMethod extends "POST"|"PUT">(endpoint: string, body: {data: CreateableSchema<TCategory>}, method: TMethod): Promise<x25Result<Response<TCategory, "one">>> => {
   try {
     const response = await fetch(endpoint, {
       method,
@@ -98,17 +100,17 @@ const modify = async <TCategory extends APICategory, TMethod extends "POST"|"PUT
       return { status: "fail", error: `HTTP error! status: ${response.status}`}
     }
   
-    const data: { data: APIResponse<TCategory, "one">} = await response.json();
+    const data: { data: Response<TCategory, "one">} = await response.json();
     return { status: "success", data: data.data };
   
   } catch (err) {
     return { status: "fail", error: `An error occurred: ${err}`}
   }
 }
-export const create = async <TCategory extends APICategory>(endpoint: string, body: {data: Required<APISchemas[TCategory]>}) => {
+export const create = async <TCategory extends SchemaCategory>(endpoint: string, body: {data: CreateableSchema<TCategory>}): Promise<x25Result<Response<TCategory, "one">>> => {
   return modify(endpoint, body, "POST");
 };
-export const update = async <TCategory extends APICategory>(endpoint: string, body: {data: Required<APISchemas[TCategory]>}) => {
+export const update = async <TCategory extends SchemaCategory>(endpoint: string, body: {data: UpdateableSchema<TCategory>}): Promise<x25Result<Response<TCategory, "one">>> => {
   return modify(endpoint, body, "PUT");
 };
 

@@ -2,26 +2,29 @@ import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
 // import { saveBudget, getBudget } from '../utils/localStorage';
-import { APIResult, APISchemas, budgetTox25, get, itemTox25 } from '../utils/strapi';
+import { get, update, CreateableSchema, Schema, x25Result, Response } from '../utils/strapi';
 import { x25Error, Budget, BudgetItem, BudgetNote } from '../utils/schemas';
 import { getUniqueID } from '../utils/util';
-import { calculateOccurrences, daysTillNextOccurrence, itemIsActive } from '../utils/budget';
+import { calculateOccurrences, daysTillNextOccurrence, itemIsActive } from '../utils/occurrence';
 import { x25log } from '../utils/log';
-import { boolean } from 'zod';
+import { isGoodItem } from '../utils/isGood';
+// import { boolean } from 'zod';
+// import { asWorkableItem, WorkableItem } from '../utils/workable';
 
-export type Occurrence = {
-  date: Dayjs,
-  item: BudgetItem,
-  verification?: APISchemas["verification"]
-}
+// export type Occurrence = {
+//   date: Dayjs,
+//   item: Schema<"item">,
+//   verification?: Schema<"verification">
+// }
 
-type x25Result<T> = { status: "success", data: T } | { status: "fail", error: string }
+// type x25Result<T> = { status: "success", data: T } | { status: "fail", error: string }
 
 export type UseBudget = {
-  budget?: Budget,
+  budget?: Schema<"budget">,
   // error?: x25Error,
   error?: string,
-  verify: (occurrence: Occurrence, amount: string) => Promise<x25Result<boolean>>,
+  // verify: (occurrence: Occurrence, amount: string) => Promise<x25Result<boolean>>,
+  verify: (occurrence: Occurrence, amount: number) => Promise<x25Result<Response<"verification", "one">>>,
   duplicateBudgetItem: (item: BudgetItem) => void,
   deleteBudgetItem: (item: BudgetItem) => void,
   updateBudgetItem: (item: BudgetItem) => void,
@@ -34,13 +37,13 @@ export type UseBudget = {
   // pastDueItems: Occurrence[],
   // upcomingItems: Occurrence[],
   // budget: () => Budget,
-  items: (active: boolean) => BudgetItem[]
+  // items: (active: boolean) => BudgetItem[]
   getOccurrencesBetween: (start: Dayjs, end: Dayjs) => Promise<x25Result<Occurrence[]>>
 }
 
 export const useBudget = (id: string): UseBudget => {
 
-  const [data, setData] = useState<Budget>();
+  const [data, setData] = useState<Schema<"budget">>();
   const [items, setItems] = useState<BudgetItem[]>();
   const [error, setError] = useState<string>();
 
@@ -55,47 +58,54 @@ export const useBudget = (id: string): UseBudget => {
     ))
   }
 
-  const _updateBudgetItem = (item: BudgetItem) => {
-    if (data === undefined) {
-      // setError({
-      //   status: "fail",
-      //   message: "ERROR: Data is undefined. updateBudgetItem() -> useBudgetDetails"
-      // })
-    } else {
-      let itemFound = false;
-      const items = data.items.map(_item => {
-        if (_item.id === item.id) {
-          itemFound = true;
-          return item;
-        } else {
-          return _item;
-        }
-      });
+  // const _updateBudgetItem = (item: BudgetItem) => {
+    // if (data === undefined) {
+    //   // setError({
+    //   //   status: "fail",
+    //   //   message: "ERROR: Data is undefined. updateBudgetItem() -> useBudgetDetails"
+    //   // })
+    // } else {
+    //   let itemFound = false;
+    //   const items = data.items.map(_item => {
+    //     if (_item.id === item.id) {
+    //       itemFound = true;
+    //       return item;
+    //     } else {
+    //       return _item;
+    //     }
+    //   });
 
-      // if (!itemFound) {
-      //   items.push(item);
-      // }
-      // setData(prev => (
-      //   prev === undefined ?
-      //     undefined :
-      //     {
-      //       ...prev,
-      //       items
-      //     }
-      // ))
+    //   // if (!itemFound) {
+    //   //   items.push(item);
+    //   // }
+    //   // setData(prev => (
+    //   //   prev === undefined ?
+    //   //     undefined :
+    //   //     {
+    //   //       ...prev,
+    //   //       items
+    //   //     }
+    //   // ))
+    // }
+  // }
+
+
+  const verify = async (occurrence: Occurrence, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
+    const body: CreateableSchema<"verification"> = {
+      date: occurrence.date.format("YYYY-MM-DD"),
+      amount: amount,
+      item: occurrence.item.id,
     }
-  }
 
-
-  const verify = async (occurrence: Occurrence, amount: number): Promise<x25Result<boolean>> => {
     // create.
-    if ( occurrence.verification === null ){
-
+    if ( occurrence.verification === null || occurrence.verification?.documentId === null ){
+      return {status: "fail", error: "idk"}
     } else {
       // update.
+      const endpoint = `http://localhost:1337/api/verifications/${occurrence.verification.documentId}`;
+      const result = await update<"verification">(endpoint, {data: body})
+      return result;
     }
-
-    // _updateBudgetItem(item);
   }
 
   const duplicateBudgetItem = (item: BudgetItem) => {
@@ -104,43 +114,43 @@ export const useBudget = (id: string): UseBudget => {
       name: "Copy of " + item.name,
       id: getUniqueID()
     }
-    _updateBudgetItem(duplicate);
+    // _updateBudgetItem(duplicate);
   }
 
   const updateBudgetItem = (item: BudgetItem) => {
-    _updateBudgetItem(item);
+    // _updateBudgetItem(item);
   }
 
   const updateBudget = (_updates: Record<string, string>) => {
-    if (data === undefined) {
-      // setError({ status: "fail", message: "Can't update budget. It does not exist" });
+    // if (data === undefined) {
+    //   // setError({ status: "fail", message: "Can't update budget. It does not exist" });
 
-    } else {
+    // } else {
 
-      const updates: Budget = { ...data, items: data.items, avatar: data.avatar };
+    //   const updates: Budget = { ...data, items: data.items, avatar: data.avatar };
 
-      for (const key in _updates) {
-        if ("startingBalance" === key) {
-          updates.startingBalance = parseFloat(_updates[key]);
+    //   for (const key in _updates) {
+    //     if ("startingBalance" === key) {
+    //       updates.startingBalance = parseFloat(_updates[key]);
 
-        } else if ("startDate" === key) {
-          updates.startDate = dayjs(_updates[key]);
+    //     } else if ("startDate" === key) {
+    //       updates.startDate = dayjs(_updates[key]);
 
-        } else if ("title" === key) {
-          updates.title = _updates[key];
+    //     } else if ("title" === key) {
+    //       updates.title = _updates[key];
 
-        }
-        // else if ( "slug" === key ){
-        //   updates.slug = _updates[key];
-        // }
-      }
+    //     }
+    //     // else if ( "slug" === key ){
+    //     //   updates.slug = _updates[key];
+    //     // }
+    //   }
 
-      setData(prev => (
-        prev === undefined ?
-          undefined :
-          { ...prev, ...updates }
-      ))
-    }
+    //   setData(prev => (
+    //     prev === undefined ?
+    //       undefined :
+    //       { ...prev, ...updates }
+    //   ))
+    // }
   }
 
   const deleteBudgetItem = (item: BudgetItem) => {
@@ -151,15 +161,15 @@ export const useBudget = (id: string): UseBudget => {
   }
 
   const convertToBudget = () => {
-    if (data) {
-      const updates: Budget = { ...data, items: data.items, avatar: data.avatar };
-      delete updates.parent;
-      setData(prev => (
-        prev === undefined ?
-          undefined :
-          { ...updates }
-      ))
-    }
+    // if (data) {
+    //   const updates: Budget = { ...data, items: data.items, avatar: data.avatar };
+    //   delete updates.parent;
+    //   setData(prev => (
+    //     prev === undefined ?
+    //       undefined :
+    //       { ...updates }
+    //   ))
+    // }
   }
 
   const refresh = async () => {
@@ -170,17 +180,17 @@ export const useBudget = (id: string): UseBudget => {
     //   setError(response);
     // }
     const endpoint = `http://localhost:1337/api/budgets/${id}?status=published&populate=items`;
-    const result: APIResult<"budget", "one"> = await get(endpoint);
+    const result: x25Result<Response<"budget", "one">> = await get<"budget", "one">(endpoint);
     if (result.status === "success") {
       const budget = result.data;
       if (budget) {
-        const x25Budget = budgetTox25(budget);
-        if (x25Budget) {
-          setData(x25Budget);
+        // const x25Budget = budgetTox25(budget);
+        // if (x25Budget) {
+        setData(budget);
 
-        } else {
-          setError("Error getting budget. [Error converting APIResponseSchema<budget> to Budget]");
-        }
+        // } else {
+        //   setError("Error getting budget. [Error converting APIResponseSchema<budget> to Budget]");
+        // }
       } else {
         setError("Error getting budget. [Unable to fetch budget from api]");
       }
@@ -212,50 +222,48 @@ export const useBudget = (id: string): UseBudget => {
   const getOccurrencesBetween = async (start: Dayjs, end: Dayjs): Promise<x25Result<Occurrence[]>> => {
     x25log.d("Entered getOccurrencesBetween() in UpcomingItemsWidget. Start: %s, end: %s", start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"));
     
-    const itemIsActive = (item: BudgetItem, s: Dayjs, e: Dayjs) => {
+    const itemIsActive = (item: Schema<"item">, s: Dayjs, e: Dayjs) => {
       if (item.frequency === "Once"){
-        return item.date.isBetween(s, e, "date", "[]");
+        return dayjs(item.date).isBetween(s, e, "date", "[]");
       
       } else {
-        return !item.starts.isAfter(e) && (item.ends === "-1" || !item.ends.isBefore(s));
+        return !dayjs(item.starts).isAfter(e) && (item.ends === "-1" || !dayjs(item.ends).isBefore(s));
       } 
     }
 
-    if (data) {
+    if (data && data.startDate !== undefined) {
       const occurrences: Occurrence[] = []
-      const adjStart = data.startDate.isAfter(start) ? data.startDate : start;
-      const endpoint = `http://localhost:1337/api/items?status=published&filters[budget][documentId][$eq]=${data.id}`
+      const budgetStart = dayjs(data.startDate);
+      const adjStart = budgetStart.isAfter(start) ? budgetStart : start;
+      const endpoint = `http://localhost:1337/api/items?status=published&filters[budget][documentId][$eq]=${data.documentId}`
       const result = await get<"item", "many">(endpoint);
       if (result.status === "success") {
-        x25log.d("Fetched %d items from endpoint %s", result.data.length, endpoint);
+        x25log.d("[getOccurrencesBetween][useBudget.ts]: Fetched %d items from endpoint %s", result.data.length, endpoint);
         
-        const items: BudgetItem[] = result.data
-          .map(item => itemTox25(item))
-          .filter(item => item !== null)
+        const items: Schema<"item">[] = result.data
+          // .map(item => asWorkableItem(item))
+          .filter(item => isGoodItem(item))
           .filter(item => itemIsActive(item, adjStart, end))
         ;
 
-        x25log.d("%d/%d budget items are active.", items.length, result.data.length);
+        x25log.d("[getOccurrencesBetween][useBudget.ts]: %d/%d budget items are active.", items.length, result.data.length);
 
         // get verifications
         const v_endpoint = `http://localhost:1337/api/verifications?filters[item][budget][documentId][$eq]=${data.id}&filters[date][$between][0]=${start.format('YYYY-MM-DD')}&filters[date][$between][1]=${end.format('YYYY-MM-DD')}&populate[item][fields][0]=name`
-        x25log.d("Fetching verifications from endpoint %s", v_endpoint);
+        x25log.d("[getOccurrencesBetween][useBudget.ts]: Fetching verifications from endpoint %s", v_endpoint);
 
         const verificationsResult = await get<"verification", "many">(v_endpoint);
 
         if (verificationsResult.status === "success") {
-          x25log.d("Fetched %d verifications.", verificationsResult.data.length);
+          x25log.d("[getOccurrencesBetween][useBudget.ts]: Fetched %d verifications.", verificationsResult.data.length);
 
-          const vMap: Record<string, Record<string, APISchemas["verification"]>> = {}
+          const vMap: Record<string, Record<string, Schema<"verification">>> = {}
           verificationsResult.data.forEach(v => {
             if (v.date !== undefined && v.item !== undefined && v.amount !== undefined) {
               const date = dayjs(v.date).format("YYYY-MM-DD");
               if (undefined === vMap[date]) {
                 vMap[date] = {};
               }
-              // if (undefined === vMap[date][v.item.documentId]) {
-                // vMap[date][v.item.documentId] = v.amount;
-              // }
               vMap[date][v.item.documentId] = v;
             }
           })
@@ -264,14 +272,14 @@ export const useBudget = (id: string): UseBudget => {
           // ensure items are active.
           items.forEach(item => {
             const cOccurrences = calculateOccurrences(item, start, end)
-            x25log.d("[getOccurrencesBetween][useBudget.ts]: %s occurrs %d times. Range: %s -> %s. Dates: %s", item.name, cOccurrences.length, start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"), cOccurrences.map( d => d.format("YYYY-MM-DD")).join(", "))
+            x25log.d("[getOccurrencesBetween][useBudget.ts]: %s occurrs %d times. Range: %s -> %s. Dates: %s", item.name ?? "--", cOccurrences.length, start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"), cOccurrences.map( d => d.format("YYYY-MM-DD")).join(", "))
             
             cOccurrences.map( occ => { 
               const occdate = occ.format("YYYY-MM-DD");
 
               const missingVerification = vMap[occdate] === undefined || vMap[occdate][item.id] === undefined;
               if (missingVerification){
-                x25log.d("%s item is missing verification on %s", item.name, occ.format("YYYY-MM-DD"));
+                x25log.d("%s item is missing verification on %s", item.name ?? "--", occ.format("YYYY-MM-DD"));
               }         
               occurrences.push({
                 date: occ,

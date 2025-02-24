@@ -1,7 +1,7 @@
 import { Dayjs } from "dayjs";
 
 import { Budget, BudgetItemFrequency, MonthlyBudgetItem, OneTimeBudgetItem, WeeklyBudgetItem, x25Error } from "./schemas";
-import { calculateBalanceOver } from "./budget";
+import { calculateBalanceOver } from "./occurrence";
 import { getBudget, getBudgetByID } from "./localStorage";
 
 

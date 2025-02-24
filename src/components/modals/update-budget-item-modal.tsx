@@ -7,7 +7,7 @@ import { useUpdateBudgetItem } from "../../hooks/useUpdateBudgetItem";
 import { BudgetContext } from "../../contexts/budgetContext";
 import { BudgetItem, BudgetItemFrequency, WeekDays } from "../../utils/schemas";
 import { FormDatePicker } from "../form-datepicker";
-import { budgetItemToRecord } from "../../utils/budget";
+import { budgetItemToRecord } from "../../utils/occurrence";
 
 
 // TODO: 
