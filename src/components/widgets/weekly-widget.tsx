@@ -3,8 +3,8 @@ import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 import { BudgetItem, BudgetItemFrequency } from "../../utils/schemas";
-import { getFriday, getVerificationOn, UpcomingBudgetItem } from "../../utils/occurrence";
-import { numberOrNull } from "../../utils/util";
+// import { getFriday, getVerificationOn, UpcomingBudgetItem } from "../../utils/occurrence";
+import { getFriday, numberOrNull } from "../../utils/util";
 
 import "../../styles/weekly-widget.css"
 import { getTheme } from "../../utils/theme";
@@ -45,7 +45,8 @@ const WeeklyWidgetLineItem: FC<WeeklyWidgetLineItemProps> = (props) => {
   const theme = getTheme("light");
   const { item, isNewDay, endingBalance, days, hasPassed } = props;
   const currentDay = getFriday(date).add(days, 'day');
-  const verifiedAmt = getVerificationOn(currentDay, item);
+  // const verifiedAmt = getVerificationOn(currentDay, item);
+  const verifiedAmt = 5;
   const verified = verifiedAmt !== null;
 
   const [isOpen, setIsOpen] = useState(false);

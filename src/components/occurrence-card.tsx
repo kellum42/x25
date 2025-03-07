@@ -2,7 +2,8 @@ import React, { FC, useState } from "react"
 
 import { BudgetItem } from "../utils/schemas"
 import dayjs, { Dayjs } from "dayjs"
-import { Occurrence } from "../hooks/useBudget"
+// import { Occurrence } from "../hooks/useBudget"
+import { Occurrence } from "../utils/occurrence"
 import { getTheme } from "../utils/theme"
 import { Schema } from "../utils/strapi"
 
@@ -62,7 +63,7 @@ export const OccurrenceCard: FC<OccurrenceCardProps> = (props) => {
               />
             </div>
             <div className="line-item-title ms-2 d-flex flex-row flex-wrap">
-              <div className="fs-6 fw-bold text-gray-900 mb-1">{item.name}</div>
+              <div className="fs-6 fw-bold text-gray-900 mb-1">{item.name ?? "--"}</div>
               {item.frequency === "Weekly" &&
                 <div><span className="badge badge-light-info fw-bold mx-2">weekly</span></div>
               }

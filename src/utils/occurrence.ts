@@ -5,9 +5,11 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
+// import { Requires, x25Item } from './types';
 import { BudgetItem, BudgetItemFrequency } from './schemas';
 import { x25log } from './log';
-import { Schema } from './strapi';
+import { Schema } from './types';
+import { isMonthlyItem, isOneTimeItem, isWeeklyItem } from './util';
 
 // needed to use day.js plugins
 dayjs.extend(isBetween);
@@ -28,7 +30,6 @@ const first = <T>(arr?: T[]): T|undefined => {
   return undefined;
 }
 
-type Requires<T, K extends keyof T> = Omit<T, K> & Required<Pick<T,K>>
 
 export type Occurrence = {
   date: Dayjs,
@@ -40,36 +41,47 @@ export type Occurrence = {
 export function calculateOccurrences(items: Schema<"item">[], start: Dayjs, end: Dayjs): Occurrence[];
 export function calculateOccurrences(item: Schema<"item">, start: Dayjs, end: Dayjs): Occurrence[];
 export function calculateOccurrences(_item: Schema<"item">|Schema<"item">[], start: Dayjs, end: Dayjs): Occurrence[] {
-  const items: Schema<"item">[] = Array.isArray(_item) ? _item : [_item];
+// export function calculateOccurrences(items: x25Item[], start: Dayjs, end: Dayjs): Occurrence[];
+// export function calculateOccurrences(item: x25Item, start: Dayjs, end: Dayjs): Occurrence[];
+// export function calculateOccurrences(_item: x25Item|x25Item[], start: Dayjs, end: Dayjs): Occurrence[] { 
+  const items: x25Item[] = Array.isArray(_item) ? _item : [_item];
 
   if (start.isAfter(end)) {
     x25log.w("[calculateOccurences][occurrence.ts]: End date is before start date. This is illegal.")
     return [];
   }
 
+  // If item is starts after the end date, return nothing.
+  // If item ends before the start date, return nothing.
+  // Lower bound will be the greater between the start date and item start.
+  // Upper bound will be the least between the end date and item end.
+  // Find all occurrences in that range.
+
   const output: Occurrence[] = [];
 
   items.forEach( item => {
-    const { amount, type } = item;
-    if ( amount === undefined || type === undefined ){
-      x25log.w("[calculateOccurences][occurrence.ts]: Fields 'amount' and/or 'type' is undefined for item %s.", item.name ?? "--")
-      return;
-    }
+    // const { amount, type } = item;
+    // if ( amount === undefined || type === undefined ){
+    //   x25log.w("[calculateOccurences][occurrence.ts]: Fields 'amount' and/or 'type' is undefined for item %s.", item.name ?? "--")
+    //   return;
+    // }
 
-    if (item.frequency === "Once") {
+    if ( isOneTimeItem(item)){
+    // if (item.frequency === "Once") {
       const date = dayjs(item.date);
       if (date.isBetween(start, end, 'day', '[)')){
         output.push({ 
           date, 
-          item: { id: item.id, documentId: item.documentId, amount, type },
+          item: { id: item.id, documentId: item.documentId, amount: item.amount, type: item.type },
           verification: first(item.verifications?.filter( v => v.date === date.format("YYYY-MM-DD")))
         })
       }
   
-    } else if (item.frequency === "Monthly") {
+    } else if ( isMonthlyItem(item) ){
+      // } else if (item.frequency === "Monthly") {
       // const output: Dayjs[] = [];
   
-      (item.dates ?? "").split(",").forEach((_, i) => {
+      item.dates.split(",").forEach((_, i) => {
         // calculate the first occurrence of line item.
         // this will be our frame of reference for calculating future occurrences.
         //  i is needed to tell daysTillNextOccurrence which MonthlyBudgetItem.dates[] we're using.
@@ -98,14 +110,14 @@ export function calculateOccurrences(_item: Schema<"item">|Schema<"item">[], sta
           const d = firstOccurrence.add(i, 'months');
           output.push({ 
             date: d.add(i, 'months'), 
-            item: { id: item.id, documentId: item.documentId, amount, type },
+            item: { id: item.id, documentId: item.documentId, amout: item.amount, type: item.type },
             verification: first(item.verifications?.filter( v => v.date === d.format("YYYY-MM-DD")))
           })
         })
       })
       // return output;
   
-    } else {
+    } else if ( isWeeklyItem(item) ){
       // calculate the first occurrence of line item.
       const daysUntilFirstOccurrence = daysTillNextOccurrence(item, start);
       if (typeof daysUntilFirstOccurrence === 'string') {
@@ -137,7 +149,7 @@ export function calculateOccurrences(_item: Schema<"item">|Schema<"item">[], sta
         const d = firstOccurrence.add(rate * (i), 'days');
         output.push({ 
           date: d,
-          item: { id: item.id, documentId: item.documentId, amount, type },
+          item: { id: item.id, documentId: item.documentId, amount: item.amount, type: item.type },
           verification: first(item.verifications?.filter( v => v.date === d.format("YYYY-MM-DD")))
         })
       })
@@ -367,18 +379,18 @@ export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: n
 
 // Weekly, Bi-weekly, and monthly items occurs on or after budget start date.
 // One time items have not already occurred.
-export const itemIsActive = (on: Dayjs, budgetStart: Dayjs, item: BudgetItem,): boolean => {
-  if (item.frequency === "Once") {
-    return !on.isBefore(budgetStart) && item.date.isAfter(on, 'day');
+// export const itemIsActive = (on: Dayjs, budgetStart: Dayjs, item: BudgetItem,): boolean => {
+//   if (item.frequency === "Once") {
+//     return !on.isBefore(budgetStart) && item.date.isAfter(on, 'day');
 
-  } else {
-    return (
-      item.starts.isSameOrBefore(on, 'day')
-      && (item.ends === "-1" || item.ends.isSameOrAfter(on, 'day'))
-      && !budgetStart.isBefore(item.starts)
-    );
-  }
-}
+//   } else {
+//     return (
+//       item.starts.isSameOrBefore(on, 'day')
+//       && (item.ends === "-1" || item.ends.isSameOrAfter(on, 'day'))
+//       && !budgetStart.isBefore(item.starts)
+//     );
+//   }
+// }
 
 export type UpcomingBudgetItem = {
   days: number,

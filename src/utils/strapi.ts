@@ -1,64 +1,10 @@
-import dayjs from "dayjs";
-import { Budget, BudgetItem } from "./schemas";
-
-
-type BaseSchema = {
-  id: string;
-  documentId: string;
-  publishedAt?: string;
-  updatedAt?: string;
-  createdAt?: string;
-}
-
-type PersistentSchema = {
-  "budget": {
-    startAmount?: number;
-    startDate?: string;
-    title?: string;
-    items?: Schemas["item"][];
-    parent?: Schemas["budget"]
-  },
-  "item": {
-    amount?: number;
-    frequency?: "Once" | "Weekly" | "Bi-weekly" | "Monthly";
-    name?: string;
-    type?: 'income' | 'expense';
-    date?: string;
-    dates?: string;
-    day?: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
-    starts?: string;
-    ends?: string;
-    budget?: Schemas["budget"];
-    verifications?: Schemas["verification"][]
-  },
-  "verification": {
-    amount?: number;
-    date?: string;
-    item?: Schemas["item"];
-  }
-}
-
-type NonPersistentSchema = {
-  "budget": {
-    // current?: number;
-    // startOfWeek?: number;
-    // itemCount?: number;
-  },
-  "item": {},
-  "verification": {}
-}
-
-export type Schemas = {
-  "budget": BaseSchema & PersistentSchema["budget"],
-  "item": BaseSchema & PersistentSchema["item"],
-  "verification": BaseSchema & PersistentSchema["verification"]
-}
-
-export type SchemaCategory = keyof Schemas;
-export type Schema<TCategory extends SchemaCategory> = Schemas[TCategory];
-export type ResponseType = "one" | "many"
-export type Response<TCategory extends SchemaCategory, TType extends ResponseType> = TType extends "one" ? Schema<TCategory> | null : Schema<TCategory>[];
-export type x25Result<T> = { status: "success", data: T } | { status: "fail", error: string }
+import { 
+  SchemaCategory, 
+  Response, 
+  ResponseType, 
+  PersistentSchema, 
+  x25Result 
+} from "./types";
 
 const token = process.env.GATSBY_STRAPI_API_KEY;
 

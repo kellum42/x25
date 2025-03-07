@@ -10,7 +10,7 @@ export const calculateBalance = (startBalance: number, occurrences: Occurrence[]
     if ( occ.verification && occ.verification.amount !== undefined ){
       sum += occ.verification.amount * (occ.item.type === "expense" ? -1 : 1)
     } else {
-      sum += occ.item.amount;
+      sum += occ.item.amount * (occ.item.type === "expense" ? -1 : 1);
     }
   })
   return sum + startBalance;

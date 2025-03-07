@@ -8,6 +8,10 @@ import { Occurrence } from "../../utils/occurrence";
 import { OccurrenceCard } from "../occurrence-card";
 import { calculateOccurrences } from "../../utils/occurrence";
 import { getFriday } from "../../utils/util";
+// import { Schema, x25Result } from "../../utils/strapi";
+import { calculateBalance } from "../../utils/balance";
+import { VerificationMap } from "../../hooks/useBudget";
+import { x25Result } from "../../utils/types";
 
 
 type WeekChangerProps = {
@@ -41,140 +45,181 @@ export const UpcomingItemsWidget: FC = () => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { date, budget, getVerifications } = context;
+  const { date, budget, items: getItems, getVerifications } = context;
 
-  if (!budget || budget.startDate === undefined) {
+  if ( !budget ) {
     return <></>;
   }
 
+  // const { startDate, startAmount } = budget;
+
+  // if ( startDate === undefined || startAmount === undefined ){ 
+  //   return <></>; 
+  // }
+
   const [localDate, setLocalDate] = useState<Dayjs>(getFriday(date));
   const [upcoming, setUpcoming] = useState<Occurrence[]>()
+  const [balance, setBalance] = useState<number>();
 
   const verificationsDue = (upcoming ?? []).filter(occ => occ.verification === undefined).length;
 
+  const getStartingBalance = async (): Promise<void> => {
+    // fetch verifications for balance.
+    // const budgetStart = dayjs(budget.startDate);
+
+    // Factor in budget start date.
+    // Get all verifications from budget start until the start of the given week.
+    // If the weeks end date is before start date, return nothing.
+    // If the weeks end date is before the budget start return nothing.
+    // If budget start is after week start, use budget start date for lower bound.
+    const start = localDate;
+    const end = localDate.add(6, 'days');
+
+    const response: x25Result<VerificationMap> = await getVerifications(budget.startDate, end);
+    if (response.status === "success") {
+      // getItems().map( i => { i.})
+      const occurrences: Occurrence[] = calculateOccurrences( getItems(), start, end);
+      occurrences.forEach( occ => {
+        const d = occ.date.format("YYYY-MM-DD");
+        const doc = occ.item.documentId;
+        occ.verification = d in response.data && doc in response.data[d] ? response.data[d][doc] : undefined
+      });
+      const balance = calculateBalance( budget.startAmount, occurrences);
+      setBalance(balance);
+    
+    } else {
+      x25log.d("[getStartingBalance][UpcomingItemsWidget.tsx]: Unable to calculate start of week balance for budget %s on %s.", budget.title ?? "--", start.format("YYYY-MM-DD"));
+      // do some error handling.
+    }
+  }
+ 
   const fetch = async (): Promise<void> => {
     const start = localDate;
     const end = localDate.add(6, 'days');
 
-    // fetch verifications within span.
-    const response = await getVerifications(start, end);
-    if ( response.status === "success" ){
-      const items = (budget.items ?? []).map( item => ({
-        ...item,
-        verifications: item.documentId in response.data ? response.data[item.documentId] : undefined
-      }));
+    // const startBalance = await getStartingBalance();
 
-      // calculate occurrences between start and end.
-      // ensure items are active.
-      // const result = await getOccurrencesBetween(start, end);
-      const occurrences = calculateOccurrences(items, start, end);
-      setUpcoming(occurrences.sort((a, b) => a.date.diff(b.date)))
-      // if (result.status === "success") {
-      //   x25log.d("[fetch][UpcomingItemsWidget.tsx]: %d upcoming occurrences. Range: %s -> %s.", result.data.length, start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"))
-      //   setUpcoming(result.data.sort((a, b) => a.date.diff(b.date)));
+      // fetch verifications within span.
+      const response = await getVerifications(start, end);
+      
+      if (response.status === "success") {
+        // calculate occurrences between start and end.
+        // ensure items are active.
+        const occurrences = calculateOccurrences(budget.items, start, end);
+        occurrences.forEach( occ => {
+          const d = occ.date.format("YYYY-MM-DD");
+          const doc = occ.item.documentId;
+          occ.verification = d in response.data && doc in response.data[d] ? response.data[d][doc] : undefined  
+        })
+        setUpcoming(occurrences.sort((a, b) => a.date.diff(b.date)))
 
-      // } else {
-      //   x25log.w("[fetch][UpcomingItemsWidget.tsx]: Error getting occurrences. Details: %s", result.error);
-      // }
-
-    } else {
-      // some error handling.
-    }
+      } else {
+        x25log.d("[fetch][UpcomingItemsWidget.tsx]: Unable to fetch upcoming items for budget %s between %s and %s.", budget.title ?? "--", start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"));
+        // some error handling.
+      }
   }
 
-    useEffect(() => {
-      fetch();
-    }, [])
+  useEffect(() => {
+    getStartingBalance();
+  }, [])
 
-    return (
-      <div className="card mb-6">
-        <div className="card-header p-10 pb-2">
-          <div className="card-title d-block">
-            <h3 className="m-0 text-gray-900">Upcoming Items</h3>
-            <div className="d-flex flex-row align-items-center justify-content-center">
-              <WeekChanger mode="prev" onChange={(_) => { }} />
-              <p className="text-gray-400 fs-6 fw-semibold mb-0 mx-3">
-                {localDate.format("MMM DD, YYYY")} - {localDate.add(6, 'days').format("MMM DD, YYYY")}
-              </p>
-              <WeekChanger onChange={(_) => { }} />
-            </div>
+  useEffect(() => {
+    getStartingBalance();
+  }, [localDate])
+
+  useEffect(() => {
+    fetch();
+  }, [balance])
+
+  return (
+    <div className="card mb-6">
+      <div className="card-header p-10 pb-2">
+        <div className="card-title d-block">
+          <h3 className="m-0 text-gray-900">Upcoming Items</h3>
+          <div className="d-flex flex-row align-items-center justify-content-center">
+            <WeekChanger mode="prev" onChange={(_) => { }} />
+            <p className="text-gray-400 fs-6 fw-semibold mb-0 mx-3">
+              {localDate.format("MMM DD, YYYY")} - {localDate.add(6, 'days').format("MMM DD, YYYY")}
+            </p>
+            <WeekChanger onChange={(_) => { }} />
           </div>
         </div>
+      </div>
 
-        <div className="py-2 row">
-          <div className="col-lg-6">
-            {(upcoming ?? []).map((occ, i) => {
-              let sum: number | undefined = 0; // sum of upcoming occurrences before current.
+      <div className="py-2 row">
+        <div className="col-lg-6">
+          {(upcoming ?? []).map((occ, i) => {
+            let sum: number | undefined = 0; // sum of upcoming occurrences before current.
 
-              if (budget.startOfWeek !== undefined && occ.item.amount !== undefined) {
-                (upcoming ?? [])
-                  .slice(0, i + 1) // get upcoming occurrences up to and including the current one.
-                  .map(o => {
-                    if (sum === undefined || o.item.type === undefined) {
-                      sum = undefined;
-                      return
-                    }
+            if (balance !== undefined && occ.item.amount !== undefined) {
+              (upcoming ?? [])
+                .slice(0, i + 1) // get upcoming occurrences up to and including the current one.
+                .map(o => {
+                  if (sum === undefined || o.item.type === undefined) {
+                    sum = undefined;
+                    return
+                  }
 
-                    const multiplier = o.item.type === "expense" ? -1 : 1;
-                    const amount = o.verification && o.verification.amount !== undefined ? o.verification.amount : o.item.amount
+                  const multiplier = o.item.type === "expense" ? -1 : 1;
+                  const amount = o.verification && o.verification.amount !== undefined ? o.verification.amount : o.item.amount
 
-                    if (undefined === amount) {
-                      sum = undefined;
-                      return amount;
-                    }
-                    sum += (amount * multiplier)
-                  })
-                sum = sum === undefined ? sum : budget.startOfWeek + sum;
-              }
-              // .reduce((a,c) => {
-              //   if ( 
-              //     a === undefined || 
-              //     c.item.amount === undefined || 
-              //     c.verification === undefined || 
-              //     c.verification.amount === undefined 
-              //   ){
-              //     return undefined;
-              //   }
-              //   const multiplier = c.item.type === "expense" ? -1 : 1;
-              //   const amount = c.verification && c.verification.amount !== undefined ? c.verification.amount : c.item.amount
-              //   if ( undefined === amount){ return amount; }
-              //   return a + (amount * multiplier)
-              // }, 0)
-              // const balance = budget.startOfWeekBalance === undefined ? undefined : budget.startOfWeekBalance + sum;
-              // }
-              const newDay = i === 0 ? true : (upcoming ?? [])[i - 1].date.get("day") !== occ.date.get("day")
+                  if (undefined === amount) {
+                    sum = undefined;
+                    return amount;
+                  }
+                  sum += (amount * multiplier)
+                })
+              sum = sum === undefined ? sum : balance + sum;
+            }
+            // .reduce((a,c) => {
+            //   if ( 
+            //     a === undefined || 
+            //     c.item.amount === undefined || 
+            //     c.verification === undefined || 
+            //     c.verification.amount === undefined 
+            //   ){
+            //     return undefined;
+            //   }
+            //   const multiplier = c.item.type === "expense" ? -1 : 1;
+            //   const amount = c.verification && c.verification.amount !== undefined ? c.verification.amount : c.item.amount
+            //   if ( undefined === amount){ return amount; }
+            //   return a + (amount * multiplier)
+            // }, 0)
+            // const balance = budget.startOfWeekBalance === undefined ? undefined : budget.startOfWeekBalance + sum;
+            // }
+            const newDay = i === 0 ? true : (upcoming ?? [])[i - 1].date.get("day") !== occ.date.get("day")
 
-              return (
-                <div key={i}>
-                  <OccurrenceCard
-                    occurrence={occ}
-                    date={date}
-                    isNewDay={newDay}
-                    balance={sum}
-                  />
-                </div>
-              )
-            })}
-          </div>
-          <div className="col-lg-6">
-            {verificationsDue > 0 && <div className="my-4"><span className="badge badge-lg badge-light-warning fw-bold">{verificationsDue} item{verificationsDue === 1 ? '' : 's'} need to be verified.</span></div>}
+            return (
+              <div key={i}>
+                <OccurrenceCard
+                  occurrence={occ}
+                  date={date}
+                  isNewDay={newDay}
+                  balance={sum}
+                />
+              </div>
+            )
+          })}
+        </div>
+        <div className="col-lg-6">
+          {verificationsDue > 0 && <div className="my-4"><span className="badge badge-lg badge-light-warning fw-bold">{verificationsDue} item{verificationsDue === 1 ? '' : 's'} need to be verified.</span></div>}
 
-            <div className="d-flex flex-wrap py-2 px-6">
+          <div className="d-flex flex-wrap py-2 px-6">
+            <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
+              <div className="d-flex align-items-center">
+                <div className="fs-2 fw-bold counted">35</div>
+              </div>
+              <div className="fw-semibold fs-6 text-gray-400">Budget Items</div>
+            </div>
+            {balance !== undefined &&
               <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                 <div className="d-flex align-items-center">
-                  <div className="fs-2 fw-bold counted">35</div>
+                  <div className="fs-2 fw-bold counted">${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                 </div>
-                <div className="fw-semibold fs-6 text-gray-400">Budget Items</div>
+                <div className="fw-semibold fs-6 text-gray-400">Start Balance</div>
               </div>
-              {budget.startOfWeek !== undefined &&
-                <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                  <div className="d-flex align-items-center">
-                    <div className="fs-2 fw-bold counted">${budget.startOfWeek.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-                  </div>
-                  <div className="fw-semibold fs-6 text-gray-400">Start Balance</div>
-                </div>
-              }
-              {/* {endingBalance &&
+            }
+            {/* {endingBalance &&
               <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                 <div className="d-flex align-items-center">
                   {weekStartingBalance &&
@@ -197,9 +242,9 @@ export const UpcomingItemsWidget: FC = () => {
                 <div className="fw-semibold fs-6 text-gray-400">End Balance</div>
               </div>
             } */}
-            </div>
           </div>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
+}
