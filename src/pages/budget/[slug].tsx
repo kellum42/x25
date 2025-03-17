@@ -111,7 +111,7 @@ const BudgetDashboard: React.FC = () => {
           {!isSimulation &&
             <div className="row">
               <div className="col-lg-12">
-                {/* <SummaryWidget /> */}
+                <SummaryWidget />
                 <UpcomingItemsWidget />
                 <ChartWidget />
                 <div className="d-none d-lg-block">

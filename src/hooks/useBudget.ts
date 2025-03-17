@@ -9,35 +9,36 @@ import { x25Error, Budget, BudgetItem, BudgetNote } from '../utils/schemas';
 // import { calculateOccurrences, daysTillNextOccurrence, itemIsActive } from '../utils/occurrence';
 import { x25log } from '../utils/log';
 import { x25Budget } from '../utils/types';
-import { Occurrence } from '../utils/occurrence';
+// import { Occurrence } from '../utils/occurrence';
 import { isMonthlyItem, isOneTimeItem, isWeeklyItem } from '../utils/util';
 
 
-export type VerificationMap = Record<string, Record<string, Schema<"verification">>>;
+// export type VerificationMap = Record<string, Record<string, Schema<"verification">>>;
 
 export type UseBudget = {
   // budget?: Schema<"budget">,
-  budget: x25Budget|null,
-  items: () => Schema<"item">[],
+  data: x25Budget|null,
+  loading: boolean,
+  getItems: () => Schema<"item">[],
   // error?: x25Error,
   error?: string,
   // verify: (occurrence: Occurrence, amount: string) => Promise<x25Result<boolean>>,
-  verify: (occurrence: Occurrence, amount: number) => Promise<x25Result<Response<"verification", "one">>>,
-  duplicateBudgetItem: (item: BudgetItem) => void,
-  deleteBudgetItem: (item: BudgetItem) => void,
-  updateBudgetItem: (item: BudgetItem) => void,
-  updateBudget: (updates: Record<string, string>) => void,
-  convertToBudget: () => void,
+  // verify: (occurrence: Occurrence, amount: number) => Promise<x25Result<Response<"verification", "one">>>,
+  // duplicateBudgetItem: (item: BudgetItem) => void,
+  // deleteBudgetItem: (item: BudgetItem) => void,
+  // updateBudgetItem: (item: BudgetItem) => void,
+  // updateBudget: (updates: Record<string, string>) => void,
+  // convertToBudget: () => void,
   refresh: () => void,
-  addNote: (note: BudgetNote) => void,
-  deleteNote: (note: BudgetNote) => void,
+  // addNote: (note: BudgetNote) => void,
+  // deleteNote: (note: BudgetNote) => void,
 
   // pastDueItems: Occurrence[],
   // upcomingItems: Occurrence[],
   // budget: () => Budget,
   // items: (active: boolean) => BudgetItem[]
   // getOccurrencesBetween: (start: Dayjs, end: Dayjs) => Promise<x25Result<Occurrence[]>>
-  getVerifications: (from: Dayjs, to: Dayjs) => Promise<x25Result<VerificationMap>>
+  getVerifications: (from: Dayjs, to: Dayjs) => Promise<x25Result<Schema<"verification">[]>>
 }
 
 
@@ -45,6 +46,7 @@ export const useBudget = (documentId: string): UseBudget => {
 
   const [_budget, _setBudget] = useState<Schema<"budget">>();
   const [_items, _setItems] = useState<Record<string, Schema<"item">>>();
+  const [_loading, _setLoading] = useState<boolean>(false);
   // const [error, setError] = useState<string>();
 
   const _getBudget = (): x25Budget|null => {
@@ -57,6 +59,9 @@ export const useBudget = (documentId: string): UseBudget => {
           startDate: dayjs(startDate),
           title
         }
+
+      } else {
+        x25log.e("[_getBudget][useBudget.ts]: Budget %s is invalid.", _budget.documentId);
       }
     }
     return null
@@ -105,24 +110,24 @@ export const useBudget = (documentId: string): UseBudget => {
   // }
 
 
-  const verify = async (occurrence: Occurrence, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
-    const body: CreateableSchema<"verification"> = {
-      date: occurrence.date.format("YYYY-MM-DD"),
-      amount: amount,
-      item: occurrence.item.id,
-    }
+  // const verify = async (occurrence: Occurrence, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
+  //   const body: CreateableSchema<"verification"> = {
+  //     date: occurrence.date.format("YYYY-MM-DD"),
+  //     amount: amount,
+  //     item: occurrence.item.id,
+  //   }
 
-    // create.
-    // if (occurrence.verification === null || occurrence.verification?.documentId === null) {
-    if (occurrence.verification){
-      const endpoint = `http://localhost:1337/api/verifications/${occurrence.verification.documentId}`;
-      const result = await update<"verification">(endpoint, { data: body })
-      return result;
+  //   // create.
+  //   // if (occurrence.verification === null || occurrence.verification?.documentId === null) {
+  //   if (occurrence.verification){
+  //     const endpoint = `http://localhost:1337/api/verifications/${occurrence.verification.documentId}`;
+  //     const result = await update<"verification">(endpoint, { data: body })
+  //     return result;
       
-    } else {
-      return { status: "fail", error: "idk" }
-    }
-  }
+  //   } else {
+  //     return { status: "fail", error: "idk" }
+  //   }
+  // }
 
   const duplicateBudgetItem = (item: BudgetItem) => {
     const duplicate: BudgetItem = {
@@ -188,7 +193,7 @@ export const useBudget = (documentId: string): UseBudget => {
     // }
   }
 
-  const items = (): Schema<"item">[] => {
+  const getItems = (active: boolean = false): Schema<"item">[] => {
     const items: Schema<"item">[] = Object.values(_items || {});
     const output = items.map( schema => {
       if ( isMonthlyItem(schema) ){
@@ -263,8 +268,7 @@ export const useBudget = (documentId: string): UseBudget => {
     if (result.status === "success") {
       const budget = result.data;
       if (budget) {
-        x25log.d("[refresh][useBudget.ts]: Successful fetched budget %s from %s.", budget.title ?? "--", endpoint);
-        _setBudget(budget);
+        x25log.i("[refresh][useBudget.ts]: Successfully fetched budget %s from %s.", budget.title ?? "--", endpoint);
 
         if ( budget.items !== undefined ){
           const map: Record<string, Schema<"item">> = {};
@@ -272,7 +276,11 @@ export const useBudget = (documentId: string): UseBudget => {
             map[item.documentId] = item;
           })
           _setItems(map)
+          x25log.i("[refresh][useBudget.ts]: Stored %d budget items.", budget.items.length);
         }
+
+        delete budget.items; // no need to store items twice.
+        _setBudget(budget);
 
       } else {
         x25log.d("[refresh][useBudget.ts]: Successful API call for budget, but budget data is bad.");
@@ -304,7 +312,7 @@ export const useBudget = (documentId: string): UseBudget => {
     // }
   }
 
-  const getVerifications = async (from: Dayjs, to: Dayjs): Promise<x25Result<VerificationMap>> => {
+  const getVerifications = async (from: Dayjs, to: Dayjs): Promise<x25Result<Schema<"verification">[]>> => {
     const budget = _getBudget();
     if (budget === null){ return {status: "fail", error: "Budget does not exist."}}
 
@@ -316,18 +324,18 @@ export const useBudget = (documentId: string): UseBudget => {
     if (result.status === "success") {
       x25log.d("[getVerifications][useBudget.ts]: Successfully fetched %d verifications.", result.data.length);
 
-      const vMap: VerificationMap = {}
-      result.data.forEach(v => {
-        if (v.date !== undefined && v.item !== undefined && v.amount !== undefined) {
-          const date = dayjs(v.date).format("YYYY-MM-DD");
-          if (undefined === vMap[date]) {
-            vMap[date] = {};
-          }
-          vMap[date][v.item.documentId] = v;
-        } else {
-          x25log.w("[getVerifications][useBudget.ts]: Verification %s is incomplete.", v.documentId);
-        }
-      })
+      // const vMap: VerificationMap = {}
+      // result.data.forEach(v => {
+      //   if (v.date !== undefined && v.item !== undefined && v.amount !== undefined) {
+      //     const date = dayjs(v.date).format("YYYY-MM-DD");
+      //     if (undefined === vMap[date]) {
+      //       vMap[date] = {};
+      //     }
+      //     vMap[date][v.item.documentId] = v;
+      //   } else {
+      //     x25log.w("[getVerifications][useBudget.ts]: Verification %s is incomplete.", v.documentId);
+      //   }
+      // })
       // const map: Record<string, Schema<"verification">[]> = {};
       // result.data.forEach(v => {
       //   if (v.date !== undefined && v.item !== undefined && v.amount !== undefined) {
@@ -340,7 +348,7 @@ export const useBudget = (documentId: string): UseBudget => {
       //     x25log.w("[getVerifications][useBudget.ts]: Verification %s is incomplete.", v.documentId);
       //   }
       // })
-      return {status: "success", data: vMap};
+      return {status: "success", data: result.data};
 
     } else {
       x25log.d("[getVerifications][useBudget.ts]: Failed to fetch verifications from %s. Details -> %s.", endpoint, result.error);
@@ -454,18 +462,19 @@ export const useBudget = (documentId: string): UseBudget => {
   // }, [data]);
 
   return {
-    budget: _getBudget(),
-    items,
+    data: _getBudget(),
+    loading: _loading,
+    getItems,
     // error,
-    verify,
-    updateBudget,
-    duplicateBudgetItem,
-    deleteBudgetItem,
-    updateBudgetItem,
-    convertToBudget,
+    // verify,
+    // updateBudget,
+    // duplicateBudgetItem,
+    // deleteBudgetItem,
+    // updateBudgetItem,
+    // convertToBudget,
     refresh,
-    addNote,
-    deleteNote,
+    // addNote,
+    // deleteNote,
     getVerifications
   };
 }

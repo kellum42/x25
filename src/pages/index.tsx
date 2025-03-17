@@ -6,10 +6,11 @@ import { Layout } from "../components/layout"
 // import { getBudgets, saveBudget } from "../utils/localStorage"
 import { UpdateBudget } from "../components/modals/update-budget"
 import { Budget, x25Error } from "../utils/schemas"
-import { generateAvatar, getUniqueID, slugify } from "../utils/util"
+// import { generateAvatar, getUniqueID, slugify } from "../utils/util"
 import dayjs from "dayjs"
-import { get, Response, Schema, x25Result } from "../utils/strapi";
+import { get } from "../utils/strapi";
 import { x25log } from "../utils/log"
+import { Schema } from "../utils/types"
 
 // TODO:
 //  - Get popup on budget cards working
