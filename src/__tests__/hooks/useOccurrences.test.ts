@@ -5,6 +5,7 @@ import { useOccurrences, UseOccurrences } from "../../hooks/useOccurrences";
 import { populateBounds } from "../../utils/occurrence";
 import { Schema } from "../../utils/types";
 
+// items from sample budget 3.
 const items: Schema<"item">[] = [
   {
     id: "1",
@@ -124,6 +125,10 @@ test('it gets balance correctly.', () => {
   bal = balance( dayjs("2024-10-01"), "end");
   expect(bal).not.toBeNull()
   expect((bal || 0) + startBal ).toBe(1855.46);
+
+  bal = balance( dayjs("2024-09-01"), "end", startBal);
+  expect(bal).not.toBeNull()
+  expect(bal).toBe(2001.00);
 })
 
 test('it gets occurrences correctly.', () => {
@@ -133,5 +138,21 @@ test('it gets occurrences correctly.', () => {
   const { occurrences } = result.current;
   const occs = occurrences(dayjs("2024-12-20"), dayjs("2024-12-30"))
   expect(occs.length).toBe(9);
+})
+
+test('it verifies correctly.', () => {
+  const { result } = renderHook<UseOccurrences, {start: Dayjs, end: Dayjs, items: Schema<"item">[]}>(
+    () => useOccurrences(dayjs("2024-09-01"), dayjs("2025-09-01"), items)
+  );
+  const startBal = 4000;
+  const { verify, balance,  } = result.current;
+  let bal = balance( dayjs("2025-01-01"), "end");
+  // expect(bal).not.toBeNull()
+  // expect((bal || 0) + startBal ).toBe( 146.16 );
+
+  const v = { id: "test", documentId: "12345", amount: 2599.6, date: "2024-11-08"}
+  act(() => { verify("Rahni Paycheck", v) })
+
+  
 })
 

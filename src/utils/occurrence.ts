@@ -330,11 +330,11 @@ export type UpcomingBudgetItem = {
 // If underage, tell them how much extra to put in per week/month for how long to not be in underage.
 
 
-export const populateBounds = (bounds: [Dayjs, Dayjs], map: OccurrenceMap): OccurrenceMap|null => {
+export const populateBounds = (bounds: [Dayjs, Dayjs], map: OccurrenceMap = {}): OccurrenceMap => {
   const lower = bounds[0];
   const upper = bounds[1];
 
-  if (lower.isBefore(upper)) { // Sanity check.
+  // if (lower.isBefore(upper)) { // Sanity check.
     let d = lower;
     let datesAdded: number = 0;
     // const _map = map || {};
@@ -349,15 +349,15 @@ export const populateBounds = (bounds: [Dayjs, Dayjs], map: OccurrenceMap): Occu
     if (datesAdded > 0) {
       x25log.d("[populateBounds][occurrences.ts]: Added %d dates to useOccurrences map between %s and %s.", datesAdded, bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
     } else {
-      x25log.d("[populateBounds][occurrences.ts]: No dates were added to useOccurrences map between %s and %s.", datesAdded, bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
+      x25log.d("[populateBounds][occurrences.ts]: No dates were added to useOccurrences map between %s and %s.", bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
     }
     return map
 
-  } else {
+  // } else {
     x25log.w("[populateBounds][occurrences.ts]: Lower bound %s is after upper bound %s.", bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
-    return null;
+    // return null;
     // return { status: "fail", error: "Invalid bounds." }
-  }
+  // }
 }
 
 
