@@ -6,6 +6,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 import { BudgetContext } from "../../contexts/budgetContext";
 import { OccurrencesContext } from "../../contexts/occurrencesContext";
 import { x25log } from "../../utils/log";
+import { useOccurrences } from "../../hooks/useOccurrences";
 // import { calculateBalance, daysTillNextOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getUpcomingBudgetItems } from "../../utils/occurrence";
 // import { DateChanger } from "../datechanger";
 // import { BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
@@ -13,17 +14,21 @@ import { x25log } from "../../utils/log";
 
 dayjs.extend(isBetween);
 
-export const SummaryWidget: FC = () => {
+type SummaryWidgetProps = {
+  balance: number|null
+}
+
+export const SummaryWidget: FC<SummaryWidgetProps> = ({ balance }) => {
   const context = useContext(BudgetContext);
-  const occurrencesContext = useContext(OccurrencesContext);
+  // const occurrencesContext = useContext(OccurrencesContext);
 
   if (!context) {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  if (!occurrencesContext) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!occurrencesContext) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
   const { date, data, getItems } = context;
 
@@ -102,14 +107,14 @@ export const SummaryWidget: FC = () => {
 
   // const pastDue = getPastDueVers();
 
-  const [currentBalance, setCurrentBalance] = useState<number|null>(null);
-  const { balance } = occurrencesContext;
+  // const [currentBalance, setCurrentBalance] = useState<number|null>(null);
+  // const { balance } = useOccurrences(data.startDate, date, getItems());
   
-  useEffect(() => {
-    x25log.d("[SummaryWidget][summary-widget.tsx]: Start calculating current balance..");
-    const _currentBal = balance(date, "end");
-    setCurrentBalance(_currentBal);
-  }, []);
+  // useEffect(() => {
+  //   x25log.d("[SummaryWidget][summary-widget.tsx]: Calculating summary balance.");
+  //   const _currentBal = balance(date, "end");
+  //   setCurrentBalance(_currentBal);
+  // }, []);
 
 
   return (
@@ -131,7 +136,7 @@ export const SummaryWidget: FC = () => {
               <p className="text-gray-400 fw-semibold fs-6 mt-2 mb-0">Current Balance</p>
               {/* <h2 className="m-0 fs-1 text-gray-900">$5,844.23</h2> */}
               <h2 className="m-0 fs-1 text-gray-900">
-                ${ currentBalance ? `${(currentBalance + data.startAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : "--" }
+                ${ balance ? `${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : "--" }
                 {/* ${currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} */}
               </h2>
             </div>

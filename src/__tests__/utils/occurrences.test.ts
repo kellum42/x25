@@ -106,42 +106,39 @@ const items: Schema<"item">[] = [
 
 test('it populates bounds correctly.', () => {
   const bounds: [Dayjs, Dayjs] = [dayjs("2025/05/01"), dayjs("2025/05/31")];
-  const result = populateBounds(bounds, {});
+  const result = populateBounds(bounds, { dates: {} });
 
-  // expect(result.status).toBe("success");
-  // if (result.status === "success") {
-    expect(result).toHaveProperty("2025-05-01");
-    expect(result).toHaveProperty("2025-05-15");
-    expect(result).toHaveProperty("2025-05-31");
-    expect(result).not.toHaveProperty("2025-04-01");
-  // }
+  expect(result.dates).toHaveProperty("2025-05-01");
+  expect(result.dates).toHaveProperty("2025-05-15");
+  expect(result.dates).toHaveProperty("2025-05-31");
+
+  const map = populateBounds([dayjs("2025-05-15"), dayjs("2025-07-31")], result);
+  expect(map.dates).toHaveProperty("2025-07-23");
+  expect(map.dates).toHaveProperty("2025-05-01");
 
   // Test failure cases as well.
 })
 
 test('it populates items correctly.', () => {
   const bounds: [Dayjs, Dayjs] = [dayjs("2024-10-01"), dayjs("2024-10-31")];
-  const result = populateBounds(bounds, {});
+  const result = populateBounds(bounds, {dates:{}});
   // if (result.status === "success") {
-    expect(result).not.toBeNull();
+    // expect(Objresult.dates).not.toBeNull();
     const map = populateOccurrences(items, bounds, result || {});
-    expect(Object.keys(map["2024-10-04"]).length).toBe(3);
-    expect(map["2024-10-11"]["Rahni Paycheck"]).toBeDefined();
-    expect(map["2024-10-25"]["Rahni Paycheck"]).toBeDefined();
+    expect(Object.keys(map.dates["2024-10-04"].items).length).toBe(3);
+    expect(map.dates["2024-10-11"].items["Rahni Paycheck"]).toBeDefined();
+    expect(map.dates["2024-10-25"].items["Rahni Paycheck"]).toBeDefined();
   // }
 });
 
 test('it populates calculations correctly.', () => {
   const bounds: [Dayjs, Dayjs] = [dayjs("2024-10-01"), dayjs("2024-10-31")];
-  const result = populateBounds(bounds, {});
-  // expect(result.status).toBe("success");
+  const result = populateBounds(bounds, {dates:{}});
 
-  // if ( result.status === "success"){
-  expect(result).not.toBeNull();
-  let map = populateOccurrences(items, bounds, result || {});
+  let map = populateOccurrences(items, bounds, result);
   map = calculate(map);
 
-  const startingBalance = 3854.46;
-  expect(map["2024-10-15"]["Acura"].balance).toBe(2542.11 - startingBalance)
-  // }
+  const startBalance = 3854.46;
+  expect( startBalance + (map.dates["2024-10-15"].bal ?? 0)).toBe(2542.11);
+  expect( startBalance + (map.dates["2024-10-15"].sbal ?? 0)).toBe(3552.27);
 });

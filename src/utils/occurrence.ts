@@ -68,18 +68,18 @@ export function calculateOccurrences(_item: Schema<"item"> | Schema<"item">[], s
     } else if (isMonthlyItem(item)) {
       const itemStart = dayjs(item.starts);
       const itemEnds = item.ends === "-1" ? "-1" : dayjs(item.ends);
-      
-      if (itemStart.isAfter(end)){
+
+      if (itemStart.isAfter(end)) {
         x25log.d("[calculateOccurences][occurrence.ts]: Item %s starts after end parameter %s. Skipping.", item.name, end.format("YYYY-MM-DD"));
         return;
       }
 
-      if ( itemEnds !== "-1" ){
-        if (itemEnds.isBefore(start)){
+      if (itemEnds !== "-1") {
+        if (itemEnds.isBefore(start)) {
           x25log.d("[calculateOccurences][occurrence.ts]: Item %s ends before start parameter %s. Skipping.", item.name, start.format("YYYY-MM-DD"));
           return;
         }
-        if ( itemEnds.isBefore(itemStart)){
+        if (itemEnds.isBefore(itemStart)) {
           x25log.w("[calculateOccurences][occurrence.ts]: Item %s ends date %s is before its start date %s. Skipping.", item.name, end.format("YYYY-MM-DD"), start.format("YYYY-MM-DD"));
           return;
         }
@@ -111,7 +111,7 @@ export function calculateOccurrences(_item: Schema<"item"> | Schema<"item">[], s
         //  1 is added to fullMonthsRemaining to account for the first occurrence.
         const numOccurrences = fullMonthsRemaining + 1;
         x25log.d("[calculateOccurrences][occurrence.ts]: %s (%s: %d of month) has %d occurrences between the %s and %s.", item.name ?? "--", item.frequency ?? "", dayOfMonth, numOccurrences, _start.format("YYYY-MM-DD"), _end.format("YYYY-MM-DD"));
-        
+
         Array(numOccurrences).fill(0).map((_, i) => {
           const d = firstOccurrence.add(i, 'months');
           output.push({
@@ -329,35 +329,29 @@ export type UpcomingBudgetItem = {
 // If overage, tell them how much per week/month they can spare over a certain period of time.
 // If underage, tell them how much extra to put in per week/month for how long to not be in underage.
 
+// const _maybeUpdte
 
-export const populateBounds = (bounds: [Dayjs, Dayjs], map: OccurrenceMap = {}): OccurrenceMap => {
-  const lower = bounds[0];
-  const upper = bounds[1];
+export const populateBounds = (bounds: [Dayjs, Dayjs], map: OccurrenceMap = {dates:{}}): OccurrenceMap => {  
+  const lower = map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date') ? bounds[0] : dayjs(map.bounds[0]);
+  const upper = map.bounds === undefined || bounds[1].isAfter(dayjs(map.bounds[1]), 'date') ? bounds[1] : dayjs(map.bounds[1]);
 
-  // if (lower.isBefore(upper)) { // Sanity check.
-    let d = lower;
-    let datesAdded: number = 0;
-    // const _map = map || {};
-    while (!d.isAfter(upper, 'day')) {
-      const datestring = d.format("YYYY-MM-DD");
-      if (!(datestring in map)) {
-        map[datestring] = {}
-        datesAdded++;
-      }
-      d = d.add(1, 'days');
+  let d = lower;
+  let datesAdded: number = 0;
+
+  while (!d.isAfter(upper, 'day')) {
+    const datestring = d.format("YYYY-MM-DD");
+    if (!(datestring in map.dates)) {
+      map.dates[datestring] = {items:{}}
+      datesAdded++;
     }
-    if (datesAdded > 0) {
-      x25log.d("[populateBounds][occurrences.ts]: Added %d dates to useOccurrences map between %s and %s.", datesAdded, bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
-    } else {
-      x25log.d("[populateBounds][occurrences.ts]: No dates were added to useOccurrences map between %s and %s.", bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
-    }
-    return map
-
-  // } else {
-    x25log.w("[populateBounds][occurrences.ts]: Lower bound %s is after upper bound %s.", bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
-    // return null;
-    // return { status: "fail", error: "Invalid bounds." }
-  // }
+    d = d.add(1, 'days');
+  }
+  if (datesAdded > 0) {
+    x25log.d("[populateBounds][occurrences.ts]: Added %d dates to useOccurrences map between %s and %s.", datesAdded, bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
+  } else {
+    x25log.d("[populateBounds][occurrences.ts]: No dates were added to useOccurrences map between %s and %s.", bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
+  }
+  return map
 }
 
 
@@ -367,13 +361,13 @@ export const populateOccurrences = (items: Schema<"item">[], bounds: [Dayjs, Day
     const { date, item } = occ;
     const datestring = date.format("YYYY-MM-DD");
 
-    if ( datestring in map ){
+    if (datestring in map.dates) {
       // Do not want to overwrite existing items unless explicitly told to.
-      if (!(item.documentId in map[datestring]) || (item.documentId in map[datestring] && overwrite)){
-        map[datestring][item.documentId] = { amount: item.amount }
+      if (!(item.documentId in map.dates[datestring].items) || (item.documentId in map.dates[datestring].items && overwrite)) {
+        map.dates[datestring].items[item.documentId] = { amount: item.amount }
       }
     } else {
-      x25log.w("[populateOccurrences][occurrence.ts]: Date %s not in map. Item: %s.", datestring, item.documentId);     
+      x25log.w("[populateOccurrences][occurrence.ts]: Date %s not in map. Item: %s.", datestring, item.documentId);
     }
 
   })
@@ -384,34 +378,36 @@ export const populateOccurrences = (items: Schema<"item">[], bounds: [Dayjs, Day
 export const calculate = (map: OccurrenceMap): OccurrenceMap => {
   let sum = 0;
 
-  for (const datestring in map){
-    for (const item in map[datestring]){
-      const data = map[datestring][item];
+  for (const datestring in map.dates) {
+    // if ( from && dayjs(datestring).isBefore(from, 'date')){
+    //   continue;
+    // }
+
+    map.dates[datestring].sbal = Math.round(100 * sum) / 100;
+    
+    for (const item in map.dates[datestring].items) {
+      const data = map.dates[datestring].items[item];
       const currentAmount: number = data.vAmount !== undefined && data.vId !== undefined ? data.vAmount : data.amount;
       sum += currentAmount;
-      
-      map[datestring][item] = {
-        ...data,
-        balance: Math.round(100*sum)/100  // rounds to 2 decimal places.
-      }
     }
+    map.dates[datestring].bal = Math.round(100 * sum) / 100;
   }
   return map;
 }
 
 export const findItem = (id: string, map: OccurrenceMap, fn: (date: string) => void) => {
-  for (const datestring in map){
-    for (const item in map[datestring]){
-      if (item === id){
-        fn(datestring);
-      }
-    }
-  }
+  // for (const datestring in map) {
+  //   for (const item in map[datestring]) {
+  //     if (item === id) {
+  //       fn(datestring);
+  //     }
+  //   }
+  // }
 }
 
-export const deleteItem = (id: string, map: OccurrenceMap ): OccurrenceMap => {
-  findItem(id, map, (datestring) => {
-    delete map[datestring][id];
-  })
+export const deleteItem = (id: string, map: OccurrenceMap): OccurrenceMap => {
+  // findItem(id, map, (datestring) => {
+  //   delete map[datestring][id];
+  // })
   return map;
 }

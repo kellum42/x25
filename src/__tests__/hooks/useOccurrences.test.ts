@@ -140,19 +140,17 @@ test('it gets occurrences correctly.', () => {
   expect(occs.length).toBe(9);
 })
 
-test('it verifies correctly.', () => {
-  const { result } = renderHook<UseOccurrences, {start: Dayjs, end: Dayjs, items: Schema<"item">[]}>(
-    () => useOccurrences(dayjs("2024-09-01"), dayjs("2025-09-01"), items)
-  );
-  const startBal = 4000;
-  const { verify, balance,  } = result.current;
-  let bal = balance( dayjs("2025-01-01"), "end");
-  // expect(bal).not.toBeNull()
-  // expect((bal || 0) + startBal ).toBe( 146.16 );
+// test('it verifies correctly.', () => {
+//   const { result } = renderHook<UseOccurrences, {start: Dayjs, end: Dayjs, items: Schema<"item">[]}>(
+//     () => useOccurrences(dayjs("2024-09-01"), dayjs("2025-09-01"), items)
+//   );
+//   const startBal = 4000;
+//   const { verify, balance,  } = result.current;
+//   let bal = balance( dayjs("2025-01-01"), "end");
+//   // expect(bal).not.toBeNull()
+//   // expect((bal || 0) + startBal ).toBe( 146.16 );
 
-  const v = { id: "test", documentId: "12345", amount: 2599.6, date: "2024-11-08"}
-  act(() => { verify("Rahni Paycheck", v) })
-
-  
-})
+//   const v = { id: "test", documentId: "12345", amount: 2599.6, date: "2024-11-08"}
+//   act(() => { verify("Rahni Paycheck", v) })
+// })
 

@@ -16,34 +16,36 @@ import { Modal } from "../../components/modals/modal"
 import { NoteDrawer } from "../../components/drawers/note"
 // import { UpcomingItemsWidget } from "../../components/widgets/upcoming-items-widget"
 import { ActionNeededWidget } from "../../components/widgets/action-needed-widget"
-import dayjs from "dayjs"
+import dayjs, { Dayjs } from "dayjs"
 import { OccurrencesContext, OccurrencesContextProvider } from "../../contexts/occurrencesContext"
 import { useOccurrences } from "../../hooks/useOccurrences"
+import { x25log } from "../../utils/log"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
 //  - Remove simulations widget on simulations
 
-const BudgetDashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
   const context = useContext(BudgetContext);
 
   if (!context) {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const occurrencesContext = useContext(OccurrencesContext);
+  // const occurrencesContext = useContext(OccurrencesContext);
 
-  if (!occurrencesContext) {
-    throw new Error("Calling occurrences Context from outside of provider.");
-  }
+  // if (!occurrencesContext) {
+  //   throw new Error("Calling occurrences Context from outside of provider.");
+  // }
 
-  const { data, error, date } = context;
-  const { balance, maybeUpdateBounds } = occurrencesContext;
+  const { data, error, date, getItems, getVerifications } = context;
 
   const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
   const [isConvertingSim, setIsConvertingSim] = useState<boolean>(false);
   const [isShowingNotes, setIsShowingNotes] = useState<boolean>(false);
+
   const [chartdata, setChartData] = useState<ChartWidgetProps>();
+  const [currentBalance, setCurrentBalance] = useState<number | null>(null);
 
   const isSimulation = data?.parent !== undefined;
 
@@ -56,13 +58,24 @@ const BudgetDashboard: React.FC = () => {
     // }
   }
 
-  // const notes = [
-  //   {body: "How likely are you to recommend our company to your friends and family?", date: "5/15/25 8:02pm"},
-  //   {body: "Not at all good brother.", date: "5/15/25 8:05pm"}
-  // ]
-  useEffect(() => {
-    const j1 = date.set('month', 0).set('date', 1);
-    maybeUpdateBounds(j1.format("YYYY-MM-DD"), j1.add(365, 'days').format("YYYY-MM-DD"));
+  const j1 = date.set('month', 0).set('date', 1);
+  const lower: Dayjs = j1.isBefore(data.startDate) ? j1 : data.startDate; 
+  const { balance, updateBounds, addVerifications } = useOccurrences(lower, date, getItems());
+
+  const loadData = async () => {
+    x25log.d("[useEffect][slug.tsx]: Loading dashboard data.");
+    
+    // include verifications.
+    let result = await getVerifications(data.startDate, date);
+    if ( result.status === "success" ){
+      addVerifications(result.data);
+    }
+
+    setCurrentBalance(balance(date, "end", data.startAmount));
+
+    // const j1 = date.set('month', 0).set('date', 1);
+    const eoy = j1.add(365, 'days');
+    updateBounds([lower, eoy]);
 
     const _chartdata: ChartWidgetProps = {
       title: "Balance",
@@ -70,12 +83,22 @@ const BudgetDashboard: React.FC = () => {
       data: Array(365).fill(0).map((_, i) => {
         const currentDate = j1.add(i, 'days');
         return {
-          date: currentDate.format("MM/DD/YYYY"),
+          date: currentDate.format("YYYY-MM-DD"),
           balance: data.startDate.isAfter(currentDate) ? null : balance(currentDate, "end", data.startAmount)
         }
       })
     }
     setChartData(_chartdata);
+  }
+
+  // const { balance } = useOccurrences(j1, eoy, getItems());
+
+  // const notes = [
+  //   {body: "How likely are you to recommend our company to your friends and family?", date: "5/15/25 8:02pm"},
+  //   {body: "Not at all good brother.", date: "5/15/25 8:05pm"}
+  // ]
+  useEffect(() => {
+    loadData();
   }, [])
 
 
@@ -140,9 +163,9 @@ const BudgetDashboard: React.FC = () => {
         {!isSimulation &&
           <div className="row">
             <div className="col-lg-12">
-              <SummaryWidget />
+              <SummaryWidget balance={currentBalance} />
               <ActionNeededWidget />
-              {chartdata && <ChartWidget title={chartdata.title} subtitle={chartdata.subtitle} data={chartdata.data} /> }
+              {chartdata && <ChartWidget title={chartdata.title} subtitle={chartdata.subtitle} data={chartdata.data} />}
               <div className="d-none d-lg-block">
                 <SimulationsWidget />
               </div>
@@ -194,7 +217,7 @@ const BudgetDashboard: React.FC = () => {
   )
 }
 
-const BudgetBySlugPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
+const BudgetPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
   // useEffect(() => {
   //   console.log("SLUG CHANGED ON PAGE");
   // }, [slug])
@@ -206,12 +229,12 @@ const BudgetBySlugPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
   return (
     <Layout>
       <BudgetContextProvider slug={slug}>
-        <OccurrencesContextProvider end={dayjs()}>
-          <BudgetDashboard />
-        </OccurrencesContextProvider>
+        {/* <OccurrencesContextProvider end={dayjs()}> */}
+        <Dashboard />
+        {/* </OccurrencesContextProvider> */}
       </BudgetContextProvider>
     </Layout>
   )
 }
 
-export default BudgetBySlugPage;
+export default BudgetPage;
