@@ -261,10 +261,10 @@ export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: n
   return "";
 }
 
-export type UpcomingBudgetItem = {
-  days: number,
-  item: BudgetItem
-}
+// export type UpcomingBudgetItem = {
+//   days: number,
+//   item: BudgetItem
+// }
 
 
 // export const JSONtoBudgetItem = (json: string): BudgetItem | undefined => {
@@ -375,14 +375,10 @@ export const populateOccurrences = (items: Schema<"item">[], bounds: [Dayjs, Day
 }
 
 
-export const calculate = (map: OccurrenceMap): OccurrenceMap => {
-  let sum = 0;
+export const calculate = (map: OccurrenceMap, startBalance: number): OccurrenceMap => {
+  let sum = startBalance;
 
   for (const datestring in map.dates) {
-    // if ( from && dayjs(datestring).isBefore(from, 'date')){
-    //   continue;
-    // }
-
     map.dates[datestring].sbal = Math.round(100 * sum) / 100;
     
     for (const item in map.dates[datestring].items) {
@@ -396,18 +392,18 @@ export const calculate = (map: OccurrenceMap): OccurrenceMap => {
 }
 
 export const findItem = (id: string, map: OccurrenceMap, fn: (date: string) => void) => {
-  // for (const datestring in map) {
-  //   for (const item in map[datestring]) {
-  //     if (item === id) {
-  //       fn(datestring);
-  //     }
-  //   }
-  // }
+  for (const datestring in map.dates) {
+    for (const item in map.dates[datestring].items) {
+      if (item === id) {
+        fn(datestring);
+      }
+    }
+  }
 }
 
 export const deleteItem = (id: string, map: OccurrenceMap): OccurrenceMap => {
-  // findItem(id, map, (datestring) => {
-  //   delete map[datestring][id];
-  // })
+  findItem(id, map, (datestring) => {
+    delete map.dates[datestring].items[id];
+  })
   return map;
 }

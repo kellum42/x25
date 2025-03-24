@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
 // import { saveBudget, getBudget } from '../utils/localStorage';
-import { get, update, CreateableSchema } from '../utils/strapi';
+import { get, create, CreateableSchema, delete_ } from '../utils/strapi';
 import { Schema, x25Result, Response } from '../utils/types';
 import { x25Error, Budget, BudgetItem, BudgetNote } from '../utils/schemas';
 // import { getUniqueID } from '../utils/util';
@@ -20,10 +20,11 @@ export type UseBudget = {
   data: x25Budget|null,
   loading: boolean,
   getItems: () => Schema<"item">[],
+  findItem: (id: string) => Schema<"item">|null,
   // error?: x25Error,
   error?: string,
-  // verify: (occurrence: Occurrence, amount: string) => Promise<x25Result<boolean>>,
-  // verify: (occurrence: Occurrence, amount: number) => Promise<x25Result<Response<"verification", "one">>>,
+  verify: (item: string, date: Dayjs, amount: number) => Promise<x25Result<Response<"verification", "one">>>
+  unverify: (id: string) => Promise<x25Result<boolean>>,
   // duplicateBudgetItem: (item: BudgetItem) => void,
   // deleteBudgetItem: (item: BudgetItem) => void,
   // updateBudgetItem: (item: BudgetItem) => void,
@@ -110,24 +111,39 @@ export const useBudget = (documentId: string): UseBudget => {
   // }
 
 
-  // const verify = async (occurrence: Occurrence, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
-  //   const body: CreateableSchema<"verification"> = {
-  //     date: occurrence.date.format("YYYY-MM-DD"),
-  //     amount: amount,
-  //     item: occurrence.item.id,
-  //   }
+  const verify = async (item: string, date: Dayjs, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
+    const endpoint: string = "http://localhost:1337/api/verifications";
+    const body = {
+      date: date.format("YYYY-MM-DD"),
+      amount,
+      item
+    }
+    const result = await create<"verification">(endpoint, { data: body })
+    return result;
 
-  //   // create.
-  //   // if (occurrence.verification === null || occurrence.verification?.documentId === null) {
-  //   if (occurrence.verification){
-  //     const endpoint = `http://localhost:1337/api/verifications/${occurrence.verification.documentId}`;
-  //     const result = await update<"verification">(endpoint, { data: body })
-  //     return result;
+    // const body: CreateableSchema<"verification"> = {
+    //   date: occurrence.date.format("YYYY-MM-DD"),
+    //   amount: amount,
+    //   item: occurrence.item.id,
+    // }
+
+    // // create.
+    // // if (occurrence.verification === null || occurrence.verification?.documentId === null) {
+    // if (occurrence.verification){
+    //   const endpoint = `http://localhost:1337/api/verifications/${occurrence.verification.documentId}`;
+    //   const result = await update<"verification">(endpoint, { data: body })
+    //   return result;
       
-  //   } else {
-  //     return { status: "fail", error: "idk" }
-  //   }
-  // }
+    // } else {
+    //   return { status: "fail", error: "idk" }
+    // }
+  }
+
+  const unverify = async (id: string): Promise<x25Result<boolean>> => {
+    const endpoint: string = `http://localhost:1337/api/verifications/${id}`;
+    const result = await delete_(endpoint)
+    return result;
+  }
 
   const duplicateBudgetItem = (item: BudgetItem) => {
     const duplicate: BudgetItem = {
@@ -191,6 +207,13 @@ export const useBudget = (documentId: string): UseBudget => {
     //       { ...updates }
     //   ))
     // }
+  }
+
+  const findItem = (id: string): Schema<"item">|null => {
+    if ( _items && id in _items){
+      return _items[id];
+    }
+    return null;
   }
 
   const getItems = (active: boolean = false): Schema<"item">[] => {
@@ -465,8 +488,10 @@ export const useBudget = (documentId: string): UseBudget => {
     data: _getBudget(),
     loading: _loading,
     getItems,
+    findItem,
     // error,
-    // verify,
+    verify,
+    unverify,
     // updateBudget,
     // duplicateBudgetItem,
     // deleteBudgetItem,

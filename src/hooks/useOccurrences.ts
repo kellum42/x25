@@ -24,20 +24,21 @@ export type OccurrenceMap = {
 export type Occurrence = {
   date: Dayjs,
   item: { documentId: string, amount: number },
-  balance?: number,
+  balance?: number, // end balance
   verification?: { documentId: string, amount: number }
 }
 
 export type UseOccurrences = {
-  balance: (on: Dayjs, day: "start" | "end", startBalance?: number) => number | null,
-  occurrences: (from: Dayjs, to: Dayjs) => Occurrence[],
+  getBalance: (on: Dayjs, day: "start" | "end", startBalance?: number) => number | null,
+  getOccurrences: (from: Dayjs, to: Dayjs) => Occurrence[],
   updateItem: (item: Schema<"item">) => void,
-  deleteWith: (id: string, type: "item" | "verification") => void,
+  deleteVerification: (verification: Schema<"verification">) => void,
   addVerifications: (verification: Schema<"verification">[]) => void,
-  updateBounds: (bounds: [Dayjs, Dayjs]) => void
+  updateBounds: (bounds: [Dayjs, Dayjs]) => void,
+  // getThisWeek: ()
 }
 
-export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]): UseOccurrences => {
+export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[], balance?: number): UseOccurrences => {
   const [map, setMap] = useState<OccurrenceMap>({ dates: {} });
   // const [bounds, setBounds] = useState<[string, string]>();
   const [error, setError] = useState<string>();
@@ -63,10 +64,14 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
       _map = populateOccurrences(items, [start, end], _map);
 
       // calculate balance
-      _map = calculate(_map);
+      _map = calculate(_map, balance ?? 0);
       setMap(_map);
     }
   }, []);
+
+  useEffect(() => {
+    x25log.d("[useEffect][useOccurrences.ts]: Map was set. Bounds are %s - %s.", map.bounds?.[0] ?? "null", map.bounds?.[1] ?? "null"); 
+  }, [map])
 
 
   // useEffect(() => {
@@ -86,12 +91,13 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
   // }, [bounds])
 
 
-  const balance = (on: Dayjs, day: "start" | "end", startBalance?: number): number | null => {
+  const getBalance = (on: Dayjs, day: "start" | "end"): number | null => {
     const datestring = on.format("YYYY-MM-DD");
     if (datestring in map.dates) {
       const data = map.dates[datestring];
       const balance = day === "start" ? data.sbal : data.bal;
-      return balance !== undefined ? balance + (startBalance ?? 0) : null;
+      return balance ?? null
+      // return balance !== undefined ? balance + (startBalance ?? 0) : null;
     }
     return null;
     // if (bounds) {
@@ -148,7 +154,7 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
     // }
   }
 
-  const occurrences = (from: Dayjs, to: Dayjs): Occurrence[] => {
+  const getOccurrences = (from: Dayjs, to: Dayjs): Occurrence[] => {
     if (from.isAfter(to, 'day')) {
       x25log.e("[occurrences][useOccurrences.ts]: Invalid date range given. From: %s, to: %s.", from.format("YYYY-MM-DD"), to.format("YYYY-MM-DD"));
       return []
@@ -194,8 +200,27 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
     // }
   }
 
-  const deleteWith = (id: string, type: "item" | "verification") => {
-
+  const deleteVerification = (verification: Schema<"verification">) => {
+    if (verification.date && verification.item) {
+      const datestring = verification.date;
+      if (map.dates[datestring].items[verification.item.documentId] !== undefined) {
+        const _map = map;
+        delete _map.dates[datestring].items[verification.item.documentId].vAmount;
+        delete _map.dates[datestring].items[verification.item.documentId].vId;
+        
+        x25log.d("[deleteVerification][useOccurrences.ts]: Deleted verification %s from map. Item: %s, date: %s.", verification.documentId, verification.item.documentId, datestring);
+        calculate(_map, balance ?? 0);
+        // setMap(_map);
+        setMap((prevState) => ({
+          ...prevState,
+          dates: _map.dates
+        }))
+      } else {
+        x25log.w("[deleteVerification][useOccurrences.ts]: Unable to delete verification %s, it does not exist in map.", verification.documentId);
+      }
+    } else {
+      x25log.w("[deleteVerification][useOccurrences.ts]: Unable to delete verification. Missing date or item on verification %s.", verification.documentId);
+    }
   }
 
   const addVerifications = (verifications: Schema<"verification">[]) => {
@@ -208,13 +233,13 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
       const item = verification.item;
 
       if (date !== undefined && amount !== undefined && item !== undefined) {
-        const multiplier = amount > 0 ? 1 : -1;
 
         if (date in _map.dates && item.documentId in _map.dates[date].items) {
+          const multiplier = _map.dates[date].items[item.documentId].amount < 0 ? -1 : 1;
           _map.dates[date].items[item.documentId].vId = verification.documentId;
           _map.dates[date].items[item.documentId].vAmount = multiplier * amount;
           added++;
-        
+
         } else {
           x25log.w("[addVerification][useOccurrences.ts]: Occurrence is missing for verification %s. This should not happen. date: %s, item: %s.", verification.documentId, date, item.documentId);
         }
@@ -226,9 +251,13 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
 
     x25log.d("[addVerification][useOccurrences.ts]: Added %d/%d verifications to map.", added, verifications.length);
 
-    if ( added > 0){
-      _map = calculate(_map);
-      setMap(_map);
+    if (added > 0) {
+      _map = calculate(_map, balance ?? 0);
+      // setMap(_map);
+      setMap((prevState) => ({
+        ...prevState,
+        dates: _map.dates
+      }))
     }
 
     // if ( )
@@ -278,14 +307,14 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
       _map = populateOccurrences(items, [lower, upper], _map);
 
       // calculate balance
-      _map = calculate(_map);
+      _map = calculate(_map, balance ?? 0);
 
       setMap({
         ..._map,
         bounds: [lower.format("YYYY-MM-DD"), upper.format("YYYY-MM-DD")]
       });
     } else {
-      x25log.d("[updateBounds][useOccurrences.ts]: Changing bounds from %s-%s to %s-%s requires no update.", (map.bounds ?? ["null"])[0], (map.bounds ?? ["null"])[0], bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
+      x25log.d("[updateBounds][useOccurrences.ts]: Changing bounds from %s - %s to %s - %s requires no update.", (map.bounds ?? ["null"])[0], (map.bounds ?? ["null", "null"])[1], bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
     }
 
     // populateOccurrences(items,[lower, upper], map)
@@ -331,6 +360,6 @@ export const useOccurrences = (start: Dayjs, end: Dayjs, items: Schema<"item">[]
   }
 
   return {
-    balance, occurrences, updateItem, deleteWith, addVerifications, updateBounds
+    getBalance, getOccurrences, updateItem, deleteVerification, addVerifications, updateBounds
   }
 }
