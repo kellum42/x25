@@ -52,7 +52,7 @@ const modify = async <TCategory extends SchemaCategory, TMethod extends "POST"|"
   
     const jsonresponse = await response.json();
     const data: { data: Response<TCategory, "one">} = jsonresponse;
-    x25log.e("[modify][strapi.ts]: Call successful. Recieved: %s.", JSON.stringify(jsonresponse));
+    x25log.d("[modify][strapi.ts]: Call successful. Recieved: %s.", JSON.stringify(jsonresponse));
     return { status: "success", data: data.data };
   
   } catch (err) {

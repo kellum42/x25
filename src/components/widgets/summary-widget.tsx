@@ -19,102 +19,12 @@ type SummaryWidgetProps = {
 
 export const SummaryWidget: FC<SummaryWidgetProps> = ({ balance }) => {
   const context = useContext(BudgetContext);
-  // const occurrencesContext = useContext(OccurrencesContext);
 
   if (!context) {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  // if (!occurrencesContext) {
-  //   throw new Error("Calling Budget Context from outside of provider.");
-  // }
-
   const { date, data, getItems } = context;
-
-  // if (!budget) {
-  //   return <></>;
-  // }
-
-  // const friday = getFriday(date);
-  // const balance = calculateBalance(budget.startDate, budget.startingBalance, budget.items, date);
-
-  // Gets the verifications due this week.
-  // Friday is the first day of the week.
-  // const getVersDue = (): number => {
-  //   // const friday = getFriday(date);
-  //   const items = getUpcomingBudgetItems(friday, 6, budget.items)
-  //   // const items = getWeeksBudgetLineItems(date, budget.startDate, budget.items);
-  //   const idealVerCount = items.length;
-  //   let actualVerCount = 0;
-  //   items.forEach((_item, _) => {
-  //     const ver = getVerificationOn(friday.add(_item.days, 'day'), _item.item);
-  //     actualVerCount += ver === null ? 0 : 1;
-  //   })
-  //   return idealVerCount - actualVerCount;
-  // };
-
-  // const getPastDueVers = (): { items: number, amount: number } => {
-  //   let vers: number = 0;
-  //   let expectedVers: number = 0;
-
-  //   let pastDue: number = 0;
-  //   let pastDueAmount: number = 0;
-
-  //   const start = date.subtract(3, 'month');
-  //   const end = friday.subtract(1, 'day');
-
-  //   budget.items.forEach((item, _) => {
-  //     if (item.frequency === BudgetItemFrequency.once) {
-  //       if (item.date.isBetween(start, end, 'day', '[]')) {
-  //         if (null === getVerificationOn(item.date, item)){
-  //           pastDue += 1;
-  //           pastDueAmount += item.amount;
-  //         }
-  //       }
-  //     } else {
-  //       const _start = start.isBefore(item.starts) ? item.starts : start;
-  //       const _end = item.ends !== "-1" && item.ends.isBefore(end) ? item.ends : end;
-  //       const _rangeInDays = _end.diff(_start, 'day');
-
-  //       const i = item.frequency === BudgetItemFrequency.monthly ? item.dates.length : 1;
-  //       for (let _i = 0; _i < i; _i++) {
-  //         const _daysTillFirstOccurrence = daysTillNextOccurrence(item, _start, _i);
-  //         if (typeof _daysTillFirstOccurrence === 'string') { return; }
-
-  //         const rangeInDays = _rangeInDays - _daysTillFirstOccurrence;
-  //         if (rangeInDays < 0) { return; }
-  //         const firstOccurrence = _start.add(_daysTillFirstOccurrence, 'day');
-
-  //         const numOccurrences = item.frequency === BudgetItemFrequency.monthly
-  //           ? _end.diff(firstOccurrence, 'month') + 1
-  //           : Math.floor(rangeInDays / (item.frequency == BudgetItemFrequency.weekly ? 7 : 14)) + 1
-
-  //         const itemVers = getVerificationsBetween([firstOccurrence, _end], item);
-  //         if ( itemVers && itemVers.length < numOccurrences ){
-  //           pastDue += numOccurrences - itemVers.length;
-  //           pastDueAmount += ( numOccurrences - itemVers.length ) * item.amount;
-  //           if ( item.type === "income" ){
-  //             console.log(firstOccurrence, _end);
-  //             console.log("PAST DUE - %s, occurrences: %d, verifications: %d, amount: %s", item.name, numOccurrences, itemVers.length, item.amount);
-  //           }
-  //         }
-  //       }
-  //     }
-  //   });
-  //   return { items: pastDue, amount: pastDueAmount };
-  // };
-
-  // const pastDue = getPastDueVers();
-
-  // const [currentBalance, setCurrentBalance] = useState<number|null>(null);
-  // const { balance } = useOccurrences(data.startDate, date, getItems());
-  
-  // useEffect(() => {
-  //   x25log.d("[SummaryWidget][summary-widget.tsx]: Calculating summary balance.");
-  //   const _currentBal = balance(date, "end");
-  //   setCurrentBalance(_currentBal);
-  // }, []);
-
 
   return (
     <div className="card mb-6">

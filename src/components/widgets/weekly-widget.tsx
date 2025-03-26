@@ -279,7 +279,7 @@ export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
   return (
     // print line items for this week in order.
 
-    <div className="x25-line-item-list">
+    <div className="x25-line-item-list mb-6">
       <div className="card card-flush p-4">
         <div className="card-header px-0">
           <div className="card-title flex-row d-flex">

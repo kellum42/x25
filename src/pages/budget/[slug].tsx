@@ -106,7 +106,7 @@ const Dashboard: React.FC = () => {
       { !loadedVerifications ?
         (<p>Loading dashboard data...</p>) :
         (<div>
-          <div className="d-flex flex-row flex-stack">
+          <div className="d-md-flex flex-stack">
             <div>
               <div className="d-flex flex-row align-items-center">
                 <h1 className="text-dark fw-bold mb-0 fs-2 me-1">{data.title}</h1>
@@ -117,14 +117,14 @@ const Dashboard: React.FC = () => {
                   {isSimulation && <MenuItem label="Convert to Budget" onClick={() => setIsConvertingSim(true)} />}
                 </Menu>
               </div>
-              <ul className="breadcrumb fw-semibold fs-base my-1 mt-4">
+              <ul className="breadcrumb fw-semibold fs-base my-1 mt-2">
                 <li className="breadcrumb-item text-muted">
                   <Link to="/" className="text-muted text-hover-primary">Home</Link>
                 </li>
                 <li className="breadcrumb-item text-dark">Dashboard</li>
               </ul>
             </div>
-            <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
+            <div className="d-flex align-items-center flex-nowrap text-nowrap my-6 my-md-0">
               <Link
                 to={`/budget/${data.documentId}/items`}
                 className="btn bg-body btn-color-gray-700 btn-active-primary me-4 w-125px">
@@ -167,11 +167,11 @@ const Dashboard: React.FC = () => {
                   <ActionNeededWidget 
                     date={date} 
                     occurrences={getOccurrences(date.subtract(3, 'month'), date).filter( occ => occ.verification === undefined )}/>
-                    <ChartWidget 
-                      title="Balance" 
-                      subtitle={date.year().toString()} 
-                      data={getChartdata()} 
-                    />
+                  <ChartWidget 
+                    title="Balance" 
+                    subtitle={date.year().toString()} 
+                    data={getChartdata()} 
+                  />
                   <div className="d-none d-lg-block">
                     <SimulationsWidget />
                   </div>
