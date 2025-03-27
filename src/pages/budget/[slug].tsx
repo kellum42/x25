@@ -66,9 +66,9 @@ const Dashboard: React.FC = () => {
   const endOfWeek = friday.add(6, 'days');
   const j1 = date.set('month', 0).set('date', 1);
   const eoy = j1.add(365, 'days');
-  const lower: Dayjs = j1.isBefore(data.startDate) ? j1 : data.startDate; 
+  // const lower: Dayjs = j1.isBefore(data.startDate) ? j1 : data.startDate; 
   const upper: Dayjs = endOfWeek.isBefore(eoy, 'date') ? eoy : endOfWeek;
-  const { getBalance, getOccurrences, addVerifications, deleteVerification } = useOccurrences(lower, upper, getItems(), data.startAmount);
+  const { getBalance, getOccurrences, addVerifications, deleteVerification, updateTo } = useOccurrences();
 
   const loadData = async () => {
     x25log.d("[useEffect][slug.tsx]: Loading verifications for dashboard data.");
@@ -77,6 +77,7 @@ const Dashboard: React.FC = () => {
     // get verifications through end of week.
     let result = await getVerifications(data.startDate, endOfWeek);
     if ( result.status === "success" ){
+      updateTo(upper);
       addVerifications(result.data);
     }
     setLoadedVerifications(true);
@@ -124,7 +125,7 @@ const Dashboard: React.FC = () => {
                 <li className="breadcrumb-item text-dark">Dashboard</li>
               </ul>
             </div>
-            <div className="d-flex align-items-center flex-nowrap text-nowrap my-6 my-md-0">
+            {/* <div className="d-flex align-items-center flex-nowrap text-nowrap my-6 my-md-0">
               <Link
                 to={`/budget/${data.documentId}/items`}
                 className="btn bg-body btn-color-gray-700 btn-active-primary me-4 w-125px">
@@ -144,7 +145,7 @@ const Dashboard: React.FC = () => {
                 <MenuItem label="Note" />
                 <MenuItem label="Simulation" />
               </Menu>
-            </div>
+            </div> */}
           </div>
           <div className="mt-8">
             {isSimulation &&

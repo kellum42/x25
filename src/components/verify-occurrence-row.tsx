@@ -8,71 +8,130 @@ import { Schema } from "../utils/types";
 
 type VerifyOccurrenceRowProps = {
   occ: Occurrence,
-  onVerify: (item: string, date: Dayjs, amount: number) => Promise<boolean>
-  onUnverify: (verification: Schema<"verification">) => Promise<boolean>
+  onVerified: (verification: Schema<"verification">) => void,
+  onUnVerified: (verification: Schema<"verification">) => void,
+  subLabel?: string
+  // onVerify: (item: string, date: Dayjs, amount: number) => Promise<boolean>
+  // onUnverify: (verification: Schema<"verification">) => Promise<boolean>
 }
 
 export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
-  const context = useContext(BudgetContext);
+  const useBudget = useContext(BudgetContext);
 
-  if (!context) {
+  if (!useBudget) {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { occ, onVerify, onUnverify } = props;
+  // const { verify, unverify } = context;
+  const { occ } = props;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const [textInput, setTextInput] = useState<string>("--");
   const [loading, setIsLoading] = useState(false);
 
-  const amount = `$${Math.abs(occ.item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  const amount = `$${Math.abs(props.occ.item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
-  const verify = async (forceStandardAmount: boolean = false) => {
-    let amount: number;
+  const amountNode = (): React.ReactNode|string => {
+    const type: "income"|"expense" = occ.item.amount > 0 ? "income" : "expense";
 
-    if (forceStandardAmount) {
-      amount = occ.item.amount;
-
+    if (occ.verification && Math.abs(occ.verification.amount) !== Math.abs(occ.item.amount)){
+      return <>
+        <span className="text-decoration-line-through">{amount}</span>
+        <span className="ms-2 text-primary">${Math.abs(occ.verification.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+      </>
     } else {
-      // Check for empty strings
-      if (textInput.trim() === "") {
-        setTextInput("");
-        return;
-      }
+      const inner = occ.verification ? occ.verification.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) : amount;
+      return type === "income" ? <span className="text-success">+{inner}</span> : inner;
+    }
+  }
 
-      const cleanedString = textInput.replace(/[^0-9.]/g, '');
-
-      // Convert the cleaned string to a number
-      amount = parseFloat(cleanedString);
-      if (isNaN(amount)) {
-        setTextInput("");
-        x25log.d("[verify][VerifyOccurrenceRow.ts]: Can't verify. Invalid verification amount given, %s", textInput);
-        return;
-      }
+  const cleanVerifiedAmount = (): number | null => {
+    // Check for empty strings
+    if (textInput.trim() === "") {
+      setTextInput("");
+      return null;
     }
 
-    setIsLoading(true);
-    const _ = await onVerify(occ.item.documentId, occ.date, Math.abs(amount));
-    setTextInput("");
-    setIsLoading(false);
+    const cleanedString = textInput.replace(/[^0-9.]/g, '');
+
+    // Convert the cleaned string to a number
+    const amount = parseFloat(cleanedString);
+
+    if (isNaN(amount)) {
+      setTextInput("");
+      x25log.d("[validate][VerifyOccurrenceRow.tsx]: Invalid verification amount given, %s", textInput);
+      return null;
+    }
+    return amount;
+  }
+
+  const verify = async (forceStandardAmount: boolean = false) => {
+    const amount: number | null = forceStandardAmount ? occ.item.amount : cleanVerifiedAmount();
+
+    const item = occ.item.documentId;
+    const date = occ.date;
+
+    if (amount !== null) {
+      setIsLoading(true);
+      const result = await useBudget.verify(item, date, Math.abs(amount));
+      if (result.status === "success") {
+        if (result.data !== null) {
+          // Add to map.
+          // Add in item documentId since its not populated on POST call response.
+          const verification: Schema<"verification"> = { ...result.data, item: { documentId: item } };
+          props.onVerified(verification);
+          // addVerification([verification])
+          // return true;
+        } else {
+          x25log.d("[verify][VerifyOccurrenceRow.tsx]: Can't verify. Got null response.");
+        }
+      } else {
+        x25log.d("[verify][VerifyOccurrenceRow.tsx]: Can't verify. Error: %s.", result.error);
+      }
+      setTextInput("");
+      setIsLoading(false);
+      // return false;
+
+      // const _ = await onVerify(occ.item.documentId, occ.date, Math.abs(amount));
+
+    } else {
+      // error handling. maybe set an error?
+      x25log.d("[verify][VerifyOccurrenceRow.tsx]: Unable to verify item %s, date: %s.", item, date.format("YYYY-MM-DD"));
+      // return
+    }
   }
 
   const unverify = async () => {
-    if (occ.verification) {
-      const success = await onUnverify({
-        documentId: occ.verification.documentId,
-        id: "--",
-        date: occ.date.format("YYYY-MM-DD"),
-        item: { documentId: occ.item.documentId, id: "--" }
-      });
-      if (success) {
-        setTextInput("");
+    const verification = occ.verification;
+    if (verification) {
+      // if (verification.date && verification.item) {
+      const result = await useBudget.unverify(verification.documentId);
+
+      if (result.status === "success") {
+        props.onUnVerified({
+          documentId: verification.documentId,
+          id: "--",
+          date: occ.date.format("YYYY-MM-DD"),
+          item: { documentId: occ.item.documentId, id: "--" }
+        })
+        // deleteVerification(verification);
+        // return true;
+
+      } else {
+        x25log.d("[unverify][VerifyOccurrenceRow.tsx]: Can't unverify %s. Error: %s.", verification.documentId, result.error);
       }
+
+      // } else {
+      //   x25log.w("[onUnverify][weekly-widget.ts]: Can't unverify %s. Missing verification date or item. This should not happen.", verification.documentId);
+      // }
+      return false;
+
     } else {
-      x25log.w("[unverify][VerifyOccurrenceRow.ts]: Could not unverify because verification does not exist. This should not happen. Date: %s, item: %s.", occ.date.format("YYYY-MM-DD"), occ.item.documentId);
+      x25log.w("[unverify][VerifyOccurrenceRow.tsx]: Could not unverify because verification does not exist. This should not happen. Date: %s, item: %s.", occ.date.format("YYYY-MM-DD"), occ.item.documentId);
     }
   }
+
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
@@ -105,7 +164,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
   }, [occ]);
 
   const checkboxAndDropdown: React.ReactNode = <>
-    <div className="me-2 rotate-90">
+    <div className="me-2 rotate-90" style={{ transform: isOpen ? "rotateZ(90deg)" : "none" }}>
       <span
         onClick={toggleOpen}
         className="text-gray-400 fc-icon cursor-pointer fc-icon-chevron-right">
@@ -150,8 +209,8 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
 
   return <OccurrenceRow
     occ={occ}
-    label={amount}
-    subLabel={occ.date.format("M/D/YY")}
+    label={amountNode()}
+    subLabel={ props.subLabel ?? occ.date.format("M/D/YY")}
     showTags={true}
     beforeTitle={checkboxAndDropdown}
     beforeRowEnds={verifyDropdown}

@@ -5,7 +5,7 @@ import { BudgetContext } from "../contexts/budgetContext";
 
 type OccurrenceRowProps = {
   occ: Occurrence
-  label?: string
+  label?: string|React.ReactNode
   subLabel?: string,
   title?: string,
   subtitle?: string,

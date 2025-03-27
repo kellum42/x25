@@ -35,14 +35,14 @@ export const SummaryWidget: FC<SummaryWidgetProps> = ({ balance }) => {
         </div>
       </div>
 
-      <div className="card-body my-5 pb-0 px-0">
+      <div className="card-body my-0 pb-0 px-0">
         {/* begin::Tab content */}
         <div className="tab-content">
           {/* begin::Tab panel */}
           <div className="tab-pane fade active show" id="kt_security_summary_tab_pane_hours" role="tabpanel">
             {/* begin::Row */}
             <div className="row p-0 mb-5 px-9">
-              <p className="text-gray-400 fw-semibold fs-6 mt-2 mb-0">Current Balance</p>
+              <p className="text-gray-400 fw-semibold fs-6 mb-0">Current Balance</p>
               {/* <h2 className="m-0 fs-1 text-gray-900">$5,844.23</h2> */}
               <h2 className="m-0 fs-1 text-gray-900">
                 ${ balance ? `${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : "--" }

@@ -261,84 +261,23 @@ export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: n
   return "";
 }
 
-// export type UpcomingBudgetItem = {
-//   days: number,
-//   item: BudgetItem
-// }
+// map: OccurrenceMap = {dates:{}
+export const populateDatesTo = (date: Dayjs, map: OccurrenceMap): boolean => {  
+  // const lower = map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date') ? bounds[0] : dayjs(map.bounds[0]);
+  const startBound = dayjs(map.bounds[0]);
+  const formerEndBound = dayjs(map.bounds[1]);
+  const endBound = !formerEndBound || date.isAfter(formerEndBound, 'date') ? date : formerEndBound;
 
+  map.bounds = [map.bounds[0], endBound.format("YYYY-MM-DD")];
 
-// export const JSONtoBudgetItem = (json: string): BudgetItem | undefined => {
-//   try {
-//     const item = JSON.parse(json) as BudgetItem;
-//     // Parse dayjs.
+  if (!formerEndBound.isSame(endBound, 'date')){
+    x25log.d("[populateDatesTo][occurrences.ts]: End bound for map updated from %s to %s.", formerEndBound.format("YYYY-MM-DD"), endBound.format("YYYY-MM-DD"));
+  }
 
-//     if (item.frequency === "Once") {
-//       item.date = dayjs(item.date);
-
-//     } else {
-//       item.starts = dayjs(item.starts);
-//       item.ends = item.ends === "-1" ? "-1" : dayjs(item.ends);
-//     }
-
-//     return item
-
-//   } catch (e) {
-//     if (typeof e === "string") {
-//       console.log(e);
-
-//     } else if (e instanceof Error) {
-//       console.log(e.message);
-
-//     } else {
-//       console.log("An unknown error occurred getting the budgets.");
-//     }
-//   }
-// }
-
-
-// export const budgetItemToRecord = (item: BudgetItem): Record<string, string> => {
-//   const obj: Record<string, string> = {};
-
-//   for (const key in item) {
-//     // if (item.frequency === "Monthly") {
-//     //   const value = item[key as keyof MonthlyBudgetItem];
-//     //   if (Array.isArray(value)) {
-//     //     obj[key] = value.join(",");
-//     //   } else if (dayjs.isDayjs(value)) {
-//     //     obj[key] = value.format("MM/DD/YYYY");
-//     //   } else {
-//     //     obj[key] = (typeof value === "string" || typeof value === "number") ? value.toString() : JSON.stringify(value);
-//     //   }
-//     // } else {
-//     //   const value = item[key as keyof (OneTimeBudgetItem | WeeklyBudgetItem)];
-//     //   if (dayjs.isDayjs(value)) {
-//     //     obj[key] = value.format("MM/DD/YYYY");
-//     //   } else {
-//     //     obj[key] = (typeof value === "string" || typeof value === "number") ? value.toString() : JSON.stringify(value);
-//     //   }
-//     // }
-//   }
-//   return obj;
-// }
-
-
-// Get dates and amounts
-// Check if person is in excess or underage
-// Excess = all over threshold. Else --> underage.
-// Get dollar per day for each underage instance
-// If overage, tell them how much per week/month they can spare over a certain period of time.
-// If underage, tell them how much extra to put in per week/month for how long to not be in underage.
-
-// const _maybeUpdte
-
-export const populateBounds = (bounds: [Dayjs, Dayjs], map: OccurrenceMap = {dates:{}}): OccurrenceMap => {  
-  const lower = map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date') ? bounds[0] : dayjs(map.bounds[0]);
-  const upper = map.bounds === undefined || bounds[1].isAfter(dayjs(map.bounds[1]), 'date') ? bounds[1] : dayjs(map.bounds[1]);
-
-  let d = lower;
+  let d = startBound;
   let datesAdded: number = 0;
 
-  while (!d.isAfter(upper, 'day')) {
+  while (!d.isAfter(endBound, 'date')) {
     const datestring = d.format("YYYY-MM-DD");
     if (!(datestring in map.dates)) {
       map.dates[datestring] = {items:{}}
@@ -347,11 +286,12 @@ export const populateBounds = (bounds: [Dayjs, Dayjs], map: OccurrenceMap = {dat
     d = d.add(1, 'days');
   }
   if (datesAdded > 0) {
-    x25log.d("[populateBounds][occurrences.ts]: Added %d dates to useOccurrences map between %s and %s.", datesAdded, bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
+    x25log.d("[populateDatesTo][occurrences.ts]: Added %d dates to occurrence map between %s and %s.", datesAdded, map.bounds[0], endBound.format("YYYY-MM-DD"));
   } else {
-    x25log.d("[populateBounds][occurrences.ts]: No dates were added to useOccurrences map between %s and %s.", bounds[0].format("YYYY-MM-DD"), bounds[1].format("YYYY-MM-DD"));
+    x25log.d("[populateBounds][occurrences.ts]: No dates were added to occurrence map between %s and %s.", map.bounds[0], endBound.format("YYYY-MM-DD"));
   }
-  return map
+
+  return datesAdded > 0;
 }
 
 

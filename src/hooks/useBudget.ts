@@ -120,23 +120,6 @@ export const useBudget = (documentId: string): UseBudget => {
     }
     const result = await create<"verification">(endpoint, { data: body })
     return result;
-
-    // const body: CreateableSchema<"verification"> = {
-    //   date: occurrence.date.format("YYYY-MM-DD"),
-    //   amount: amount,
-    //   item: occurrence.item.id,
-    // }
-
-    // // create.
-    // // if (occurrence.verification === null || occurrence.verification?.documentId === null) {
-    // if (occurrence.verification){
-    //   const endpoint = `http://localhost:1337/api/verifications/${occurrence.verification.documentId}`;
-    //   const result = await update<"verification">(endpoint, { data: body })
-    //   return result;
-      
-    // } else {
-    //   return { status: "fail", error: "idk" }
-    // }
   }
 
   const unverify = async (id: string): Promise<x25Result<boolean>> => {

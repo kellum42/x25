@@ -1,4 +1,6 @@
 import React, { FC, useContext, useEffect, useState } from "react"
+import { Link } from "gatsby"
+
 import { BudgetContext } from "../../contexts/budgetContext";
 import dayjs, { Dayjs } from "dayjs";
 import { x25log } from "../../utils/log";
@@ -18,6 +20,7 @@ export const ActionNeededWidget: FC<ActionNeededWidgetProps> = (props) => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
+  const { data } = budgetContext;
   const { date, occurrences } = props;
   const friday = getFriday(date);
   const dueOccs = occurrences.filter(occ => !occ.date.isBefore(friday), 'date');
@@ -40,15 +43,23 @@ export const ActionNeededWidget: FC<ActionNeededWidgetProps> = (props) => {
       </div>
 
       <div className="d-flex flex-row py-2 px-6">
-        <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-          <div className="fw-bold fs-6 text-warning text-center">This Week</div>
-            <div className="fs-1 fw-bold counted text-center">{dueOccs.length}</div>
-        </div>
-        <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-          <div className="fw-bold fs-6 text-danger text-center">Past 3 Months</div>
-            <div className="fs-1 fw-bold counted text-center">{pastOccs.length}</div>
-        </div>
+        <Link
+          to={`/budget/${data.documentId}/action`}
+        >
+          <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
+            <div className="fw-bold fs-6 text-warning text-center">This Week</div>
+            <div className="fs-1 fw-bold counted text-center text-body">{dueOccs.length}</div>
+          </div>
+        </Link>
+        <Link
+          to={`/budget/${data.documentId}/action`}
+        >
+          <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
+            <div className="fw-bold fs-6 text-danger text-center">Past 3 Months</div>
+            <div className="fs-1 fw-bold counted text-center text-body">{pastOccs.length}</div>
+          </div>
+        </Link>
       </div>
-    </div>
+    </div >
   )
 }
