@@ -6,85 +6,83 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isBetween from 'dayjs/plugin/isBetween';
 
 import { getTheme } from "../../utils/theme";
-import { calculateBalanceOver } from "../../utils/budget";
+// import { calculateBalanceOver } from "../../utils/budget";
 import { BudgetContext } from "../../contexts/budgetContext";
 import { Menu, MenuItem } from "../floating-menu";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
-type ChartWidgetProps = {
+export type ChartWidgetProps = {
   height?: string
+  subtitle?: string
+  title: string,
+  data: {date: string, balance: number|null}[]
 }
 
 export const ChartWidget: FC<ChartWidgetProps> = (props) => {
 
-  const _context = useContext(BudgetContext);
+  // const _context = useContext(BudgetContext);
 
-  if (!_context) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!_context) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
-  const { budget, date } = _context;
+  // const { budget, date } = _context;
 
-  if (!budget) {
-    return <></>;
-  }
+  // if (!budget) {
+  //   return <></>;
+  // }
 
-  enum Period { 
-    last3Y = "-3Y", 
-    last1Y = "-1Y", 
-    YTD = "YTD", 
-    next1Y = "1Y", 
-    next3Y = "3Y" 
-  };
-  const format = ("MM/DD/YYYY");
+  // enum Period { 
+  //   last3Y = "-3Y", 
+  //   last1Y = "-1Y", 
+  //   YTD = "YTD", 
+  //   next1Y = "1Y", 
+  //   next3Y = "3Y" 
+  // };
+  // const format = ("MM/DD/YYYY");
 
-  const { startingBalance, startDate, items } = budget;
+  // const { startAmount, startDate, items } = budget;
 
-  const [period, setPeriod] = useState<Period>(Period.next1Y);
+  // const [period, setPeriod] = useState<Period>(Period.next1Y);
 
   const theme = getTheme("light");
 
-  const getPeriodRanges = (): Dayjs[] => {
-    if (period === Period.last3Y) {
-      return [...Array(36).fill(0).map((_, i) => { return date.subtract(36-i, "month") }), date];
+  // const getPeriodRanges = (): Dayjs[] => {
+  //   if (period === Period.last3Y) {
+  //     return [...Array(36).fill(0).map((_, i) => { return date.subtract(36-i, "month") }), date];
 
-    } else if (period === Period.next3Y) {
-      return [ date, ...Array(36).fill(0).map((_, i) => { return date.add(i + 1, "month") })];
+  //   } else if (period === Period.next3Y) {
+  //     return [ date, ...Array(36).fill(0).map((_, i) => { return date.add(i + 1, "month") })];
 
-    } else if (period === Period.last1Y) {
-      return [ ...Array(365).fill(0).map((_, i) => { return date.subtract(365 - i, "day") }), date ];
+  //   } else if (period === Period.last1Y) {
+  //     return [ ...Array(365).fill(0).map((_, i) => { return date.subtract(365 - i, "day") }), date ];
 
-    } else if (period === Period.next1Y) {
-      return [ date, ...Array(365).fill(0).map((_, i) => { return date.add(i + 1, "day") }) ];
+  //   } else if (period === Period.next1Y) {
+  //     return [ date, ...Array(365).fill(0).map((_, i) => { return date.add(i + 1, "day") }) ];
 
-    } else {
-      const j1 = date.set( 'month', 0 ).set( 'date', 1 );
-      return Array(365).fill(0).map((_, i) => { return j1.add(i, 'day' )} )
-    }
-  }
+  //   } else {
+  //     const j1 = date.set( 'month', 0 ).set( 'date', 1 );
+  //     return Array(365).fill(0).map((_, i) => { return j1.add(i, 'day' )} )
+  //   }
+  // }
 
-  const { dates, balances } = calculateBalanceOver(getPeriodRanges(), startingBalance, startDate, items);
+  // const { dates, balances } = calculateBalanceOver(getPeriodRanges(), startingBalance, startDate, items);
 
   const options: ApexOptions = {
     series: [{
       name: undefined,
-      data: balances.map((bal,i) => {
-        return {x: dates[i].toDate().getTime(), y: bal }
+      // data: balances.map((bal,i) => {
+      //   return {x: dates[i].toDate().getTime(), y: bal }
+      // })
+      data: props.data.map(({date, balance},i) => {
+        return {x: dayjs(date).toDate().getTime(), y: balance }
       })
     }],
     chart: {
       fontFamily: 'inherit',
       type: 'area',
-      // height: '300px',
-      // width: '100%',
-      // toolbar: {
-      //   show: false
-      // },
-      // zoom: {
-      //   enabled: false
-      // },
       zoom: {
         autoScaleYaxis: true
       }
@@ -104,11 +102,6 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
     },
     xaxis: {
       type: 'datetime',
-      // labels: {
-      //   datetimeFormatter: {
-      //     month: 'MMM' // Show only the 3-letter month abbreviation
-      //   }
-      // },
       crosshairs: {
         show: false,
         position: 'front',
@@ -153,8 +146,9 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
   return (
     <div className="card card-xl-stretch mb-6">
       <div className="card-body p-0 d-flex justify-content-between flex-column">
+        {/* <h1>chart widget coming soon</h1> */}
         <div className="d-flex flex-stack flex-grow-1 p-10">
-          <div className="symbol symbol-45px">
+          {/* <div className="symbol symbol-45px">
             <div className="symbol-label">
               <Menu label={period} className="fw-bold text-gray-500" showLabel={true}>
                 { Object.keys(Period)
@@ -170,11 +164,12 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
                 }
               </Menu>
             </div>
-          </div>
+          </div> */}
 
           <div className="d-flex flex-column text-end mb-4">
             <span className="fw-bolder text-gray-800 fs-2">Balance</span>
-            <span className="text-gray-400 fw-semibold fs-6">{dates[0].format(format) + " - " + dates[dates.length - 1].format(format)}</span>
+            {/* <span className="text-gray-400 fw-semibold fs-6">{dates[0].format(format) + " - " + dates[dates.length - 1].format(format)}</span> */}
+            {props.subtitle && <span className="text-gray-400 fw-semibold fs-6">{props.subtitle}</span>}
           </div>
         </div>
 

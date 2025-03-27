@@ -4,7 +4,7 @@ import {
   BudgetLineItem,
   BudgetLineItemFrequency,
   WeeklyBudgetLineItemDays
-} from "../hooks/useBudgetDetails";
+} from "../hooks/useBudget";
 
 export const getSampleBudgetLineItems = (): BudgetLineItem[] => {
   return [

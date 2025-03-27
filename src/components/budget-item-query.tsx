@@ -3,7 +3,7 @@ import { Dayjs } from "dayjs";
 
 import { DateChanger } from "./datechanger";
 import { BudgetItem, BudgetItemFrequency } from "../utils/schemas";
-import { calculateBalance, getUpcomingBudgetItems, itemIsActive, ytd } from "../utils/budget";
+import { calculateBalance, getUpcomingBudgetItems, itemIsActive, ytd } from "../utils/occurrence";
 import { BudgetContext } from "../contexts/budgetContext";
 import { numberOrNull } from "../utils/util";
 import { Menu, MenuItem } from "./floating-menu";
