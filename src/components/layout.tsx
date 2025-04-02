@@ -13,8 +13,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <img style={{ height: "32px" }} src={'/img/logo-compact-craft.svg'} />
           </div>
 
-          <div className="content fs-6 d-flex flex-column flex-column-fluid">
-            <div className="post fs-6 d-flex flex-column-fluid">
+          <div className="content d-flex flex-column flex-column-fluid">
+            <div className="post d-flex flex-column-fluid">
               <div className="container-xxl">
                 {children}
               </div>

@@ -31,7 +31,7 @@ export const SummaryWidget: FC<SummaryWidgetProps> = ({ balance }) => {
       <div className="card-header p-10 pb-2">
         <div className="card-title d-block">
           <h3 className="m-0 text-gray-900">Summary</h3>
-          <p className="text-gray-400 fw-semibold fs-7 mt-2">As of {date.format("dddd, MMM D, YYYY")}</p>
+          <p className="text-gray-400 fw-semibold mt-2">As of {date.format("dddd, MMM D, YYYY")}</p>
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export const SummaryWidget: FC<SummaryWidgetProps> = ({ balance }) => {
       </div>
 
       <div className="px-10 fw-semibold">
-        <div className="fs-6 d-flex justify-content-between my-4">
+        <div className="d-flex justify-content-between my-4">
           <Link to={`/budget/${data.documentId}/items`} className="hover text-primary">Budget Items</Link>
           <div className="d-flex">{getItems().length}</div>
         </div>
