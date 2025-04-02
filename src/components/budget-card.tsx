@@ -1,15 +1,16 @@
 import React, { FC } from "react";
 import { Link } from "gatsby"
 
-import { Budget } from "../utils/schemas";
-import { svgs } from "../utils/svg";
+// import { Budget } from "../utils/schemas";
+// import { svgs } from "../utils/svg";
 import { Menu, MenuItem } from "./floating-menu";
-import { deleteBudget } from "../utils/localStorage";
-import { Schema } from "../utils/strapi";
-import { calculateBalance } from "../utils/balance";
-import { calculateOccurrences } from "../utils/occurrence";
+// import { deleteBudget } from "../utils/localStorage";
+// import { Schema } from "../utils/strapi";
+// import { calculateBalance } from "../utils/balance";
+// import { calculateOccurrences } from "../utils/occurrence";
 import { x25log } from "../utils/log";
-import dayjs from "dayjs";
+// import dayjs from "dayjs";
+import { Schema } from "../utils/types";
 
 type BudgetCardProps = {
   budget: Schema<"budget">,
@@ -17,7 +18,7 @@ type BudgetCardProps = {
 }
 
 const BudgetCard: FC<BudgetCardProps> = (props) => {
-  const { budget, onDeleteSuccess } = props;
+  const { budget } = props;
 
   const {items, startDate, startAmount} = budget;
   
@@ -27,16 +28,16 @@ const BudgetCard: FC<BudgetCardProps> = (props) => {
   }
 
   const onDelete = () => {
-    const response = deleteBudget( budget.id );
-    if ( response.status === "success" ){
-      onDeleteSuccess();
-    } else {
-      console.log(response.message);
-    }
+    // const response = deleteBudget( budget.id );
+    // if ( response.status === "success" ){
+    //   onDeleteSuccess();
+    // } else {
+    //   console.log(response.message);
+    // }
   }
 
-  const occurrences = calculateOccurrences(items, dayjs(startDate), dayjs())
-  const balance = calculateBalance(startAmount, occurrences);
+  // const occurrences = calculateOccurrences(items, dayjs(startDate), dayjs())
+  // const balance = calculateBalance(startAmount, occurrences);
 
   return (
     <div className="col-sm-6 col-xl-4 mb-6">
@@ -62,8 +63,8 @@ const BudgetCard: FC<BudgetCardProps> = (props) => {
         </div>
         <div className="card-body d-flex flex-column px-9 pt-6 pb-8">
           <div className="fw-semibold text-gray-400 text-gray-400 fs-7">Balance Today:</div>
-          <div className="fs-2tx fw-bold mb-3" style={{ color: "#000000" }}>$
-            {balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          <div className="fs-2tx fw-bold mb-3" style={{ color: "#000000" }}>$500
+            {/* {balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} */}
           </div>
           <div className="d-flex align-items-center flex-wrap mb-5 mt-auto fs-6">
             <div className="fw-bold text-danger me-2">+40.5%</div>

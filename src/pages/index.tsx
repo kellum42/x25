@@ -4,8 +4,8 @@ import type { HeadFC, PageProps } from "gatsby"
 import BudgetCard from '../components/budget-card'
 import { Layout } from "../components/layout"
 // import { getBudgets, saveBudget } from "../utils/localStorage"
-import { UpdateBudget } from "../components/modals/update-budget"
-import { Budget, x25Error } from "../utils/schemas"
+// import { UpdateBudget } from "../components/modals/update-budget"
+// import { x25Error } from "../utils/schemas"
 // import { generateAvatar, getUniqueID, slugify } from "../utils/util"
 import dayjs from "dayjs"
 import { get } from "../utils/strapi";
@@ -22,7 +22,7 @@ import { Schema } from "../utils/types"
 const IndexPage: React.FC<PageProps> = () => {
   const [createNewBudget, setCreateNewBudget] = useState<boolean>(false);
   const [budgets, setBudgets] = useState<Schema<"budget">[]>([]);
-  const [error, setError] = useState<x25Error>();
+  // const [error, setError] = useState<x25>();
 
   const fetchBudgets = async () => {
     const today = dayjs().format("YYYY-MM-DD");
@@ -55,9 +55,9 @@ const IndexPage: React.FC<PageProps> = () => {
       </div>
 
       <div className="row">
-        {error && <p>{error.message}</p>}
-        { budgets.map( budget => (
-          <BudgetCard budget={budget} onDeleteSuccess={() => fetchBudgets()} />
+        {/* {error && <p>{error.message}</p>} */}
+        { budgets.map(budget  => (
+          <BudgetCard key={budget.documentId} budget={budget} onDeleteSuccess={() => fetchBudgets()} />
         ))} 
       </div>
 

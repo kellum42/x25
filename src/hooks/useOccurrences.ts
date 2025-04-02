@@ -1,9 +1,8 @@
 import dayjs, { Dayjs } from "dayjs"
-import React, { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { Schema } from "../utils/types"
 import { x25log } from "../utils/log"
-// import { isMonthlyItem, isOneTimeItem, isWeeklyItem } from '../utils/util';
-import { calculate, calculateOccurrences, deleteItem, populateDatesTo, populateOccurrences } from "../utils/occurrence";
+import { calculate, populateDatesTo, populateOccurrences } from "../utils/occurrence";
 import { BudgetContext } from "../contexts/budgetContext";
 
 // export type OccurrenceMap = Record<string, Record<string, { amount: number, vId?: string, vAmount?: number, balance?: number }>>
@@ -36,7 +35,6 @@ export type UseOccurrences = {
   deleteVerification: (verification: Schema<"verification">) => void,
   addVerifications: (verification: Schema<"verification">[]) => void,
   updateTo: (date: Dayjs) => void,
-  // getThisWeek: ()
 }
 
 export const useOccurrences = (): UseOccurrences => {
@@ -53,24 +51,8 @@ export const useOccurrences = (): UseOccurrences => {
     bounds: [data.startDate.format(format), data.startDate.format(format)], 
     dates: {} 
   });
-  // const [bounds, setBounds] = useState<[string, string]>();
-  const [error, setError] = useState<string>();
+  // const [error, setError] = useState<string>();
 
-  // useEffect(() => {
-  //   // populate bounds
-  //   if (end.isBefore(data.startDate, 'days')) {
-  //     x25log.w("[useEffect][useOccurrences.ts]: End date %s is before the budget starts %s. End date must be after the budget begins.", end.format("YYYY-MM-DD"), data.startDate.format("YYYY-MM-DD"));
-
-  //   } else {
-  //     let _map = map;
-  //     _map = populateDatesTo(end, _map);
-  //     _map = populateOccurrences(items, [data.startDate, end], _map);
-
-  //     // calculate balance
-  //     _map = calculate(_map, data.startAmount);
-  //     setMap(_map);
-  //   }
-  // }, []);
 
   useEffect(() => {
     x25log.d("[useEffect][useOccurrences.ts]: Map was set. Bounds are %s - %s.", map.bounds?.[0] ?? "null", map.bounds?.[1] ?? "null");
@@ -143,7 +125,6 @@ export const useOccurrences = (): UseOccurrences => {
 
         x25log.d("[deleteVerification][useOccurrences.ts]: Deleted verification %s from map. Item: %s, date: %s.", verification.documentId, verification.item.documentId, datestring);
         calculate(_map, data.startAmount);
-        // setMap(_map);
         setMap((prevState) => ({
           ...prevState,
           dates: _map.dates
@@ -186,57 +167,18 @@ export const useOccurrences = (): UseOccurrences => {
 
     if (added > 0) {
       _map = calculate(_map, data.startAmount);
-      // setMap(_map);
       setMap((prevState) => ({
         ...prevState,
         dates: _map.dates
       }))
     }
-
-    // if ( )
-    //   if (verification.date === undefined || verification.amount === undefined) {
-    //     x25log.d("[verify][useOccurrences.ts]: Could not verify %s for item %s. No date and/or amount was given.", verification.documentId, item);
-
-    //   } else {
-    //     if (verification.date in map && item in map[verification.date]) {
-    //       const _map = map;
-    //       const multiplier = _map[verification.date][item].amount < 0 ? -1 : 1;
-
-    //       _map[verification.date][item].vId = verification.documentId;
-    //       _map[verification.date][item].vAmount = verification.amount * multiplier
-
-    //       calculate(_map);
-    //       setMap(_map);
-    //     } else {
-    //       x25log.d("[verify][useOccurrences.ts]: There is no occurrence for item %s on %s. Could not create verification.", item, verification.date);
-    //     }
-    //   }
   }
 
   const updateTo = (date: Dayjs) => {
-    // const lower = map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date') ? bounds[0] : dayjs(map.bounds[0]);
-    // const upper = map.bounds === undefined || bounds[1].isAfter(dayjs(map.bounds[1]), 'date') ? bounds[1] : dayjs(map.bounds[1]);
-    // let lower: Dayjs;
-  
-    // if (map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date')) {
-    //   lower = bounds[0];
-    //   update = true;
-    // } else {
-    //   lower = dayjs(map.bounds[0]);
-    // }
-
-    // if (map.bounds === undefined || bounds[1].isAfter(dayjs(map.bounds[1]), 'date')) {
-    //   upper = bounds[1];
-    //   update = true;
-    // } else {
-    //   upper = dayjs(map.bounds[1]);
-    // }
     const _map = map;
     const needsUpdate = populateDatesTo(date, _map);
 
     if (needsUpdate) {
-      // let _map = map;
-      // _map = populateBounds([lower, upper], _map);
       populateOccurrences(items, [dayjs(map.bounds[0]), dayjs(map.bounds[1])], _map);
 
       // calculate balance
@@ -250,47 +192,6 @@ export const useOccurrences = (): UseOccurrences => {
     } else {
       x25log.d("[updateTo][useOccurrences.ts]: Changing map end date from %s - %s requires no update.", map.bounds[0], date.format("YYYY-MM-DD"));
     }
-
-    // populateOccurrences(items,[lower, upper], map)
-    // if (lower === undefined && upper === undefined) {
-    //   x25log.w("[maybeUpdateBounds][useOccurrences.ts]: Can't update bounds. Both lower and upper bounds args are undefined.");
-    //   return;
-    // }
-
-    // if (bounds === undefined) {
-    //   // if ( lower !== undefined && upper !== undefined ){
-    //   //   setBounds([lower, upper]);
-    //   //   return;
-    //   // }
-    //   x25log.w("[maybeUpdateBounds][useOccurrences.ts]: Could not update bounds. New bounds are invalid.");
-    //   return;
-    // }
-
-    // let update = false;
-    // let _lower = bounds[0];
-    // let _upper = bounds[1];
-    // if (lower !== undefined && dayjs(lower).isBefore(dayjs(_lower))) {
-    //   _lower = lower;
-    //   update = true;
-    // }
-
-    // if (upper !== undefined && dayjs(upper).isAfter(dayjs(_upper))) {
-    //   _upper = upper;
-    //   update = true;
-    // }
-
-    // if (update) {
-    //   setBounds([_lower, _upper]);
-    //   // x25log.i("[maybeUpdateBounds][useOccurrences.ts]: Bounds updated to %s - %s.", _lower, _upper);
-
-    //   let _map = map;
-    //   _map = populateBounds([dayjs(_lower), dayjs(_upper)], _map);
-    //   _map = populateOccurrences(items, [dayjs(_lower), dayjs(_upper)], _map);
-
-    //   // calculate balance
-    //   _map = calculate(_map);
-    //   setMap(_map);
-    // }
   }
 
   return {

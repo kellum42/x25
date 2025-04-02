@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 
 import { Budget, BudgetItemFrequency, WeekDays, WeeklyBudgetItem } from "../../utils/schemas";
 import { datesBelowThreshold, getSimulationDiffs } from "../../utils/simulation";
-import { sampleBudgetThreeItems } from "../../utils/sample-budget-3";
+import { sampleBudgetThreeItems } from "../../utils/testing/sample-budget-3";
 import * as localStorage from "../../utils/localStorage";
 
 const budgetTwo: Budget = {

@@ -2,14 +2,14 @@ import React, { useContext, useEffect, useState } from "react"
 import { Link, type PageProps } from "gatsby"
 import { Layout } from "../../../components/layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
-import { Occurrence, useOccurrences } from "../../../hooks/useOccurrences"
+
 import dayjs, { Dayjs } from "dayjs"
 import { getFriday, truncate } from "../../../utils/util"
-// import { OccurrenceRow } from "../../../components/occurence-row"
 import { VerifyOccurrenceRow } from "../../../components/verify-occurrence-row"
 import { x25log } from "../../../utils/log"
 import { Schema } from "../../../utils/types"
 import { SeeMore } from "../../../components/see-more"
+import { Occurrence, useOccurrences } from "../../../hooks/useOccurrences"
 
 const Actions: React.FC = () => {
   const context = useContext(BudgetContext);
@@ -18,7 +18,7 @@ const Actions: React.FC = () => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { data, getItems, getVerifications, verify, unverify } = context;
+  const { data, getVerifications } = context;
   const today = dayjs();
   const friday = getFriday(today);
   const endOfWeek = friday.add(6, 'days');

@@ -9,8 +9,8 @@ import {
   JSONtoBudgetItem,
 } from "../../utils/occurrence";
 import { BudgetItem, BudgetItemFrequency, WeekDays } from '../../utils/schemas';
-import { sampleBudgetTwoItems } from '../../utils/sample-budget-two';
-import { sampleBudgetThreeItems } from '../../utils/sample-budget-3';
+import { sampleBudgetTwoItems } from '../../utils/testing/sample-budget-two';
+import { sampleBudgetThreeItems } from '../../utils/testing/sample-budget-3';
 
 describe('daysTillFirstOccurrence()', () => {
   test('it gives 18 days between April 27th and a monthly bill due on May 15th', () => {

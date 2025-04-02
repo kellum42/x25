@@ -3,23 +3,18 @@ import type { PageProps } from "gatsby"
 import { Link } from "gatsby"
 
 import { BudgetContext, BudgetContextProvider } from "../../contexts/budgetContext"
-import { ChartWidget, ChartWidgetProps } from "../../components/widgets/chart-widget"
+import { ChartWidget } from "../../components/widgets/chart-widget"
 import { Layout } from "../../components/layout"
 import { WeeklyWidget } from "../../components/widgets/weekly-widget"
 import { SummaryWidget } from "../../components/widgets/summary-widget"
-import { SimulationsWidget } from "../../components/widgets/simulations-widget"
-import { UpdateBudget } from "../../components/modals/update-budget"
-import { SimulationsSummaryWidget } from "../../components/widgets/simulation-summary-widget"
-import { SimulationChangesWidget } from "../../components/widgets/simulation-changes-widget"
-import { Menu, MenuItem } from "../../components/floating-menu"
-import { Modal } from "../../components/modals/modal"
-import { NoteDrawer } from "../../components/drawers/note"
-// import { UpcomingItemsWidget } from "../../components/widgets/upcoming-items-widget"
+// import { SimulationsWidget } from "../../components/widgets/simulations-widget"
+// import { SimulationsSummaryWidget } from "../../components/widgets/simulation-summary-widget"
+// import { SimulationChangesWidget } from "../../components/widgets/simulation-changes-widget"
 import { ActionNeededWidget } from "../../components/widgets/action-needed-widget"
-import dayjs, { Dayjs } from "dayjs"
-import { Occurrence, useOccurrences } from "../../hooks/useOccurrences"
 import { x25log } from "../../utils/log"
 import { getFriday } from "../../utils/util"
+import { Dayjs } from "dayjs"
+import { useOccurrences } from "../../hooks/useOccurrences"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
@@ -32,35 +27,11 @@ const Dashboard: React.FC = () => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  // const occurrencesContext = useContext(OccurrencesContext);
-
-  // if (!occurrencesContext) {
-  //   throw new Error("Calling occurrences Context from outside of provider.");
-  // }
-
-  const { data, error, date, getItems, getVerifications } = context;
-
-  const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
-  const [isConvertingSim, setIsConvertingSim] = useState<boolean>(false);
-  const [isShowingNotes, setIsShowingNotes] = useState<boolean>(false);
-
-  // const [chartdata, setChartData] = useState<ChartWidgetProps>();
-  // const [currentBalance, setCurrentBalance] = useState<number | null>(null);
-  // const [oustandingOccs, setOutstandingOccs] = useState<Occurrence[]>([]);
-  // const [weekData, setWeekData] = useState<{occs: Occurrence[], sbal?: number}>({occs:[]});
+  const { data, date, getVerifications } = context;
   
   const [loadedVerifications, setLoadedVerifications] = useState<boolean>(false);
 
   const isSimulation = data?.parent !== undefined;
-
-  const convertSimulationToBudget = () => {
-    // convertToBudget();
-    // setIsConvertingSim(false);
-
-    // if (error) {
-    //   console.log(error);
-    // }
-  }
 
   const friday = getFriday(date);
   const endOfWeek = friday.add(6, 'days');
@@ -93,10 +64,6 @@ const Dashboard: React.FC = () => {
     })
   }
 
-  // const notes = [
-  //   {body: "How likely are you to recommend our company to your friends and family?", date: "5/15/25 8:02pm"},
-  //   {body: "Not at all good brother.", date: "5/15/25 8:05pm"}
-  // ]
   useEffect(() => {
     loadData();
   }, [])
@@ -112,11 +79,11 @@ const Dashboard: React.FC = () => {
               <div className="d-flex flex-row align-items-center">
                 <h1 className="text-dark fw-bold mb-0 fs-2 me-1">{data.title}</h1>
                 {/* {budget.notes && budget.notes.length > 0 && <span className="badge badge-primary fs-7 mb-6">{budget.notes.length}</span>} */}
-                <Menu label="">
+                {/* <Menu label="">
                   <MenuItem label={`Edit ${isSimulation ? 'Simulation' : 'Budget'}`} onClick={() => setIsEditingBudget(true)} />
                   <MenuItem label="View Notes" onClick={() => { setIsShowingNotes(true) }} />
                   {isSimulation && <MenuItem label="Convert to Budget" onClick={() => setIsConvertingSim(true)} />}
-                </Menu>
+                </Menu> */}
               </div>
               <ul className="breadcrumb fw-semibold fs-base my-1 mt-2">
                 <li className="breadcrumb-item text-muted">
@@ -151,13 +118,13 @@ const Dashboard: React.FC = () => {
             {isSimulation &&
               <div className="row">
                 <div className="col-md-4">
-                  <SimulationsSummaryWidget />
+                  {/* <SimulationsSummaryWidget /> */}
                 </div>
                 <div className="col-md-8">
                   {/* <ChartWidget height="300px" /> */}
                 </div>
                 <div className="col-12">
-                  <SimulationChangesWidget />
+                  {/* <SimulationChangesWidget /> */}
                 </div>
               </div>
             }
@@ -174,7 +141,7 @@ const Dashboard: React.FC = () => {
                     data={getChartdata()} 
                   />
                   <div className="d-none d-lg-block">
-                    <SimulationsWidget />
+                    {/* <SimulationsWidget /> */}
                   </div>
                 </div>
                 <div className="col-lg-6">
@@ -186,7 +153,7 @@ const Dashboard: React.FC = () => {
                     deleteVerification={deleteVerification}
                   />
                   <div className="d-lg-none">
-                    <SimulationsWidget />
+                    {/* <SimulationsWidget /> */}
                   </div>
                 </div>
               </div>
