@@ -11,7 +11,8 @@ type OccurrenceRowProps = {
   subtitle?: string,
   showTags?: boolean,
   beforeTitle?: React.ReactNode,
-  beforeRowEnds?: React.ReactNode
+  afterRow?: React.ReactNode,
+  beforeRow?: React.ReactNode
 }
 
 // Model after:
@@ -25,7 +26,7 @@ export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { occ, title, subtitle, label, subLabel, showTags, beforeTitle, beforeRowEnds } = props;
+  const { occ, title, subtitle, label, subLabel, showTags, beforeTitle, afterRow, beforeRow } = props;
   const { findItem } = context;
 
   const item = findItem(occ.item.documentId);
@@ -33,6 +34,7 @@ export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
   return (
     <div className="line-item-wrapper">
       <div className="line-item py-4 position-relative">
+        { beforeRow }
         <div className="d-flex justify-content-between flex-row align-items-center">
           <div className="align-items-center fw-semibold d-flex flex-row">
             { beforeTitle }
@@ -51,7 +53,7 @@ export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
             </div>
           </div>
         </div>
-        { beforeRowEnds }
+        { afterRow }
       </div>
     </div>
   )

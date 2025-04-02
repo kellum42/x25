@@ -6,7 +6,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 // import { Requires, x25Item } from './types';
-import { BudgetItem, BudgetItemFrequency } from './schemas';
+// import { BudgetItem, BudgetItemFrequency } from './schemas';
 import { x25log } from './log';
 import { Schema, x25Result } from './types';
 import { isMonthlyItem, isOneTimeItem, isWeeklyItem } from './util';
@@ -166,7 +166,7 @@ export function calculateOccurrences(_item: Schema<"item"> | Schema<"item">[], s
 export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: number): number | string => {
   const from = _from.set('hour', 0).set('minutes', 0).set('seconds', 0);
 
-  if (item.frequency == BudgetItemFrequency.weekly || item.frequency == BudgetItemFrequency.biweekly) {
+  if (item.frequency == "Weekly" || item.frequency == "Bi-weekly") {
 
     const getDayAsInt = (day: string): number => {
       if (day === "Sunday") { return 0; }
@@ -199,7 +199,7 @@ export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: n
 
     const firstOccurrence = getDayAsInt(item.day);
 
-    const isBiWeekly = item.frequency === BudgetItemFrequency.biweekly;
+    const isBiWeekly = item.frequency === "Bi-weekly";
     const occursThisWeek = (from.isoWeek() - starts.isoWeek()) % 2 === 0 // for biweekly line items
 
     // is upcoming this week
@@ -214,7 +214,7 @@ export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: n
       return days;
     }
 
-  } else if (item.frequency == BudgetItemFrequency.monthly) {
+  } else if (item.frequency == "Monthly") {
     const _i = i ?? -1;
     const dates: string[] = (item.dates ?? "").split(",");
 
@@ -253,7 +253,7 @@ export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: n
       return "A valid iterator is required for MonthlyBudgetItems.";
     }
 
-  } else if (item.frequency === BudgetItemFrequency.once) {
+  } else if (item.frequency === "Once") {
     // return "Offset can only be calculated for reoccurring BudgetItems.";
     return Math.round((dayjs(item.date).unix() - from.unix()) / (3600 * 24));
   }

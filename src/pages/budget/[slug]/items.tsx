@@ -1,115 +1,117 @@
-import React, { useContext, useState } from "react"
+import React, { useContext } from "react"
 import type { PageProps } from "gatsby"
 import { Link } from "gatsby"
 
 import { Layout } from "../../../components/layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
-import { BudgetItem } from "../../../utils/schemas"
-import { BudgetItemQuery } from "../../../components/budget-item-query"
-import { BudgetItemCard } from "../../../components/budget-item-card"
-import { ytd } from "../../../utils/occurrence";
-// import { AddNewBudgetItem } from "../../../components/modals/add-new-budget-item-modal"
-import { Popup } from "../../../components/popups/popup"
-import { deleteBudgetItem } from "../../../utils/localStorage"
-import { UpdateBudgetItem } from "../../../components/modals/update-budget-item-modal"
+import { ManageItems } from "../../../components/manage-items/manage-items"
+import { truncate } from "../../../utils/util"
 
 // TODO:
 //  - Fix ytd's. Some of them are wrong.
 //  - z-index of start date datepicker is too low. its getting cut off.
 //  - Got past due verifications (13) when starting a new budget with just one weekly expense.
 
-const BudgetItems: React.FC = () => {
+const Items: React.FC = () => {
   const context = useContext(BudgetContext);
 
   if (!context) {
     throw new Error("Calling Budget Context from outside of provider.");
   }
 
-  const { budget, error, date } = context;
+  const { data, getItems, date } = context;
 
-  const initialQuery = (): (items: BudgetItem[]) => BudgetItem[] => {
-    return (items: BudgetItem[]) => items;
-  }
-
-  const [queryFn, setQueryFn] = useState<((items: BudgetItem[]) => BudgetItem[])>(initialQuery)
-  const [createItem, setCreateItem] = useState<boolean>(false);
-  // const [deleteItem, setDeleteItem] = useState<BudgetItem | null>(null);
-
-  const queriedItems: BudgetItem[] = budget === undefined ? [] : queryFn(budget.items);
-
+  const items = getItems();
 
   return (
     <>
-      {budget &&
-        <div>
-          <div className="d-flex flex-row flex-stack mb-4">
-            <div>
-              <h1 className="text-dark fw-bold mb-4 fs-2">{budget.title}</h1>
-              <ul className="breadcrumb fw-semibold fs-base my-1">
-                <li className="breadcrumb-item text-muted">
-                  <Link to="/" className="text-muted text-hover-primary">Home</Link>
-                </li>
-                <li className="breadcrumb-item text-muted">
-                  <Link to={`/budget/${budget.slug}`} className="text-muted text-hover-primary">Dashboard</Link>
-                </li>
-                <li className="breadcrumb-item text-dark">Items</li>
-              </ul>
+      <div>
+        <div className="d-md-flex flex-stack">
+          <div>
+            <div className="d-flex flex-row align-items-center">
+              <h1 className="text-dark fw-bold mb-0 fs-2 me-1">Items</h1>
             </div>
-            <div className="d-flex align-items-center flex-nowrap text-nowrap py-1">
-              <button className="btn btn-primary" onClick={() => setCreateItem(true)}>Add New Item</button>
-            </div>
+            <ul className="breadcrumb fw-semibold fs-base my-1 mt-2">
+              <li className="breadcrumb-item text-muted">
+                <Link to="/" className="text-muted text-hover-primary">Home</Link>
+              </li>
+              <li className="breadcrumb-item text-muted">
+                <Link to={`/budget/${data.documentId}`} className="text-muted text-hover-primary">{truncate(data.title, 20)}</Link>
+              </li>
+              <li className="breadcrumb-item text-dark">Items</li>
+            </ul>
           </div>
-          <BudgetItemQuery setQuery={setQueryFn} />
-          <div className="">
-            <div className="row">
-              {queriedItems.map((item, i) => {
-                const runningTotal = ytd(date, budget.startDate, item);
-
-                return (
-                  <BudgetItemCard
-                    key={i}
-                    item={item}
-                    date={date}
-                    runningTotal={runningTotal}
-                    // onDelete={(item) => {
-                    //   setDeleteItem(item);
-                    // }}
-                  />
-                )
-              })}
-            </div>
-          </div>
-          { createItem && 
-            <UpdateBudgetItem mode="create" onCancel={() => { setCreateItem(false) }} />
-          }
-          {/* {deleteItem &&
-            <Popup
-              item={deleteItem}
-              onDeleteItem={(item) => {
-                const response = deleteBudgetItem(budget.id, item);
-                if (response.status === "success") {
-                  setDeleteItem(null);
-                } else {
-                  console.log(response.message);
-                }
-              }}
-              onCancel={() => setDeleteItem(null)}
-            />
-          } */}
         </div>
-      }
-      {error &&
-        <div>{error.message}</div>
-      }
+      </div>
+
+      <div className="mt-8">
+        <div className="row">
+          <div className="col-lg-12">
+            <div className="card mb-6">
+              <div className="p-8 pb-2">
+                <div className="">
+                  <h3 className="m-0 mb-6 text-gray-900">Summary</h3>
+                  <p className="text-muted">Total Items</p>
+                  <h3 className="fw-bold">{items.length}</h3>
+
+                  <div className="my-8 fw-semibold">
+                    <div className="fs-6 d-flex justify-content-between my-4">
+                      <div className="">Weekly</div>
+                      <div className="d-flex">{items.filter(item => item.frequency === "Weekly").length}</div>
+                    </div>
+                    <div className="separator separator-dashed"></div>
+
+                    <div className="fs-6 d-flex justify-content-between my-4">
+                      <div className="">Bi-Weekly</div>
+                      <div className="d-flex">{items.filter(item => item.frequency === "Bi-weekly").length}</div>
+                    </div>
+                    <div className="separator separator-dashed"></div>
+
+                    <div className="fs-6 d-flex justify-content-between my-4">
+                      <div className="">Monthly</div>
+                      <div className="d-flex">{items.filter(item => item.frequency === "Monthly").length}</div>
+                    </div>
+                    <div className="separator separator-dashed"></div>
+
+                    <div className="fs-6 d-flex justify-content-between my-4">
+                      <div className="">One-time</div>
+                      <div className="d-flex">{items.filter(item => item.frequency === "Once").length}</div>
+                    </div>
+                    <div className="separator separator-dashed"></div>
+
+                    <div className="fs-6 d-flex justify-content-between my-4">
+                      <div className="">Inactive</div>
+                      <div className="d-flex">5</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <div className="row">
+          <div className="col-lg-12">
+            <div className="card mb-6">
+              <div className="p-8 pb-2">
+                <ManageItems items={items} date={date} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };
+
 
 const ItemsPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
   return (
     <Layout>
       <BudgetContextProvider slug={slug}>
-        <BudgetItems />
+        <Items />
       </BudgetContextProvider>
     </Layout>
   )

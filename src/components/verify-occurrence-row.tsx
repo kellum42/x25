@@ -10,7 +10,8 @@ type VerifyOccurrenceRowProps = {
   occ: Occurrence,
   onVerified: (verification: Schema<"verification">) => void,
   onUnVerified: (verification: Schema<"verification">) => void,
-  subLabel?: string
+  subLabel?: string,
+  beforeRow?: React.ReactNode
   // onVerify: (item: string, date: Dayjs, amount: number) => Promise<boolean>
   // onUnverify: (verification: Schema<"verification">) => Promise<boolean>
 }
@@ -213,6 +214,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
     subLabel={ props.subLabel ?? occ.date.format("M/D/YY")}
     showTags={true}
     beforeTitle={checkboxAndDropdown}
-    beforeRowEnds={verifyDropdown}
+    afterRow={verifyDropdown}
+    beforeRow={props.beforeRow}
   />;
 }

@@ -40,6 +40,7 @@ export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
     return bal;
   }
 
+
   const endBal: number|undefined = getEndBalance();
 
   useEffect(() => {
@@ -80,22 +81,20 @@ export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
 
         <div>
           <SeeMore
-            items={occurrences.map((occ, i) => (
-              <VerifyOccurrenceRow 
+            items={occurrences.map((occ, i) => {
+              const newDayLabel: React.ReactNode|undefined = i === 0 || !occ.date.isSame(occurrences[i-1].date) ?
+                <div className="text-muted text-center fw-bold fs-5 mt-4 mb-2">{occ.date.format("dddd, M/D")}</div> :
+                undefined;
+
+              return <VerifyOccurrenceRow 
                 occ={occ}
                 onVerified={(verification) => { addVerification([verification])}}
                 onUnVerified={(verification) => { deleteVerification(verification)}}
                 subLabel={occ.balance === undefined ? undefined : "$" + occ.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                beforeRow={newDayLabel}
               />
-            ))}
+            })}
           />
-            {/* {occurrences.map((occ, i) => (
-              <VerifyOccurrenceRow 
-                occ={occ}
-                onVerified={(verification) => { addVerification([verification])}}
-                onUnVerified={(verification) => { deleteVerification(verification)}}
-              />
-            ))} */}
         </div>
       </div>
     </div>

@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
     return Array(365).fill(0).map((_, i) => {
       const currentDate = j1.add(i, 'days');
       return {
-        date: currentDate.format("YYYY-MM-DD"),
+        date: currentDate.format("M/D/YY"),
         balance: data.startDate.isAfter(currentDate) ? null : getBalance(currentDate, "end", data.startAmount)
       }
     })

@@ -1,4 +1,4 @@
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { svgs } from "./svg";
 import { MonthlySchemaItem, OnceSchemaItem, Schema, WeeklySchemaItem } from "./types";
 import { x25log } from "./log";
@@ -12,6 +12,13 @@ export const numberOrNull = ( a: number | string ): number | null => {
   return typeof a === 'string' ? null : a;
 }
 
+export const asCurrency = (a?: number ) => {
+  return a === undefined ? "--" : "$" + a.toLocaleString('en-US', { minimumFractionDigits: 2 });
+}
+
+export const truncate = (text: string, to: number) => {
+  return text.length > to ? text.slice(0, to - 3) + "..." : text;
+}
 
 // export const slugify = (name: string): string => {
 //   return name
@@ -52,25 +59,31 @@ export const getFriday = (from: Dayjs): Dayjs => {
   return from.subtract(daysFromFriday, 'day');
 }
 
-export const isActive = (on: Dayjs, budgetStart: Dayjs, item: Schema<"item">): boolean => {
-  // if (item.frequency === "Once"){
-  //   if ( item.date !== undefined && typeof item.date !== "string" ) {
-  //     return !on.isBefore(budgetStart) && item.date.isAfter(on, 'day');
-  //   } else {
-  //     x25log.w("[isActive][utils.ts]: Item %s is not valid", item.documentId);  
-  //   }
+export const isActive = (on: Dayjs, item: Schema<"item">): boolean => {
+  if (item.frequency === "Once"){
+    if ( item.date !== undefined) {
+      const date = dayjs(item.date);
+      const active = !date.isBefore(on, 'date');
+      
+      x25log.d("[isActive][util.ts]: Item %s (%s) is %s.", item.documentId, item.name ?? "--", active ? "active" : "inactive");
+      return active
+    } else {
+      x25log.w("[isActive][utils.ts]: Item %s is not valid. Date is undefined.", item.documentId);  
+    }
 
-  // } else {
-  //   if ( item.starts !== undefined && typeof item.starts !== "string" && item.ends !== undefined ){
-  //     return (
-  //       item.starts.isSameOrBefore(on, 'day')
-  //       && (item.ends === "-1" || (item.ends as Dayjs).isSameOrAfter(on, 'day'))
-  //       && !budgetStart.isBefore(item.starts)
-  //     );
-  //   } else {
-  //     x25log.w("[isActive][utils.ts]: Item %s is not valid", item.documentId); 
-  //   }
-  // }
+  } else {
+    if ( item.starts !== undefined && item.ends !== undefined ){
+      const starts = dayjs(item.starts);
+      const ends: Dayjs|"-1" = item.ends === "-1" ? "-1" : dayjs(item.ends);
+      const active: boolean = !starts.isAfter(on, 'date') && (ends === "-1" || ends.isSameOrAfter(on, 'date'))
+      
+      x25log.d("[isActive][util.ts]: Item %s (%s) is %s.", item.documentId, item.name ?? "--", active ? "active" : "inactive");
+      return active;
+
+    } else {
+      x25log.w("[isActive][utils.ts]: Item %s is not valid. Start date and/or end date is undefined.", item.documentId); 
+    }
+  }
   return false
 }
 

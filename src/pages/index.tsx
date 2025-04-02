@@ -26,7 +26,7 @@ const IndexPage: React.FC<PageProps> = () => {
 
   const fetchBudgets = async () => {
     const today = dayjs().format("YYYY-MM-DD");
-    const endpoint = `http://localhost:1337/api/budgets?populate[items][populate][verifications][fields][0]=date&populate[items][populate][verifications][fields][1]=amount&populate[items][populate][verifications][filters][date][$lte]=${today}`;
+    const endpoint = `budgets?populate[items][populate][verifications][fields][0]=date&populate[items][populate][verifications][fields][1]=amount&populate[items][populate][verifications][filters][date][$lte]=${today}`;
     const result = await get<"budget", "many">(endpoint);
     if ( result.status === "success" ){
       const budgets: Schema<"budget">[] = result.data

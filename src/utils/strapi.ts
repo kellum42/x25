@@ -8,10 +8,17 @@ import {
 } from "./types";
 
 const token = process.env.GATSBY_STRAPI_API_KEY;
+const host = process.env.GATSBY_STRAPI_HOST;
+
+const url = (endpoint: string): string => {
+  return `${host}/api/${endpoint}`;
+}
 
 export const get = async <TCategory extends SchemaCategory, TType extends ResponseType>(endpoint: string): Promise<x25Result<Response<TCategory, TType>>> => {
+  x25log.d("[get][strapi.ts]: Calling endpoint %s, method: GET.", url(endpoint));
+
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(url(endpoint), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
   
@@ -36,10 +43,10 @@ export type CreateableSchema<TCategory extends keyof PersistentSchema> = Require
 export type UpdateableSchema<TCategory extends SchemaCategory> = CreateableSchema<TCategory>;
 
 const modify = async <TCategory extends SchemaCategory, TMethod extends "POST"|"PUT">(endpoint: string, body: {data: CreateableSchema<TCategory>}, method: TMethod): Promise<x25Result<Response<TCategory, "one">>> => {
-  x25log.d("[modify][strapi.ts]: Calling endpoint %s, method: %s, body: %s.", endpoint, method, JSON.stringify(body));
+  x25log.d("[modify][strapi.ts]: Calling endpoint %s, method: %s, body: %s.", url(endpoint), method, JSON.stringify(body));
   
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(url(endpoint), {
       method,
       body: JSON.stringify(body),
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
@@ -70,10 +77,10 @@ export const update = async <TCategory extends SchemaCategory>(endpoint: string,
 };
 
 export const delete_ = async (endpoint: string): Promise<x25Result<boolean>> => {
-  x25log.d("[delete_][strapi.ts]: Calling endpoint %s, method: DELETE.", endpoint);
+  x25log.d("[delete_][strapi.ts]: Calling endpoint %s, method: DELETE.", url(endpoint));
   
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(url(endpoint), {
       method: "DELETE",
       headers: { 'Authorization': `Bearer ${token}` }
     });

@@ -4,7 +4,7 @@ import { Layout } from "../../../components/layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
 import { Occurrence, useOccurrences } from "../../../hooks/useOccurrences"
 import dayjs, { Dayjs } from "dayjs"
-import { getFriday } from "../../../utils/util"
+import { getFriday, truncate } from "../../../utils/util"
 // import { OccurrenceRow } from "../../../components/occurence-row"
 import { VerifyOccurrenceRow } from "../../../components/verify-occurrence-row"
 import { x25log } from "../../../utils/log"
@@ -26,42 +26,6 @@ const Actions: React.FC = () => {
   const { getOccurrences, addVerifications, deleteVerification, updateTo } = useOccurrences();
 
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
-
-  // const onVerify = async (item: string, date: Dayjs, amount: number): Promise<boolean> => {
-  //   const result = await verify(item, date, amount);
-  //   if (result.status === "success") {
-  //     if (result.data !== null) {
-  //       // Add to map.
-  //       // Add in item documentId since its not populated on POST call response.
-  //       const verification: Schema<"verification"> = { ...result.data, item: { documentId: item } };
-  //       addVerifications([verification])
-  //       return true;
-  //     } else {
-  //       x25log.d("[onVerify][action.tsx]: Can't verify. Got null response.");
-  //     }
-  //   } else {
-  //     x25log.d("[onVerify][action.tss]: Can't verify. Error: %s.", result.error);
-  //   }
-  //   return false;
-  // }
-
-  // const onUnverify = async (verification: Schema<"verification">): Promise<boolean> => {
-  //   if (verification.date && verification.item) {
-  //     const result = await unverify(verification.documentId);
-
-  //     if (result.status === "success") {
-  //       deleteVerification(verification);
-  //       return true;
-
-  //     } else {
-  //       x25log.d("[onUnverify][action.tsx]: Can't unverify %s. Error: %s.", verification.documentId, result.error);
-  //     }
-
-  //   } else {
-  //     x25log.w("[onUnverify][action.tsx]: Can't unverify %s. Missing verification date or item. This should not happen.", verification.documentId);
-  //   }
-  //   return false;
-  // }
 
   // loads verifications.
   const load = async () => {
@@ -96,6 +60,9 @@ const Actions: React.FC = () => {
                   <li className="breadcrumb-item text-muted">
                     <Link to="/" className="text-muted text-hover-primary">Home</Link>
                   </li>
+                  <li className="breadcrumb-item text-muted">
+                    <Link to={`/budget/${data.documentId}`} className="text-muted text-hover-primary">{truncate(data.title, 20)}</Link>
+                  </li>
                   <li className="breadcrumb-item text-dark">Actions</li>
                 </ul>
               </div>
@@ -114,19 +81,19 @@ const Actions: React.FC = () => {
                         occurrences={getOccurrences(friday, endOfWeek).filter(occ => occ.verification === undefined)}
                         addVerifications={addVerifications}
                         deleteVerification={deleteVerification}
-                        // onVerify={addVerifications}
-                        // delete
-                        // onVerify={onVerify}
-                        // onUnverify={onUnverify}
+                      // onVerify={addVerifications}
+                      // delete
+                      // onVerify={onVerify}
+                      // onUnverify={onUnverify}
                       />
                       <MissingActions
                         label="Last 3 months"
                         accent="danger"
-                        occurrences={getOccurrences(threeMonthsAgo, dayjs(friday.subtract(1, 'day'))).filter(occ => occ.verification === undefined).sort((a,b) => a.date.isBefore(b.date, 'date') ? 1 : -1)}
+                        occurrences={getOccurrences(threeMonthsAgo, dayjs(friday.subtract(1, 'day'))).filter(occ => occ.verification === undefined).sort((a, b) => a.date.isBefore(b.date, 'date') ? 1 : -1)}
                         addVerifications={addVerifications}
                         deleteVerification={deleteVerification}
-                        // onVerify={onVerify}
-                        // onUnverify={onUnverify}
+                      // onVerify={onVerify}
+                      // onUnverify={onUnverify}
                       />
                       <RecentActions />
                     </div>
@@ -144,7 +111,7 @@ const Actions: React.FC = () => {
 
 type MissingActionsProps = {
   label: string,
-  accent: "warning"|"danger",
+  accent: "warning" | "danger",
   occurrences: Occurrence[],
   addVerifications: (verification: Schema<"verification">[]) => void,
   deleteVerification: (verification: Schema<"verification">) => void
@@ -189,10 +156,10 @@ const MissingActions: React.FC<MissingActionsProps> = (props) => {
             return <VerifyOccurrenceRow
               key={i}
               occ={occ}
-              onVerified={(v) => {deleteVerification(v)}} // updates map
-              onUnVerified={(v)=> {addVerifications([v])}} // updates map
-              // onVerify={props.onVerify}
-              // onUnverify={props.onUnverify}
+              onVerified={(v) => { deleteVerification(v) }} // updates map
+              onUnVerified={(v) => { addVerifications([v]) }} // updates map
+            // onVerify={props.onVerify}
+            // onUnverify={props.onUnverify}
             />
           })}
         />

@@ -112,7 +112,7 @@ export const useBudget = (documentId: string): UseBudget => {
 
 
   const verify = async (item: string, date: Dayjs, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
-    const endpoint: string = "http://localhost:1337/api/verifications";
+    const endpoint: string = "verifications";
     const body = {
       date: date.format("YYYY-MM-DD"),
       amount,
@@ -123,7 +123,7 @@ export const useBudget = (documentId: string): UseBudget => {
   }
 
   const unverify = async (id: string): Promise<x25Result<boolean>> => {
-    const endpoint: string = `http://localhost:1337/api/verifications/${id}`;
+    const endpoint: string = `verifications/${id}`;
     const result = await delete_(endpoint)
     return result;
   }
@@ -269,7 +269,7 @@ export const useBudget = (documentId: string): UseBudget => {
   }
 
   const refresh = async () => {
-    const endpoint = `http://localhost:1337/api/budgets/${documentId}?status=published&populate=items`;
+    const endpoint = `budgets/${documentId}?status=published&populate=items`;
     const result: x25Result<Response<"budget", "one">> = await get<"budget", "one">(endpoint);
     if (result.status === "success") {
       const budget = result.data;
@@ -322,7 +322,7 @@ export const useBudget = (documentId: string): UseBudget => {
     const budget = _getBudget();
     if (budget === null){ return {status: "fail", error: "Budget does not exist."}}
 
-    const endpoint = `http://localhost:1337/api/verifications?filters[item][budget][documentId][$eq]=${budget.documentId}&filters[date][$between][0]=${from.format('YYYY-MM-DD')}&filters[date][$between][1]=${to.format('YYYY-MM-DD')}&populate[item][fields][0]=name`
+    const endpoint = `verifications?filters[item][budget][documentId][$eq]=${budget.documentId}&filters[date][$between][0]=${from.format('YYYY-MM-DD')}&filters[date][$between][1]=${to.format('YYYY-MM-DD')}&populate[item][fields][0]=name`
     x25log.d("[getVerifications][useBudget.ts]: Fetching verifications from endpoint %s", endpoint);
 
     const result = await get<"verification", "many">(endpoint);
