@@ -29,12 +29,12 @@ export type Occurrence = {
 }
 
 export type UseOccurrences = {
-  getBalance: (on: Dayjs, day: "start" | "end", startBalance?: number) => number | null,
-  getOccurrences: (from: Dayjs, to: Dayjs) => Occurrence[],
+  getBalance: (on: Dayjs, day: "start" | "end") => number | null,
+  getOccurrences: (from: Dayjs, to: Dayjs, order?: "asc"|"desc") => Occurrence[],
   updateItem: (item: Schema<"item">) => void,
   deleteVerification: (verification: Schema<"verification">) => void,
   addVerifications: (verification: Schema<"verification">[]) => void,
-  updateTo: (date: Dayjs) => void,
+  populateMapThrough: (date: Dayjs) => void,
 }
 
 export const useOccurrences = (): UseOccurrences => {
@@ -69,7 +69,7 @@ export const useOccurrences = (): UseOccurrences => {
     return null;
   }
 
-  const getOccurrences = (from: Dayjs, to: Dayjs): Occurrence[] => {
+  const getOccurrences = (from: Dayjs, to: Dayjs, order?: "asc"|"desc"): Occurrence[] => {
     if (from.isAfter(to, 'day')) {
       x25log.e("[occurrences][useOccurrences.ts]: Invalid date range given. From: %s, to: %s.", from.format("YYYY-MM-DD"), to.format("YYYY-MM-DD"));
       return []
@@ -98,7 +98,7 @@ export const useOccurrences = (): UseOccurrences => {
       }
       date = date.add(1, 'day');
     }
-    return occurrences;
+    return order === "desc" ? occurrences.reverse() : occurrences;
   }
 
   const updateItem = (item: Schema<"item">) => {
@@ -174,7 +174,7 @@ export const useOccurrences = (): UseOccurrences => {
     }
   }
 
-  const updateTo = (date: Dayjs) => {
+  const populateMapThrough = (date: Dayjs) => {
     const _map = map;
     const needsUpdate = populateDatesTo(date, _map);
 
@@ -195,6 +195,6 @@ export const useOccurrences = (): UseOccurrences => {
   }
 
   return {
-    getBalance, getOccurrences, updateItem, deleteVerification, addVerifications, updateTo
+    getBalance, getOccurrences, updateItem, deleteVerification, addVerifications, populateMapThrough
   }
 }

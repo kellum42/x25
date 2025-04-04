@@ -26,7 +26,7 @@ dayjs.extend(isBetween);
 export type ChartWidgetProps = {
   height?: string
   subtitle?: string
-  title: string,
+  title?: string,
   data: { date: string, balance: number | null }[]
 }
 // const isBrowser = typeof window !== "undefined"
@@ -36,13 +36,14 @@ export const ChartWidget: FC<ChartWidgetProps> = (props) => {
   return (
     <div className="card card-xl-stretch mb-6">
       <div className="card-body p-0 d-flex justify-content-between flex-column">
-        <div className="d-flex flex-stack flex-grow-1 p-10">
-
-          <div className="d-flex flex-column text-end mb-4">
-            <span className="fw-bolder text-gray-800 fs-2">Balance</span>
-            {props.subtitle && <span className="text-gray-400 fw-semibold fs-6">{props.subtitle}</span>}
+        { (props.title || props.subtitle) && 
+          <div className="d-flex flex-stack flex-grow-1 p-10">
+            <div className="d-flex flex-column text-end mb-4">
+              <span className="fw-bolder text-gray-800 fs-2">Balance</span>
+              {props.subtitle && <span className="text-gray-400 fw-semibold fs-6">{props.subtitle}</span>}
+            </div>
           </div>
-        </div>
+        }
         <ResponsiveContainer width={'99%'} height={350}>
           <AreaChart
             data={props.data}

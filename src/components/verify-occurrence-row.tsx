@@ -12,6 +12,7 @@ type VerifyOccurrenceRowProps = {
   onUnVerified: (verification: Schema<"verification">) => void,
   subLabel?: string,
   beforeRow?: React.ReactNode
+  subtitle?: string
   // onVerify: (item: string, date: Dayjs, amount: number) => Promise<boolean>
   // onUnverify: (verification: Schema<"verification">) => Promise<boolean>
 }
@@ -216,5 +217,6 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
     beforeTitle={checkboxAndDropdown}
     afterRow={verifyDropdown}
     beforeRow={props.beforeRow}
+    subtitle={props.subtitle}
   />;
 }

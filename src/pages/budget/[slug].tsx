@@ -39,7 +39,7 @@ const Dashboard: React.FC = () => {
   const eoy = j1.add(365, 'days');
   // const lower: Dayjs = j1.isBefore(data.startDate) ? j1 : data.startDate; 
   const upper: Dayjs = endOfWeek.isBefore(eoy, 'date') ? eoy : endOfWeek;
-  const { getBalance, getOccurrences, addVerifications, deleteVerification, updateTo } = useOccurrences();
+  const { getBalance, getOccurrences, addVerifications, deleteVerification, populateMapThrough } = useOccurrences();
 
   const loadData = async () => {
     x25log.d("[useEffect][slug.tsx]: Loading verifications for dashboard data.");
@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
     // get verifications through end of week.
     let result = await getVerifications(data.startDate, endOfWeek);
     if ( result.status === "success" ){
-      updateTo(upper);
+      populateMapThrough(upper);
       addVerifications(result.data);
     }
     setLoadedVerifications(true);
@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
       const currentDate = j1.add(i, 'days');
       return {
         date: currentDate.format("M/D/YY"),
-        balance: data.startDate.isAfter(currentDate) ? null : getBalance(currentDate, "end", data.startAmount)
+        balance: data.startDate.isAfter(currentDate) ? null : getBalance(currentDate, "end")
       }
     })
   }
@@ -131,7 +131,7 @@ const Dashboard: React.FC = () => {
             {!isSimulation &&
               <div className="row">
                 <div className="col-lg-12">
-                  <SummaryWidget balance={getBalance(date, "end", data.startAmount)} />
+                  <SummaryWidget balance={getBalance(date, "end")} />
                   <ActionNeededWidget 
                     date={date} 
                     occurrences={getOccurrences(date.subtract(3, 'month'), date).filter( occ => occ.verification === undefined )}/>
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
                 <div className="col-lg-6">
                   <WeeklyWidget 
                     occurrences={getOccurrences(friday, friday.add(6, 'day'))} 
-                    startBal={getBalance(friday, "start", data.startAmount) ?? undefined} 
+                    startBal={getBalance(friday, "start") ?? undefined} 
                     range={`${friday.format("MMM DD, YYYY")} - ${friday.add(6, 'day').format("MMM DD, YYYY")}`}
                     addVerification={addVerifications}
                     deleteVerification={deleteVerification}

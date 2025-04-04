@@ -8,8 +8,8 @@ export const numberOrNull = ( a: number | string ): number | null => {
   return typeof a === 'string' ? null : a;
 }
 
-export const asCurrency = (a?: number ) => {
-  return a === undefined ? "--" : "$" + a.toLocaleString('en-US', { minimumFractionDigits: 2 });
+export const asCurrency = (a?: number|null ) => {
+  return a === undefined || a === null ? "--" : "$" + a.toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
 export const truncate = (text: string, to: number) => {

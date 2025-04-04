@@ -23,7 +23,7 @@ const Actions: React.FC = () => {
   const friday = getFriday(today);
   const endOfWeek = friday.add(6, 'days');
   const threeMonthsAgo: Dayjs = today.subtract(3, 'months');
-  const { getOccurrences, addVerifications, deleteVerification, updateTo } = useOccurrences();
+  const { getOccurrences, addVerifications, deleteVerification, populateMapThrough } = useOccurrences();
 
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
 
@@ -35,7 +35,7 @@ const Actions: React.FC = () => {
     // get verifications through end of week.
     let result = await getVerifications(threeMonthsAgo, endOfWeek);
     if (result.status === "success") {
-      updateTo(endOfWeek);
+      populateMapThrough(endOfWeek);
       addVerifications(result.data);
     }
     setHasLoaded(true);

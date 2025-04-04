@@ -35,12 +35,12 @@ export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
     <div className="line-item-wrapper">
       <div className="line-item py-4 position-relative">
         { beforeRow }
-        <div className="d-flex justify-content-between flex-row align-items-center">
+        <div className="d-flex justify-content-between flex-row align-items-start">
           <div className="align-items-center fw-semibold d-flex flex-row">
             { beforeTitle }
             <div className="line-item-title ms-2 d-flex flex-column flex-wrap">
               <div className="fs-6 text-gray-900 mb-1">{title ?? item?.name ?? "--"}</div>
-              { subtitle && <div className="text-muted fs-7">{subtitle}</div>}
+              { subtitle && <div className="text-muted fs-7 mb-1">{subtitle}</div>}
               { showTags && item?.frequency === "Weekly" &&
                 <div><span className="badge badge-light-info fw-bold mx-2">weekly</span></div>
               }

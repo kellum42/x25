@@ -15,7 +15,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <div className="content d-flex flex-column flex-column-fluid">
             <div className="post d-flex flex-column-fluid">
-              <div className="container-xxl">
+              <div className="container-xxl px-4">
                 {children}
               </div>
             </div>
