@@ -133,8 +133,8 @@ const History: React.FC = () => {
                           items={occurrences.map( occ => {
                             return <VerifyOccurrenceRow 
                               occ={occ}
-                              onVerified={(v) => { deleteVerification(v) }} // updates map
-                              onUnVerified={(v) => { addVerifications([v]) }} // updates map
+                              onVerified={(v) => { addVerifications([v]) }} // updates map
+                              onUnVerified={(v) => { deleteVerification(v) }} // updates map
                               subLabel={asCurrency(occ.balance)}
                               subtitle={occ.date.format("MMM DD, YYYY")}
                             />

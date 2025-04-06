@@ -38,12 +38,17 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
     const type: "income"|"expense" = occ.item.amount > 0 ? "income" : "expense";
 
     if (occ.verification && Math.abs(occ.verification.amount) !== Math.abs(occ.item.amount)){
+      const vAmountString = "$" + Math.abs(occ.verification.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
       return <>
         <span className="text-decoration-line-through">{amount}</span>
-        <span className="ms-2 text-primary">${Math.abs(occ.verification.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+        { 
+          type === "income" ?
+          <span className="ms-2 text-success">+{vAmountString}</span> :
+          <span className="ms-2 text-primary">{vAmountString}</span>
+        }
       </>
     } else {
-      const inner = occ.verification ? occ.verification.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) : amount;
+      const inner = occ.verification ? Math.abs(occ.verification.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) : amount;
       return type === "income" ? <span className="text-success">+{inner}</span> : inner;
     }
   }
@@ -82,9 +87,10 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
           // Add to map.
           // Add in item documentId since its not populated on POST call response.
           const verification: Schema<"verification"> = { ...result.data, item: { documentId: item } };
+          x25log.d("[verify][VerifyOccurrenceRow.tsx]: Verified %s.", verification.documentId);
           props.onVerified(verification);
-          // addVerification([verification])
-          // return true;
+          setIsVerified(true);
+          
         } else {
           x25log.d("[verify][VerifyOccurrenceRow.tsx]: Can't verify. Got null response.");
         }
@@ -93,14 +99,10 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
       }
       setTextInput("");
       setIsLoading(false);
-      // return false;
-
-      // const _ = await onVerify(occ.item.documentId, occ.date, Math.abs(amount));
 
     } else {
       // error handling. maybe set an error?
       x25log.d("[verify][VerifyOccurrenceRow.tsx]: Unable to verify item %s, date: %s.", item, date.format("YYYY-MM-DD"));
-      // return
     }
   }
 
@@ -111,12 +113,16 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
       const result = await useBudget.unverify(verification.documentId);
 
       if (result.status === "success") {
+        x25log.d("[unverify][VerifyOccurrenceRow.tsx]: Unverified %s.", verification.documentId);
+        
         props.onUnVerified({
           documentId: verification.documentId,
           id: "--",
           date: occ.date.format("YYYY-MM-DD"),
           item: { documentId: occ.item.documentId, id: "--" }
         })
+        setIsVerified(false);
+
         // deleteVerification(verification);
         // return true;
 
