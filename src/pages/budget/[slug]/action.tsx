@@ -156,8 +156,8 @@ const MissingActions: React.FC<MissingActionsProps> = (props) => {
             return <VerifyOccurrenceRow
               key={i}
               occ={occ}
-              onVerified={(v) => { deleteVerification(v) }} // updates map
-              onUnVerified={(v) => { addVerifications([v]) }} // updates map
+              onVerified={(v) => { addVerifications([v]) }} // updates map
+              onUnVerified={(v) => { deleteVerification(v) }} // updates map
             // onVerify={props.onVerify}
             // onUnverify={props.onUnverify}
             />
