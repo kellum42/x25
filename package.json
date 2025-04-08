@@ -14,7 +14,8 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "deploy": "npm run build && rsync -av public/. kellumsolutions:/var/www/html/."
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.11.2",
