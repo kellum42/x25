@@ -3,6 +3,13 @@ import { Dayjs } from "dayjs";
 type Requires<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
 // type RequireExcept<T, K extends keyof T> = Required<Omit<T, K>> & Pick<T, K>;
 
+export type Pagination = {
+  page?: number,
+  pageSize?: number,
+  pageCount?: number,
+  total?: number
+}
+
 export type BaseSchema = {
   documentId: string;
   id?: string;

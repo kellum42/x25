@@ -4,7 +4,9 @@ import {
   Response, 
   ResponseType, 
   PersistentSchema, 
-  x25Result 
+  x25Result, 
+  Pagination,
+  Schema
 } from "./types";
 
 const token = process.env.GATSBY_STRAPI_API_KEY;
@@ -14,22 +16,68 @@ const url = (endpoint: string): string => {
   return `${host}/api/${endpoint}`;
 }
 
+// must add pageSize and page for pagination to work.
 export const get = async <TCategory extends SchemaCategory, TType extends ResponseType>(endpoint: string): Promise<x25Result<Response<TCategory, TType>>> => {
-  x25log.d("[get][strapi.ts]: Calling endpoint %s, method: GET.", url(endpoint));
+  const pageSize: number = 25;
 
-  try {
-    const response = await fetch(url(endpoint), {
+  const _get = async (page?: number): Promise<x25Result<{result: Response<TCategory, TType>, meta?: Pagination}>> =>  {
+    const _url = url(`${endpoint}&pagination[page]=${page ?? 1}&pagination[pageSize]=${pageSize}`);
+    
+    x25log.d("[_get][strapi.ts]: Calling endpoint %s, method: GET.", _url);
+    
+    const response = await fetch(_url, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
   
     if (!response.ok) {
-      return { status: "fail", error: `HTTP error! status: ${response.status}`}
+      return { status: "fail", error: `HTTP error! status: ${response.status}`};
     }
-  
-    const data: { data: Response<TCategory, TType>} = await response.json();
-    return { status: "success", data: data.data };
-  
+
+    const json = await response.json();
+    const data: { data: Response<TCategory, TType> } = json;
+    const meta: { meta: { pagination?: Pagination }} = json;
+
+    return { status: "success", data: { result: data.data, meta: meta.meta.pagination }};
+  }
+
+  try {
+    const result = await _get();
+    if ( result.status === "success" ){
+      const pageCount = result.data.meta?.pageCount;
+      if ( pageCount !== undefined && pageCount > 1 ){
+        x25log.d("[get][strapi.ts]: GET call yielded %d pages with %d results on each page, for %d total results.", pageCount, result.data.meta?.pageSize ?? "--", result.data.meta?.total ?? "--");      
+
+        let hasMorePages = true;
+        let currentPage = 2;
+        let holder: Response<TCategory, "many"> = result.data.result as Response<TCategory, "many">;
+
+        while ( hasMorePages ){
+          const res = await _get(currentPage);
+    
+          if ( res.status === "success" ){
+            holder.push( ...res.data.result as Response<TCategory, "many">);
+            // x25log.e("[get][strapi.ts]: Adding %d results from page %d.", (res.data.result as Response<TCategory, "many">).length, currentPage);
+
+            hasMorePages = pageCount > currentPage; 
+            currentPage++;
+
+          } else {
+            x25log.e("[get][strapi.ts]: Fetching page %d of %d failed. Not all results are present. Endpoint: %s.", currentPage, pageCount, endpoint);
+            break;
+          }  
+        }
+        return { status: "success", data: holder as Response<TCategory, TType> }
+
+      } else {
+        return { status: "success", data: result.data.result };
+      }
+    } else {
+      x25log.e("[get][strapi.ts]: Failed API call. Error: %s. Endpoint: %s.", result.error, endpoint);
+      return result;
+    }
+      
   } catch (err) {
+    x25log.e("[get][strapi.ts]: An error occurred. Error: %s. Endpoint: %s.", String(err), endpoint);
     return { status: "fail", error: `An error occurred: ${err}`}
   }
 }

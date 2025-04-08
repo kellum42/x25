@@ -130,8 +130,9 @@ const History: React.FC = () => {
                       <div>
                         <SeeMore 
                           pageSize={10}
-                          items={occurrences.map( occ => {
+                          items={occurrences.map( (occ,i) => {
                             return <VerifyOccurrenceRow 
+                              key={i}
                               occ={occ}
                               onVerified={(v) => { addVerifications([v]) }} // updates map
                               onUnVerified={(v) => { deleteVerification(v) }} // updates map
