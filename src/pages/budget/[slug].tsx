@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react"
-import type { PageProps } from "gatsby"
+import type { PageProps, HeadFC } from "gatsby"
 import { Link } from "gatsby"
 
 import { BudgetContext, BudgetContextProvider } from "../../contexts/budgetContext"
@@ -207,7 +207,7 @@ const BudgetPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
 
 
   return (
-    <Layout>
+    <Layout budget={slug}>
       <BudgetContextProvider slug={slug}>
         {/* <OccurrencesContextProvider end={dayjs()}> */}
         <Dashboard />
@@ -218,3 +218,10 @@ const BudgetPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
 }
 
 export default BudgetPage;
+
+export const Head: HeadFC = () => (
+  <>
+    <title>Your Budget</title>
+    <body className="aside-fixed aside-default-enabled"/>
+  </>
+)

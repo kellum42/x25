@@ -45888,3 +45888,25 @@ body {
     font-size: 14px !important;
   }
 }
+@media (max-width: 991px) {
+  #mainmenu.drawer {
+    width: 250px;
+  }
+}
+@media (min-width: 992px) {
+  #mainmenu.drawer.drawer-start {
+    transform: none;
+    transition: width 0.3s ease !important;
+  }
+  /* #mainmenu.drawer {
+    display: flex;
+    overflow: auto;
+    z-index: 0;
+    position: static;
+    transition: width 0.3s ease !important;
+  } */
+
+  /* #mainmenu.drawer.drawer-on + .wrapper {
+      padding-left: 100px;
+  } */
+}

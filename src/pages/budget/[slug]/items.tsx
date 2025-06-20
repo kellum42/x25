@@ -1,5 +1,5 @@
 import React, { useContext } from "react"
-import type { PageProps } from "gatsby"
+import type { HeadFC, PageProps } from "gatsby"
 import { Link } from "gatsby"
 
 import { Layout } from "../../../components/layout"
@@ -107,10 +107,10 @@ const Items: React.FC = () => {
 };
 
 
-const ItemsPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
+const ItemsPage: React.FC<PageProps & { slug: string }> = ( props ) => {
   return (
-    <Layout>
-      <BudgetContextProvider slug={slug}>
+    <Layout budget={props.slug} uri={props.uri}>
+      <BudgetContextProvider slug={props.slug}>
         <Items />
       </BudgetContextProvider>
     </Layout>
@@ -118,3 +118,11 @@ const ItemsPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
 }
 
 export default ItemsPage;
+
+export const Head: HeadFC = () => (
+  <>
+    <title>Your Budget</title>
+    {/* data-kt-aside-minimize="on" */}
+    <body className="aside-fixed aside-default-enabled" />
+  </>
+)

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react"
-import { Link, type PageProps } from "gatsby"
+import { HeadFC, Link, type PageProps } from "gatsby"
 import { Layout } from "../../../components/layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
 import { asCurrency, truncate } from "../../../utils/util"
@@ -154,10 +154,10 @@ const History: React.FC = () => {
   )
 }
 
-const HistoryPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
+const HistoryPage: React.FC<PageProps & { slug: string }> = (props) => {
   return (
-    <Layout>
-      <BudgetContextProvider slug={slug}>
+    <Layout budget={props.slug} uri={props.uri}>
+      <BudgetContextProvider slug={props.slug}>
         <History />
       </BudgetContextProvider>
     </Layout>
@@ -165,3 +165,10 @@ const HistoryPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
 }
 
 export default HistoryPage;
+
+export const Head: HeadFC = () => (
+  <>
+    <title>History</title>
+    <body className="aside-fixed aside-default-enabled" />
+  </>
+)

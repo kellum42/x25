@@ -99,4 +99,9 @@ const IndexPage: React.FC<PageProps> = () => {
 
 export default IndexPage
 
-export const Head: HeadFC = () => <title>Custom Title</title>
+export const Head: HeadFC = () => (
+  <>
+    <title>Custom Title</title>
+    <body className="aside-fixed aside-default-enabled" />
+  </>
+)

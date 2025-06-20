@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react"
-import { Link, type PageProps } from "gatsby"
+import { Link,HeadFC, type PageProps } from "gatsby"
 import { Layout } from "../../../components/layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
 
@@ -176,10 +176,10 @@ const RecentActions: React.FC<RecentActionsProps> = (props) => {
   return <></>
 }
 
-const ActionsPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
+const ActionsPage: React.FC<PageProps & { slug: string }> = (props) => {
   return (
-    <Layout>
-      <BudgetContextProvider slug={slug}>
+    <Layout budget={props.slug} uri={props.uri}>
+      <BudgetContextProvider slug={props.slug}>
         <Actions />
       </BudgetContextProvider>
     </Layout>
@@ -187,3 +187,10 @@ const ActionsPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
 }
 
 export default ActionsPage;
+
+export const Head: HeadFC = () => (
+  <>
+    <title>Action</title>
+    <body className="aside-fixed aside-default-enabled"/>
+  </>
+)
