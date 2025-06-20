@@ -10,7 +10,7 @@ type LayoutProps = {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, budget, uri }) => {
-  const [menuOpen, setIsMenuOpen] = React.useState(true);
+  const [menuOpen, setIsMenuOpen] = React.useState(false);
 
   const setMenu = (on: boolean) => {
     if (typeof window !== "undefined") {
