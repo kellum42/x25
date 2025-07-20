@@ -2,9 +2,19 @@ import React, { useContext, useEffect, useState } from "react"
 import type { PageProps, HeadFC } from "gatsby"
 import { Link } from "gatsby"
 
+import { x25log } from "../utils/log"
+import { useAuth } from "../hooks/useAuth"
+
 const LoginPage: React.FC<PageProps> = () => {
+
+  const { demoLogin } = useAuth()
+  const onDemoLogin = async () => {
+    // Figure this out.
+    await demoLogin()
+  }
+
   return (
-    <div className="d-flex flex-column flex-root">
+    <div className="d-flex flex-column flex-root vh-100">
       <div className="d-flex flex-column flex-lg-row flex-column-fluid">
         <div className="d-flex flex-column flex-lg-row-auto bg-primary w-xl-600px positon-xl-relative">
           <div className="d-flex flex-column position-xl-fixed top-0 bottom-0 w-xl-600px scroll-y">
@@ -47,7 +57,7 @@ const LoginPage: React.FC<PageProps> = () => {
                 </div> */}
 
                 <div className="text-center">
-                  <button type="submit" id="kt_sign_in_submit" className="btn btn-lg btn-primary w-100 mb-5">
+                  <button type="button" onClick={onDemoLogin} className="btn btn-lg btn-primary w-100 mb-5">
                     <span className="indicator-label">Go to Demo</span>
                     <span className="indicator-progress">Please wait...
                       <span className="spinner-border spinner-border-sm align-middle ms-2"></span></span>

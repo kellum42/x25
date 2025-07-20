@@ -15,6 +15,7 @@ import { x25log } from "../../utils/log"
 import { getFriday } from "../../utils/util"
 import { Dayjs } from "dayjs"
 import { useOccurrences } from "../../hooks/useOccurrences"
+import PrivatePage from "../../components/private-page"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
@@ -197,7 +198,7 @@ const Dashboard: React.FC = () => {
   )
 }
 
-const BudgetPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
+const BudgetPage: React.FC<PageProps & { slug: string }> = ({ path, slug }) => {
   // useEffect(() => {
   //   console.log("SLUG CHANGED ON PAGE");
   // }, [slug])
@@ -207,13 +208,15 @@ const BudgetPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
 
 
   return (
-    <Layout budget={slug}>
+    <PrivatePage path={path}>
+      <Layout budget={slug}>
       <BudgetContextProvider slug={slug}>
         {/* <OccurrencesContextProvider end={dayjs()}> */}
         <Dashboard />
         {/* </OccurrencesContextProvider> */}
       </BudgetContextProvider>
     </Layout>
+    </PrivatePage>
   )
 }
 

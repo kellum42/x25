@@ -68,3 +68,19 @@ type x25ItemBase = "amount"|"name"|"type"|"frequency"
 export type MonthlySchemaItem = Requires<Schema<"item">, "dates"|"starts"|"ends"|x25ItemBase>
 export type WeeklySchemaItem =  Requires<Schema<"item">, "starts"|"ends"|"day"|x25ItemBase>
 export type OnceSchemaItem = Requires<Schema<"item">, "date"|x25ItemBase>
+
+export type LoginResponse = {
+  jwt: string,
+  user: {
+    id: number,
+    documentId: string,
+    username: string,
+    email: string,
+    provider: string,
+    confirmed: boolean,
+    blocked: boolean,
+    createdAt?: string,
+    updatedAt?: string,
+    publishedAt?: string
+  }
+}
