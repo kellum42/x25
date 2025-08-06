@@ -12,6 +12,7 @@ import { get } from "../utils/strapi";
 import { x25log } from "../utils/log"
 import { Schema } from "../utils/types"
 import PrivatePage from "../components/private-page"
+import { AuthProvider } from "../contexts/authContext"
 
 // TODO:
 //  - Get popup on budget cards working
@@ -47,22 +48,22 @@ const BudgetList: React.FC = () => {
   }, [])
 
   return (
-      <Layout>
-        <div className="d-flex flex-wrap flex-stack mb-6">
-          <h3 className="text-dark fw-bold mb-4 fs-2">My Budgets</h3>
-          <div className="d-flex align-items-center my-2">
-            <button onClick={() => setCreateNewBudget(true)} className="btn btn-primary">Add New Budget</button>
-          </div>
+    <Layout>
+      <div className="d-flex flex-wrap flex-stack mb-6">
+        <h3 className="text-dark fw-bold mb-4 fs-2">My Budgets</h3>
+        <div className="d-flex align-items-center my-2">
+          <button onClick={() => setCreateNewBudget(true)} className="btn btn-primary">Add New Budget</button>
         </div>
+      </div>
 
-        <div className="row">
-          {/* {error && <p>{error.message}</p>} */}
-          {budgets.map(budget => (
-            <BudgetCard key={budget.documentId} budget={budget} onDeleteSuccess={() => fetchBudgets()} />
-          ))}
-        </div>
+      <div className="row">
+        {/* {error && <p>{error.message}</p>} */}
+        {budgets.map(budget => (
+          <BudgetCard key={budget.documentId} budget={budget} onDeleteSuccess={() => fetchBudgets()} />
+        ))}
+      </div>
 
-        {/* {createNewBudget &&
+      {/* {createNewBudget &&
         <UpdateBudget
           mode="create"
           onCancel={() => setCreateNewBudget(false)}
@@ -94,15 +95,18 @@ const BudgetList: React.FC = () => {
           }}
         />
       } */}
-      </Layout>
+    </Layout>
   )
 }
 
 const IndexPage: React.FC<PageProps> = (props) => {
   return (
-    <PrivatePage path={props.path}>
-      <BudgetList />
-    </PrivatePage>
+    // <AuthProvider>
+      <PrivatePage path={props.path}>
+        <BudgetList />
+        {/* <div>hello</div> */}
+      </PrivatePage>
+    // </AuthProvider>
   )
 }
 

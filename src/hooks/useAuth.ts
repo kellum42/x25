@@ -1,50 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { login } from '../utils/strapi';
+import React, { useState, useEffect, useContext } from 'react';
 import { x25log } from '../utils/log';
+import { AuthContext } from '../contexts/authContext';
+import { navigate } from 'gatsby';
 
-export const useAuth = () => {
-  const _key = "x25creds";
+// Ping server routinely?
 
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+type UseAuthType = {
+  isLoggedIn: boolean,
+  demoLogin: () => void,
+  logout: () => void 
+}
 
-  const checkLoggedIn = () => {
-    const creds = localStorage.getItem(_key);
-    if (!creds){
-      x25log.d("[checkLoggedIn][auth.ts]: No credentials exist.");
-      return false;
-    }
+export const useAuth = (): UseAuthType => {
+  const context = useContext(AuthContext);
 
-    // Ping server?
-    return true;
+  if ( !context ){
+    throw new Error("Attemping to access authContext, but it is not defined.")
   }
 
-  const userLogin = () => {
-
-  }
+  const { user, login, logout } = context;
 
   const demoLogin = async () => {
-    const result = await login("demo", "demouser");
-    if (result.status === "success") {
-      const jwt = result.data.jwt;
-      // Store jwt in local storage.
-      localStorage.setItem("x25creds", JSON.stringify({ jwt, user: result.data.user.username }));
-      setIsLoggedIn(true);
-
-    } else {
-      x25log.d("[demoLogin][auth.ts]: Error logging in. Error - %s", result.error);
-      console.log(result.error);
-    }
-  }
-
-  const logout = () => {
-    localStorage.removeItem(_key);
-    setIsLoggedIn(false);
+    await login("demo", "demouser");
   }
 
   return {
-    isLoggedIn,
-    login: userLogin,
-    demoLogin,
-    logout,
+    isLoggedIn: user !== undefined,
+    demoLogin: demoLogin,
+    logout
   }
 }
