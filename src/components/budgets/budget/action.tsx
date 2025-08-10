@@ -1,17 +1,17 @@
 import React, { useContext, useEffect, useState } from "react"
 import { Link,HeadFC, type PageProps } from "gatsby"
-import { Layout } from "../../../components/layout"
+import { Layout } from "../../layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
 
 import dayjs, { Dayjs } from "dayjs"
 import { getFriday, truncate } from "../../../utils/util"
-import { VerifyOccurrenceRow } from "../../../components/verify-occurrence-row"
+import { VerifyOccurrenceRow } from "../../verify-occurrence-row"
 import { x25log } from "../../../utils/log"
 import { Schema } from "../../../utils/types"
-import { SeeMore } from "../../../components/see-more"
+import { SeeMore } from "../../see-more"
 import { Occurrence, useOccurrences } from "../../../hooks/useOccurrences"
 
-const Actions: React.FC = () => {
+const Actions = () => {
   const context = useContext(BudgetContext);
 
   if (!context) {
@@ -176,21 +176,21 @@ const RecentActions: React.FC<RecentActionsProps> = (props) => {
   return <></>
 }
 
-const ActionsPage: React.FC<PageProps & { slug: string }> = (props) => {
-  return (
-    <Layout budget={props.slug} uri={props.uri}>
-      <BudgetContextProvider slug={props.slug}>
-        <Actions />
-      </BudgetContextProvider>
-    </Layout>
-  )
-}
+// const Actions: React.FC<PageProps & { slug: string }> = (props) => {
+//   return (
+//     <Layout budget={props.slug} uri={props.uri}>
+//       <BudgetContextProvider slug={props.slug}>
+//         <Actions />
+//       </BudgetContextProvider>
+//     </Layout>
+//   )
+// }
 
-export default ActionsPage;
+export default Actions;
 
-export const Head: HeadFC = () => (
-  <>
-    <title>Action</title>
-    <body className="aside-fixed aside-default-enabled"/>
-  </>
-)
+// export const Head: HeadFC = () => (
+//   <>
+//     <title>Action</title>
+//     <body className="aside-fixed aside-default-enabled"/>
+//   </>
+// )

@@ -2,9 +2,9 @@ import React, { useContext } from "react"
 import type { HeadFC, PageProps } from "gatsby"
 import { Link } from "gatsby"
 
-import { Layout } from "../../../components/layout"
+import { Layout } from "../../layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
-import { ManageItems } from "../../../components/manage-items/manage-items"
+import { ManageItems } from "../../manage-items/manage-items"
 import { truncate } from "../../../utils/util"
 
 // TODO:

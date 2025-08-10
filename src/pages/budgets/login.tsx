@@ -1,29 +1,55 @@
 import React, { useContext, useEffect, useState } from "react"
+import { RouteComponentProps } from "@reach/router"
 import type { PageProps, HeadFC } from "gatsby"
 import { Link, navigate } from "gatsby"
 
-import { x25log } from "../utils/log"
-import { useAuth } from "../hooks/useAuth"
-import { AuthProvider } from "../contexts/authContext"
+import { x25log } from "../../utils/log"
+import useAuth from "../../hooks/useAuth";
+import { AuthContext, AuthProvider } from "../../contexts/authContext"
 
-const LoginPage: React.FC<PageProps> = (props) => {
-  const from = props.location.state as { path?: string };
+// import { AuthProvider } from "../../contexts/authContext"
 
+
+const Login: React.FC<RouteComponentProps> = (props) => {
+  const previous = props.location?.state as { from?: string };
   const { demoLogin, isLoggedIn } = useAuth();
+
+  const [loading, setIsLoading] = useState<boolean>(false);
+  // const [loggedIn, setIsLoading] = useState<boolean>(false);
+  
+  // if ( previous.from ){
+  //   x25log.d("[logout][authContext.tsx]: Window is undefined.");
+  // }
+  // useEffect(() => {
+    // const { demoLogin, isLoggedIn } = useAuth();
+
+  // }, [])
+  
+
+
   const onDemoLogin = async () => {
     // Figure this out.
-    demoLogin();
-    if (isLoggedIn) {
-      navigate(`/${from.path ?? ""}`);
-    }
-    // if (isLoggedIn){
-    //   navigate(`/${from.path ?? ""}`)
-    // }
+    x25log.d("[onDemoLogin][login.tsx]: Attempting demo login.");
+
+    setIsLoading(true);
+    const hasLoggedIn = await demoLogin();
+    setIsLoading(false);
+
+    // console.log("RESULT WAS %s", result.toString())
+    if ( hasLoggedIn ){
+      navigate(previous.from ?? "/budgets");
+      // console.log("USER HAS LOGGED IN");
+
+    } else {
+      x25log.d("[onDemoLogin][login.tsx]: Login failed.");
+      // navigate("/budgets")
+    }    
   }
 
   return (
     // <AuthProvider>
-      <div className="d-flex flex-column flex-root vh-100">
+      // <AuthContext.Consumer>
+        <div className="d-flex flex-column flex-root vh-100">
         <div className="d-flex flex-column flex-lg-row flex-column-fluid">
           <div className="d-flex flex-column flex-lg-row-auto bg-primary w-xl-600px positon-xl-relative">
             <div className="d-flex flex-column position-xl-fixed top-0 bottom-0 w-xl-600px scroll-y">
@@ -66,16 +92,18 @@ const LoginPage: React.FC<PageProps> = (props) => {
                 </div> */}
 
                   <div className="text-center">
-                    <button type="button" onClick={onDemoLogin} className="btn btn-lg btn-primary w-100 mb-5">
+                    <button type="button" onClick={() => { onDemoLogin() }} className="btn btn-lg btn-primary w-100 mb-5" data-kt-indicator={loading ? "on" : "off"}>
                       <span className="indicator-label">Go to Demo</span>
                       <span className="indicator-progress">Please wait...
                         <span className="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                     </button>
 
-                    <div className="text-center text-muted text-uppercase fw-bold mb-5">or</div>
+                    {/* <div className="text-center text-muted text-uppercase fw-bold mb-5">or</div> */}
 
-                    <a href="#" className="btn btn-flex flex-center btn-light btn-lg w-100 mb-5">
-                      <img alt="Logo" src="/img/google-icon.svg" className="h-20px me-3" />Continue with Google</a>
+                    {/* <a href="#" className="btn btn-flex flex-center btn-light btn-lg w-100 mb-5">
+                      <img alt="Logo" src="/img/google-icon.svg" className="h-20px me-3" />
+                      Continue with Google
+                    </a> */}
 
                     {/* <a href="#" className="btn btn-flex flex-center btn-light btn-lg w-100 mb-5">
                     <img alt="Logo" src="assets/media/svg/brand-logos/facebook-4.svg" className="h-20px me-3" />Continue with Facebook</a>
@@ -98,15 +126,18 @@ const LoginPage: React.FC<PageProps> = (props) => {
           </div>
         </div>
       </div>
+      // </AuthContext.Consumer>
+      
     // </AuthProvider>
+      
   )
 }
 
-export default LoginPage
+export default Login;
 
-export const Head: HeadFC = () => (
-  <>
-    <title>Your Budget</title>
-    <body className="aside-fixed aside-default-enabled" />
-  </>
-)
+// export const Head: HeadFC = () => (
+//   <>
+//     <title>Your Budget</title>
+//     <body className="aside-fixed aside-default-enabled" />
+//   </>
+// )

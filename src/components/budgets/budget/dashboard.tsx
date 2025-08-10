@@ -2,33 +2,33 @@ import React, { useContext, useEffect, useState } from "react"
 import type { PageProps, HeadFC } from "gatsby"
 import { Link } from "gatsby"
 
-import { BudgetContext, BudgetContextProvider } from "../../contexts/budgetContext"
-import { ChartWidget } from "../../components/widgets/chart-widget"
-import { Layout } from "../../components/layout"
-import { WeeklyWidget } from "../../components/widgets/weekly-widget"
-import { SummaryWidget } from "../../components/widgets/summary-widget"
+import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
+import { ChartWidget } from "../../widgets/chart-widget"
+import { Layout } from "../../layout"
+import { WeeklyWidget } from "../../widgets/weekly-widget"
+import { SummaryWidget } from "../../widgets/summary-widget"
 // import { SimulationsWidget } from "../../components/widgets/simulations-widget"
 // import { SimulationsSummaryWidget } from "../../components/widgets/simulation-summary-widget"
 // import { SimulationChangesWidget } from "../../components/widgets/simulation-changes-widget"
-import { ActionNeededWidget } from "../../components/widgets/action-needed-widget"
-import { x25log } from "../../utils/log"
-import { getFriday } from "../../utils/util"
+import { ActionNeededWidget } from "../../widgets/action-needed-widget"
+import { x25log } from "../../../utils/log"
+import { getFriday } from "../../../utils/util"
 import { Dayjs } from "dayjs"
-import { useOccurrences } from "../../hooks/useOccurrences"
-import PrivatePage from "../../components/private-page"
+import { useOccurrences } from "../../../hooks/useOccurrences"
+// import PrivatePage from "../private-route"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
 //  - Remove simulations widget on simulations
 
 const Dashboard: React.FC = () => {
-  const context = useContext(BudgetContext);
+  // const context = useContext(BudgetContext);
 
-  if (!context) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!context) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
-  const { data, date, getVerifications } = context;
+  // const { data, date, getVerifications } = context;
   
   const [loadedVerifications, setLoadedVerifications] = useState<boolean>(false);
 
@@ -198,33 +198,4 @@ const Dashboard: React.FC = () => {
   )
 }
 
-const BudgetPage: React.FC<PageProps & { slug: string }> = ({ path, slug }) => {
-  // useEffect(() => {
-  //   console.log("SLUG CHANGED ON PAGE");
-  // }, [slug])
-
-  // Do fetching and checking here.
-  // Pass variables to contexts here.
-
-
-  return (
-    <PrivatePage path={path}>
-      <Layout budget={slug}>
-      <BudgetContextProvider slug={slug}>
-        {/* <OccurrencesContextProvider end={dayjs()}> */}
-        <Dashboard />
-        {/* </OccurrencesContextProvider> */}
-      </BudgetContextProvider>
-    </Layout>
-    </PrivatePage>
-  )
-}
-
-export default BudgetPage;
-
-export const Head: HeadFC = () => (
-  <>
-    <title>Your Budget</title>
-    <body className="aside-fixed aside-default-enabled"/>
-  </>
-)
+export default Dashboard;

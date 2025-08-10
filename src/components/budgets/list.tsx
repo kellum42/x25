@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react"
 import type { HeadFC, PageProps } from "gatsby"
 
-import BudgetCard from '../components/budget-card'
-import { Layout } from "../components/layout"
+import BudgetCard from "../budget-card"
+
 // import { getBudgets, saveBudget } from "../utils/localStorage"
 // import { UpdateBudget } from "../components/modals/update-budget"
 // import { x25Error } from "../utils/schemas"
 // import { generateAvatar, getUniqueID, slugify } from "../utils/util"
 import dayjs from "dayjs"
-import { get } from "../utils/strapi";
-import { x25log } from "../utils/log"
-import { Schema } from "../utils/types"
-import PrivatePage from "../components/private-route"
-import { AuthProvider } from "../contexts/authContext"
+import { get } from "../../utils/strapi"
+import { x25log } from "../../utils/log"
+import { Schema } from "../../utils/types"
+// import PrivatePage from "../components/private-route"
+// import { AuthProvider } from "../contexts/authContext"
 
 // TODO:
 //  - Get popup on budget cards working
@@ -34,11 +34,11 @@ const BudgetList: React.FC = () => {
       const budgets: Schema<"budget">[] = result.data
       // .map( budget => budgetTox25(budget))
       // .filter( budget => budget !== null )
-      x25log.d("[fetchBudgets][index.tsx]: Fetched %d budgets from endpoint %s", budgets.length, endpoint);
+      x25log.d("[fetchBudgets][list.tsx]: Fetched %d budgets from endpoint %s", budgets.length, endpoint);
       setBudgets(budgets);
 
     } else {
-      x25log.d("[fetchBudgets][index.tsx]: Error fetching budgets from endpoint %s. Error - %s", endpoint, result.error);
+      x25log.d("[fetchBudgets][list.tsx]: Error fetching budgets from endpoint %s. Error - %s", endpoint, result.error);
       console.log(result.error);
     }
   }
@@ -48,7 +48,8 @@ const BudgetList: React.FC = () => {
   }, [])
 
   return (
-    <Layout>
+    // <Layout>
+    <>
       <div className="d-flex flex-wrap flex-stack mb-6">
         <h3 className="text-dark fw-bold mb-4 fs-2">My Budgets</h3>
         <div className="d-flex align-items-center my-2">
@@ -95,26 +96,27 @@ const BudgetList: React.FC = () => {
           }}
         />
       } */}
-    </Layout>
+      </>
+    // </Layout>
   )
 }
 
-const IndexPage: React.FC<PageProps> = (props) => {
-  return (
-    // <AuthProvider>
-      <PrivatePage path={props.path}>
-        <BudgetList />
-        {/* <div>hello</div> */}
-      </PrivatePage>
-    // </AuthProvider>
-  )
-}
+// const IndexPage: React.FC<PageProps> = (props) => {
+//   return (
+//     // <AuthProvider>
+//       <PrivatePage path={props.path}>
+//         <BudgetList />
+//         {/* <div>hello</div> */}
+//       </PrivatePage>
+//     // </AuthProvider>
+//   )
+// }
 
-export default IndexPage
+export default BudgetList;
 
-export const Head: HeadFC = () => (
-  <>
-    <title>Custom Title</title>
-    <body className="aside-fixed aside-default-enabled" />
-  </>
-)
+// export const Head: HeadFC = () => (
+//   <>
+//     <title>Custom Title</title>
+//     <body className="aside-fixed aside-default-enabled" />
+//   </>
+// )

@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState } from "react"
 import { HeadFC, Link, type PageProps } from "gatsby"
-import { Layout } from "../../../components/layout"
+import { Layout } from "../../layout"
 import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
 import { asCurrency, truncate } from "../../../utils/util"
 import { x25log } from "../../../utils/log"
 import { Occurrence, useOccurrences } from "../../../hooks/useOccurrences"
-import { ChartWidget } from "../../../components/widgets/chart-widget"
-import { VerifyOccurrenceRow } from "../../../components/verify-occurrence-row"
-import { SeeMore } from "../../../components/see-more"
+import { ChartWidget } from "../../widgets/chart-widget"
+import { VerifyOccurrenceRow } from "../../verify-occurrence-row"
+import { SeeMore } from "../../see-more"
 
 // TODO: - Implement paging with verification data pull.
 
