@@ -22,7 +22,9 @@ const BudgetCard: FC<BudgetCardProps> = (props) => {
 
   const {items, startDate, startAmount} = budget;
   
-  if (items === undefined || startDate === undefined || startAmount === undefined){
+  // TODO: Do items check.
+  // items === undefined || 
+  if (startDate === undefined || startAmount === undefined){
     x25log.e("[BudgetCard][budget-card.tsx]: Budget %s items, startdate, or startmount is undefined. Couldn't render BudgetCard component.", budget.title ?? "--")
     return <></>
   }

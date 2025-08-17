@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { x25log } from '../utils/log';
-import { AuthContext, AuthContextType, AuthKey } from '../contexts/authContext';
+import { AuthContext, AuthContextType, AuthKey, Credentials, LoginStatus } from '../contexts/authContext';
 // import { navigate } from 'gatsby';
 // import { User } from '../utils/types';
 import { login as strapiLogin } from "../utils/strapi";
+import { navigate } from 'gatsby';
+import { User } from '../utils/types';
 
 // Ping server routinely?
 
 type UseAuthType = {
-  // user: User | false | undefined,
+  user: User|undefined,
   demoLogin: () => Promise<boolean>,
-  loadingUser: boolean,
-  isLoggedIn: boolean
+  // loadingUser: boolean,
+  isLoggedIn: LoginStatus,
+  jwt: string|null,
+  handleTimeout: () => void
   // logout: () => void
 }
 
@@ -22,7 +26,7 @@ const useAuth = (): UseAuthType => {
     throw new Error("Attemping to access authContext, but it is not defined.")
   }
 
-  const { user, setUser } = context;
+  const { user, setUser, isLoggedIn } = context;
 
   const login = async (username: string, password: string): Promise<boolean> => {
     const result = await strapiLogin(username, password);
@@ -32,7 +36,7 @@ const useAuth = (): UseAuthType => {
       if (typeof window !== 'undefined') {
         const jwt = result.data.jwt;
         // Store jwt in local storage.
-        window.localStorage.setItem(AuthKey, JSON.stringify({ jwt, user: result.data.user.username }));
+        window.localStorage.setItem(AuthKey, JSON.stringify({ jwt, user: result.data.user }));
         setUser(result.data.user);
         return true;
 
@@ -63,10 +67,33 @@ const useAuth = (): UseAuthType => {
 
   }
 
+  const getJWT = (): string|null => {
+    try {
+      const credentials = window.localStorage.getItem(AuthKey);
+      const data: Credentials = JSON.parse(credentials ?? "");
+      return data.jwt;
+
+    } catch (error) {
+      x25log.d("[getJWT][useAuth.ts]: Unable to get JWT.");
+    }
+    return null;
+  }
+
+  const handleTimeout = () => {
+    x25log.i("[handleTimeout][useAuth.ts]: User session has timed out. Logging out.");
+    window.localStorage.removeItem(AuthKey);
+    setUser(undefined);
+    
+    navigate("/budgets/login");
+  }
+
   return {
+    user,
     demoLogin,
-    loadingUser: user === undefined,
-    isLoggedIn: user !== false
+    // loadingUser: user === undefined,
+    isLoggedIn,
+    jwt: getJWT(),
+    handleTimeout
   };
 }
 

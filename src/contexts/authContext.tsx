@@ -3,28 +3,36 @@ import { User } from "../utils/types";
 import { x25log } from "../utils/log";
 import { login as strapiLogin } from "../utils/strapi";
 
+
+export enum LoginStatus { Pending = "Pending", No = "No", Yes = "Yes" }
+
 export type AuthContextType = {
-  user?: User | false,
-  setUser: React.Dispatch<React.SetStateAction<false | User | undefined>>
+  user?: User,
+  setUser: React.Dispatch<React.SetStateAction<User | undefined>>,
+  isLoggedIn: LoginStatus,
+  // setIsLoggedIn: React.Dispatch<React.SetStateAction<LoginStatus>>
   // login: (username: string, password: string) => void,
   // logout: () => void,
   // demoLogin: () => void
 }
 
-type UserData = {
+export type Credentials = {
   jwt: string,
   user: User
 }
 
 export const AuthContext = createContext<AuthContextType>({
   user: undefined,
-  setUser: () => { }
+  setUser: () => {},
+  isLoggedIn: LoginStatus.Pending,
+  // setIsLoggedIn: () => {}
 });
 
 export const AuthKey = "x25creds";
 
 export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
-  const [user, setUser] = useState<User | undefined | false>();
+  const [user, setUser] = useState<User>();
+  const [isLoggedIn, setIsLoggedIn] = useState<LoginStatus>(LoginStatus.Pending);
 
   useEffect(() => {
     // initial load of user from local storage.
@@ -34,8 +42,14 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   }, []);
 
   useEffect(() => {
-    x25log.d("[useEffect][authContext.tsx]: User status has changed. %s", (user ?? "undefined").toString());
+    x25log.d("[useEffect][authContext.tsx]: User %sset.", user ? "" : "not ");
+    setIsLoggedIn( user ? LoginStatus.Yes : LoginStatus.No );
+
   }, [user])
+
+  useEffect(() => {
+    x25log.d("[useEffect][authContext.tsx]: User login status has changed. %s", isLoggedIn);
+  }, [isLoggedIn])
 
 
   const checkForLoggedInUser = (creds: string | null) => {
@@ -43,8 +57,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
       x25log.i("[checkForLoggedInUser][authContext.tsx]: Credentials exist in local storage.");
 
       try {
-        const data: UserData = JSON.parse(creds);
+        const data: Credentials = JSON.parse(creds);
         setUser(data.user);
+        // setIsLoggedIn(LoginStatus.Yes)
         return;
 
       } catch (error) {
@@ -54,11 +69,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
     else {
       x25log.i("[checkForLoggedInUser][authContext.tsx]: No credentials exist.");
     }
-    setUser(false);
+    // setUser(false);
+    setIsLoggedIn(LoginStatus.No)
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, isLoggedIn }}>
       {children}
     </AuthContext.Provider>
   )

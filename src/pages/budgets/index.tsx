@@ -17,24 +17,23 @@ import { Layout } from "../../components/layout"
 // return <p>{`Index page for budget: ${slug}`}</p>
 
 const App = () => {
-  // const { user, key } = useAuth();
   // console.log(key);
 
   return (
     // <AuthProvider>
-      <Router basepath="/budgets">
-        {/* <AuthProvider> */}
-        <Login path="/login" />
-        {/* </AuthProvider> */}
-        {/* <BudgetContextProvider> */}
-        {/* <PrivateRoute path="/:slug/action" component={<Actions />} /> */}
-        {/* <PrivateRoute path="/details" component={Details} /> */}
-        <PrivateRoute path="/" component={BudgetList} />
-        
-        {/* </BudgetContextProvider> */}
-      </Router>
+    <Router basepath="/budgets">
+      {/* <AuthProvider> */}
+      <Login path="/login" />
+      {/* </AuthProvider> */}
+      {/* <BudgetContextProvider> */}
+      {/* <PrivateRoute path="/:slug/action" component={<Actions />} /> */}
+      {/* <PrivateRoute path="/details" component={Details} /> */}
+      <PrivateRoute path="/" component={BudgetList} />
+
+      {/* </BudgetContextProvider> */}
+    </Router>
     // </AuthProvider>
-      
+
   )
 }
 

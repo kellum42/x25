@@ -43,13 +43,27 @@ export type PersistentSchema = {
     amount?: number;
     date?: string;
     item?: Schemas["item"];
+  },
+  "tie": {
+    role?: "admin" | "viewer",
+    budget?: Schemas["budget"]
+  },
+  "user": {
+    username?: string,
+    email?: string,
+    provider?: string,
+    confirmed?: boolean,
+    blocked?: boolean,
+    ties?: Schemas["tie"][]
   }
 }
 
 export type Schemas = {
   "budget": BaseSchema & PersistentSchema["budget"],
   "item": BaseSchema & PersistentSchema["item"],
-  "verification": BaseSchema & PersistentSchema["verification"]
+  "verification": BaseSchema & PersistentSchema["verification"],
+  "tie": BaseSchema & PersistentSchema["tie"],
+  "user": BaseSchema & PersistentSchema["user"]
 }
 
 export type SchemaCategory = keyof Schemas;
@@ -69,19 +83,19 @@ export type MonthlySchemaItem = Requires<Schema<"item">, "dates" | "starts" | "e
 export type WeeklySchemaItem = Requires<Schema<"item">, "starts" | "ends" | "day" | x25ItemBase>
 export type OnceSchemaItem = Requires<Schema<"item">, "date" | x25ItemBase>
 
-export type User = {
-  id: number,
-  documentId: string,
-  username: string,
-  email: string,
-  provider: string,
-  confirmed: boolean,
-  blocked: boolean,
-  createdAt?: string,
-  updatedAt?: string,
-  publishedAt?: string
-}
+// export type User = {
+//   id: number,
+//   documentId: string,
+//   username: string,
+//   email: string,
+//   provider: string,
+//   confirmed: boolean,
+//   blocked: boolean,
+//   createdAt?: string,
+//   updatedAt?: string,
+//   publishedAt?: string
+// }
 export type LoginResponse = {
   jwt: string,
-  user: User
+  user: Schemas["user"]
 }

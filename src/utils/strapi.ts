@@ -10,7 +10,7 @@ import {
   LoginResponse
 } from "./types";
 
-const token = process.env.GATSBY_STRAPI_API_KEY;
+// const token = process.env.GATSBY_STRAPI_API_KEY;
 const host = process.env.GATSBY_STRAPI_HOST;
 
 const url = (endpoint: string): string => {
@@ -18,7 +18,7 @@ const url = (endpoint: string): string => {
 }
 
 // must add pageSize and page for pagination to work.
-export const get = async <TCategory extends SchemaCategory, TType extends ResponseType>(endpoint: string): Promise<x25Result<Response<TCategory, TType>>> => {
+export const get = async <TCategory extends SchemaCategory, TType extends ResponseType>(jwt: string, endpoint: string): Promise<x25Result<Response<TCategory, TType>>> => {
   const pageSize: number = 25;
 
   const _get = async (page?: number): Promise<x25Result<{result: Response<TCategory, TType>, meta?: Pagination}>> =>  {
@@ -27,7 +27,7 @@ export const get = async <TCategory extends SchemaCategory, TType extends Respon
     x25log.d("[_get][strapi.ts]: Calling endpoint %s, method: GET.", _url);
     
     const response = await fetch(_url, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${jwt}`, 'Content-Type': 'application/json' }
     });
   
     if (!response.ok) {
@@ -35,14 +35,18 @@ export const get = async <TCategory extends SchemaCategory, TType extends Respon
     }
 
     const json = await response.json();
-    const data: { data: Response<TCategory, TType> } = json;
-    const meta: { meta: { pagination?: Pagination }} = json;
 
-    return { status: "success", data: { result: data.data, meta: meta.meta.pagination }};
+    const result: Response<TCategory, TType> = "data" in json ? json.data : json;
+    const meta: Pagination|undefined = json.meta?.pagination;
+    // const data: { data: Response<TCategory, TType> } = json;
+    // const meta: { meta: { pagination?: Pagination }} = json;
+
+    return { status: "success", data: { result, meta }};
   }
 
   try {
     const result = await _get();
+    
     if ( result.status === "success" ){
       const pageCount = result.data.meta?.pageCount;
       if ( pageCount !== undefined && pageCount > 1 ){
@@ -91,14 +95,14 @@ export type CreateableSchema<TCategory extends keyof PersistentSchema> = Require
 }>
 export type UpdateableSchema<TCategory extends SchemaCategory> = CreateableSchema<TCategory>;
 
-const modify = async <TCategory extends SchemaCategory, TMethod extends "POST"|"PUT">(endpoint: string, body: {data: CreateableSchema<TCategory>}, method: TMethod): Promise<x25Result<Response<TCategory, "one">>> => {
+const modify = async <TCategory extends SchemaCategory, TMethod extends "POST"|"PUT">(jwt: string, endpoint: string, body: {data: CreateableSchema<TCategory>}, method: TMethod): Promise<x25Result<Response<TCategory, "one">>> => {
   x25log.d("[modify][strapi.ts]: Calling endpoint %s, method: %s, body: %s.", url(endpoint), method, JSON.stringify(body));
   
   try {
     const response = await fetch(url(endpoint), {
       method,
       body: JSON.stringify(body),
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+      headers: { 'Authorization': `Bearer ${jwt}`, 'Content-Type': 'application/json' }
     });
   
     if (!response.ok) {
@@ -117,21 +121,21 @@ const modify = async <TCategory extends SchemaCategory, TMethod extends "POST"|"
   }
 }
 
-export const create = async <TCategory extends SchemaCategory>(endpoint: string, body: {data: CreateableSchema<TCategory>}): Promise<x25Result<Response<TCategory, "one">>> => {
-  return modify(endpoint, body, "POST");
+export const create = async <TCategory extends SchemaCategory>(jwt: string, endpoint: string, body: {data: CreateableSchema<TCategory>}): Promise<x25Result<Response<TCategory, "one">>> => {
+  return modify(jwt, endpoint, body, "POST");
 };
 
-export const update = async <TCategory extends SchemaCategory>(endpoint: string, body: {data: UpdateableSchema<TCategory>}): Promise<x25Result<Response<TCategory, "one">>> => {
-  return modify(endpoint, body, "PUT");
+export const update = async <TCategory extends SchemaCategory>(jwt: string, endpoint: string, body: {data: UpdateableSchema<TCategory>}): Promise<x25Result<Response<TCategory, "one">>> => {
+  return modify(jwt, endpoint, body, "PUT");
 };
 
-export const delete_ = async (endpoint: string): Promise<x25Result<boolean>> => {
+export const delete_ = async (jwt: string, endpoint: string): Promise<x25Result<boolean>> => {
   x25log.d("[delete_][strapi.ts]: Calling endpoint %s, method: DELETE.", url(endpoint));
   
   try {
     const response = await fetch(url(endpoint), {
       method: "DELETE",
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${jwt}` }
     });
   
     if (!response.ok) {

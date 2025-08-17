@@ -5,7 +5,7 @@ import { Link, navigate } from "gatsby"
 
 import { x25log } from "../../utils/log"
 import useAuth from "../../hooks/useAuth";
-import { AuthContext, AuthProvider } from "../../contexts/authContext"
+import { AuthContext, AuthProvider, LoginStatus } from "../../contexts/authContext"
 
 // import { AuthProvider } from "../../contexts/authContext"
 
@@ -15,20 +15,18 @@ const Login: React.FC<RouteComponentProps> = (props) => {
   const { demoLogin, isLoggedIn } = useAuth();
 
   const [loading, setIsLoading] = useState<boolean>(false);
-  // const [loggedIn, setIsLoading] = useState<boolean>(false);
   
-  // if ( previous.from ){
-  //   x25log.d("[logout][authContext.tsx]: Window is undefined.");
-  // }
-  // useEffect(() => {
-    // const { demoLogin, isLoggedIn } = useAuth();
+  useEffect(() => {
+    // If user is already logged in, just go to dashboards page.
+    if ( isLoggedIn === LoginStatus.Yes ){
+      navigate("/budgets", {replace: true })
+    }
 
-  // }, [])
+  }, [isLoggedIn])
   
 
 
   const onDemoLogin = async () => {
-    // Figure this out.
     x25log.d("[onDemoLogin][login.tsx]: Attempting demo login.");
 
     setIsLoading(true);
