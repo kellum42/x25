@@ -95,6 +95,9 @@ export type OnceSchemaItem = Requires<Schema<"item">, "date" | x25ItemBase>
 //   updatedAt?: string,
 //   publishedAt?: string
 // }
+
+export type User = Schema<"user">
+
 export type LoginResponse = {
   jwt: string,
   user: Schemas["user"]

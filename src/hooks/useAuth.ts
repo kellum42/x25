@@ -2,16 +2,19 @@ import React, { useState, useEffect, useContext } from 'react';
 import { x25log } from '../utils/log';
 import { AuthContext, AuthContextType, AuthKey, Credentials, LoginStatus } from '../contexts/authContext';
 // import { navigate } from 'gatsby';
-// import { User } from '../utils/types';
+import { User, x25Result } from '../utils/types';
 import { login as strapiLogin } from "../utils/strapi";
 import { navigate } from 'gatsby';
-import { User } from '../utils/types';
+// import { User } from '../utils/types';
+// import User
 
 // Ping server routinely?
 
+
 type UseAuthType = {
   user: User|undefined,
-  demoLogin: () => Promise<boolean>,
+  demoLogin: () => Promise<x25Result<User>>,
+  login: (username: string, password: string) => Promise<x25Result<User>>,
   // loadingUser: boolean,
   isLoggedIn: LoginStatus,
   jwt: string|null,
@@ -28,7 +31,7 @@ const useAuth = (): UseAuthType => {
 
   const { user, setUser, isLoggedIn } = context;
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string): Promise<x25Result<User>> => {
     const result = await strapiLogin(username, password);
     if (result.status === "success") {
       x25log.d("[login][useAuth.ts]: %s successfully logged in.", username);
@@ -38,17 +41,17 @@ const useAuth = (): UseAuthType => {
         // Store jwt in local storage.
         window.localStorage.setItem(AuthKey, JSON.stringify({ jwt, user: result.data.user }));
         setUser(result.data.user);
-        return true;
+        return { status: "success", data: result.data.user };
 
       } else {
         x25log.e("[login][useAuth.ts]: Window is undefined.");
+        return { status: "fail", error: "Logged in ok, but window is undefined." };
       }
 
     } else {
       x25log.d("[login][useAuth.ts]: Error logging in. Error - %s", result.error);
-      console.log(result.error);
+      return { status: "fail", error: result.error };
     }
-    return false;
   }
 
   const logout = () => {
@@ -61,7 +64,7 @@ const useAuth = (): UseAuthType => {
     }
   }
 
-  const demoLogin = async (): Promise<boolean> => {
+  const demoLogin = async (): Promise<x25Result<User>> => {
     x25log.d("[demoLogin][useAuth.ts]: Attempting demo login.");
     return await login("demo", "demouser");
 
@@ -90,6 +93,7 @@ const useAuth = (): UseAuthType => {
   return {
     user,
     demoLogin,
+    login,
     // loadingUser: user === undefined,
     isLoggedIn,
     jwt: getJWT(),
