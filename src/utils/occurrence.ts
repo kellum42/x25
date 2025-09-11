@@ -24,12 +24,12 @@ dayjs.extend(isSameOrAfter);
 //    Maybe default these charges to occur on the first of the next month. Ask user their preferene?
 //  - Incorporate returning x25 error on errors instead of strings.
 
-const first = <T>(arr?: T[]): T | undefined => {
-  if (arr !== undefined && arr.length > 0) {
-    return arr[0];
-  }
-  return undefined;
-}
+// const first = <T>(arr?: T[]): T | undefined => {
+//   if (arr !== undefined && arr.length > 0) {
+//     return arr[0];
+//   }
+//   return undefined;
+// }
 
 // Start and end dates must have budget start/end and item start/end factored in.
 export function calculateOccurrences(items: Schema<"item">[], start: Dayjs, end: Dayjs): Occurrence[];
@@ -262,21 +262,67 @@ export const daysTillNextOccurrence = (item: Schema<"item">, _from: Dayjs, i?: n
 }
 
 // map: OccurrenceMap = {dates:{}
-export const populateDatesTo = (date: Dayjs, map: OccurrenceMap): boolean => {  
-  // const lower = map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date') ? bounds[0] : dayjs(map.bounds[0]);
-  const startBound = dayjs(map.bounds[0]);
-  const formerEndBound = dayjs(map.bounds[1]);
-  const endBound = !formerEndBound || date.isAfter(formerEndBound, 'date') ? date : formerEndBound;
+// export const populateDatesTo = (date: Dayjs, map: OccurrenceMap): boolean => {  
+//   // const lower = map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date') ? bounds[0] : dayjs(map.bounds[0]);
+//   const startBound = dayjs(map.bounds[0]);
+//   const formerEndBound = dayjs(map.bounds[1]);
 
-  map.bounds = [map.bounds[0], endBound.format("YYYY-MM-DD")];
+//   // Gets the latter of the old and new end bounds.
+//   const endBound = !formerEndBound || date.isAfter(formerEndBound, 'date') ? date : formerEndBound;
+
+//   map.bounds = [map.bounds[0], endBound.format("YYYY-MM-DD")];
+
+//   if (!formerEndBound.isSame(endBound, 'date')){
+//     x25log.d("[populateDatesTo][occurrences.ts]: End bound for map updated from %s to %s.", formerEndBound.format("YYYY-MM-DD"), endBound.format("YYYY-MM-DD"));
+//   }
+
+//   let d = startBound;
+//   let datesAdded: number = 0;
+
+//   // Goes thru every date between the new start and end bounds.
+//   // If its not in the map, it is added.
+//   while (!d.isAfter(endBound, 'date')) {
+//     const datestring = d.format("YYYY-MM-DD");
+//     if (!(datestring in map.dates)) {
+//       map.dates[datestring] = {items:{}}
+//       datesAdded++;
+//     }
+//     d = d.add(1, 'days');
+//   }
+//   if (datesAdded > 0) {
+//     x25log.d("[populateDatesTo][occurrences.ts]: Added %d dates to occurrence map between %s and %s.", datesAdded, map.bounds[0], endBound.format("YYYY-MM-DD"));
+//   } else {
+//     x25log.d("[populateBounds][occurrences.ts]: No dates were added to occurrence map between %s and %s.", map.bounds[0], endBound.format("YYYY-MM-DD"));
+//   }
+
+//   return datesAdded > 0;
+// }
+
+export const populateDates = (start: Dayjs, end: Dayjs, map: OccurrenceMap): boolean => {  
+  // const lower = map.bounds === undefined || bounds[0].isBefore(dayjs(map.bounds[0]), 'date') ? bounds[0] : dayjs(map.bounds[0]);
+  const formerStartBound = dayjs(map.bounds[0]);
+  const formerEndBound = dayjs(map.bounds[1]);
+
+  // Gets the former of the old and new start bounds.
+  const startBound = !formerStartBound || start.isBefore(formerStartBound) ? start : formerStartBound;
+  // Gets the latter of the old and new end bounds.
+  const endBound = !formerEndBound || end.isAfter(formerEndBound, 'date') ? end : formerEndBound;
+
+  map.bounds = [startBound.format("YYYY-MM-DD"), endBound.format("YYYY-MM-DD")];
+
+  if (!formerStartBound.isSame(startBound, 'date')){
+    x25log.d("[populateDates][occurrences.ts]: Start bound for map updated from %s to %s.", formerStartBound.format("YYYY-MM-DD"), startBound.format("YYYY-MM-DD"));
+  }
 
   if (!formerEndBound.isSame(endBound, 'date')){
-    x25log.d("[populateDatesTo][occurrences.ts]: End bound for map updated from %s to %s.", formerEndBound.format("YYYY-MM-DD"), endBound.format("YYYY-MM-DD"));
+    x25log.d("[populateDates][occurrences.ts]: End bound for map updated from %s to %s.", formerEndBound.format("YYYY-MM-DD"), endBound.format("YYYY-MM-DD"));
   }
 
   let d = startBound;
   let datesAdded: number = 0;
 
+  // Goes thru every date between the new start and end bounds.
+  // If its not in the map, it is added.
   while (!d.isAfter(endBound, 'date')) {
     const datestring = d.format("YYYY-MM-DD");
     if (!(datestring in map.dates)) {

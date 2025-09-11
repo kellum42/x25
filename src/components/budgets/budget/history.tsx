@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react"
 import { HeadFC, Link, type PageProps } from "gatsby"
 import { Layout } from "../../layout"
-import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
+import { BudgetContext, BudgetContextProvider } from "../../../deprecated/budgetContext"
 import { asCurrency, truncate } from "../../../utils/util"
 import { x25log } from "../../../utils/log"
 import { Occurrence, useOccurrences } from "../../../hooks/useOccurrences"

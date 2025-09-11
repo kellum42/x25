@@ -2,9 +2,11 @@ import React, { FC, useContext, useEffect, useState } from "react";
 import { OccurrenceRow } from "./occurence-row";
 import { Occurrence } from "../hooks/useOccurrences";
 import { x25log } from "../utils/log";
-import { BudgetContext } from "../contexts/budgetContext";
+import { BudgetContext } from "../deprecated/budgetContext";
 import { Dayjs } from "dayjs";
 import { Schema } from "../utils/types";
+import { verify as _verify, unverify as _unverify } from "../utils/verify";
+import useAuth from "../hooks/useAuth";
 
 type VerifyOccurrenceRowProps = {
   occ: Occurrence,
@@ -18,13 +20,14 @@ type VerifyOccurrenceRowProps = {
 }
 
 export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
-  const useBudget = useContext(BudgetContext);
+  // const useBudget = useContext(BudgetContext);
 
-  if (!useBudget) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!useBudget) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
   // const { verify, unverify } = context;
+  const { jwt } = useAuth();
   const { occ } = props;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -81,7 +84,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
 
     if (amount !== null) {
       setIsLoading(true);
-      const result = await useBudget.verify(item, date, Math.abs(amount));
+      const result = await _verify(jwt ?? "", item, date, Math.abs(amount));
       if (result.status === "success") {
         if (result.data !== null) {
           // Add to map.
@@ -110,7 +113,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
     const verification = occ.verification;
     if (verification) {
       // if (verification.date && verification.item) {
-      const result = await useBudget.unverify(verification.documentId);
+      const result = await _unverify(jwt ?? "", verification.documentId);
 
       if (result.status === "success") {
         x25log.d("[unverify][VerifyOccurrenceRow.tsx]: Unverified %s.", verification.documentId);

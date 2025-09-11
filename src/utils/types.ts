@@ -96,6 +96,8 @@ export type OnceSchemaItem = Requires<Schema<"item">, "date" | x25ItemBase>
 //   publishedAt?: string
 // }
 
+export type Budget = Schema<"budget">
+export type Item = Schema<"item">
 export type User = Schema<"user">
 
 export type LoginResponse = {

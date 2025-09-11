@@ -1,7 +1,7 @@
 import React, { FC, useContext, useEffect, useState } from "react";
 import { Occurrence } from "../hooks/useOccurrences";
-import { getTheme } from "../utils/theme";
-import { BudgetContext } from "../contexts/budgetContext";
+// import { getTheme } from "../utils/theme";
+import { BudgetContext } from "../deprecated/budgetContext";
 
 type OccurrenceRowProps = {
   occ: Occurrence
@@ -20,16 +20,16 @@ type OccurrenceRowProps = {
 //  weekly widget badges - user management -> permissions list
 
 export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
-  const context = useContext(BudgetContext);
+  // const context = useContext(BudgetContext);
 
-  if (!context) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!context) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
   const { occ, title, subtitle, label, subLabel, showTags, beforeTitle, afterRow, beforeRow } = props;
-  const { findItem } = context;
+  // const { findItem } = context;
 
-  const item = findItem(occ.item.documentId);
+  // const item = findItem(occ.item.documentId);
 
   return (
     <div className="line-item-wrapper">
@@ -39,9 +39,9 @@ export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
           <div className="align-items-center fw-semibold d-flex flex-row">
             { beforeTitle }
             <div className="line-item-title ms-2 d-flex flex-column flex-wrap">
-              <div className="fs-6 text-gray-900 mb-1">{title ?? item?.name ?? "--"}</div>
+              <div className="fs-6 text-gray-900 mb-1">{title ?? occ.item.name ?? "--"}</div>
               { subtitle && <div className="text-muted fs-7 mb-1">{subtitle}</div>}
-              { showTags && item?.frequency === "Weekly" &&
+              { showTags && occ.item.frequency === "Weekly" &&
                 <div><span className="badge badge-light-info fw-bold mx-2">weekly</span></div>
               }
             </div>

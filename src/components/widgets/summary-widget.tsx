@@ -3,9 +3,10 @@ import { Link } from "gatsby"
 import dayjs, { Dayjs } from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween';
 
-import { BudgetContext } from "../../contexts/budgetContext";
+import { BudgetContext } from "../../deprecated/budgetContext";
 import { x25log } from "../../utils/log";
 import { useOccurrences } from "../../hooks/useOccurrences";
+import { Schema } from "../../utils/types";
 // import { calculateBalance, daysTillNextOccurrence, getFriday, getVerificationOn, getVerificationsBetween, getUpcomingBudgetItems } from "../../utils/occurrence";
 // import { DateChanger } from "../datechanger";
 // import { BudgetLineItemFrequency } from "../../hooks/useBudgetDetails";
@@ -14,17 +15,19 @@ import { useOccurrences } from "../../hooks/useOccurrences";
 dayjs.extend(isBetween);
 
 type SummaryWidgetProps = {
+  budget: Schema<"budget">,
   balance: number|null
 }
 
-export const SummaryWidget: FC<SummaryWidgetProps> = ({ balance }) => {
-  const context = useContext(BudgetContext);
+export const SummaryWidget: FC<SummaryWidgetProps> = ({ budget, balance }) => {
+  // const context = useContext(BudgetContext);
 
-  if (!context) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!context) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
-  const { date, data, getItems } = context;
+  // const { data, getItems } = context;
+  const date = dayjs()
 
   return (
     <div className="card mb-6">
@@ -57,26 +60,26 @@ export const SummaryWidget: FC<SummaryWidgetProps> = ({ balance }) => {
 
       <div className="px-10 fw-semibold">
         <div className="d-flex justify-content-between my-4">
-          <Link to={`/budget/${data.documentId}/items`} className="hover text-primary">Budget Items</Link>
-          <div className="d-flex">{getItems().length}</div>
+          <Link to={`/budget/${budget.documentId}/items`} className="hover text-primary">Budget Items</Link>
+          <div className="d-flex">{budget?.items?.length}</div>
         </div>
         <div className="separator separator-dashed"></div>
 
         <div className="fs-6 d-flex justify-content-between my-4">
-          <Link to={`/budget/${data.documentId}#sims`} className="hover text-primary">Simulations</Link>
+          <Link to={`/budget/${budget.documentId}#sims`} className="hover text-primary">Simulations</Link>
           <div className="d-flex">0</div>
         </div>
         <div className="separator separator-dashed"></div>
 
         <div className="fs-6 d-flex justify-content-between my-4">
           <div className="">Starting Balance</div>
-          <div className="d-flex">${data.startAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <div className="d-flex">${budget.startAmount?.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
         </div>
         <div className="separator separator-dashed"></div>
 
         <div className="fs-6 d-flex justify-content-between my-4">
           <div className="">Start Date</div>
-          <div className="d-flex">{data.startDate.format("MMM D, YYYY")}</div>
+          <div className="d-flex">{dayjs(budget.startDate).format("MMM D, YYYY")}</div>
         </div>
       </div>
     </div>

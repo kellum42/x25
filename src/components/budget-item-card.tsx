@@ -6,7 +6,7 @@ import { BudgetItem, BudgetItemFrequency } from "../utils/schemas";
 import { Menu, MenuItem } from "./floating-menu";
 import { Popup } from "./popups/popup";
 import { MenuButton } from "./menu-button";
-import { BudgetContext } from "../contexts/budgetContext";
+import { BudgetContext } from "../deprecated/budgetContext";
 import { UpdateBudgetItem } from "./modals/update-budget-item-modal";
 
 dayjs.extend(isSameOrAfter);

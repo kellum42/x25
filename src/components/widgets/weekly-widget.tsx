@@ -3,8 +3,8 @@ import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 import "../../styles/weekly-widget.css"
-import { getTheme } from "../../utils/theme";
-import { BudgetContext } from "../../contexts/budgetContext";
+// import { getTheme } from "../../utils/theme";
+import { BudgetContext } from "../../deprecated/budgetContext";
 import { Occurrence } from "../../hooks/useOccurrences";
 import { Schema } from "../../utils/types";
 import { x25log } from "../../utils/log";
@@ -22,11 +22,11 @@ type WeeklyWidgetProps = {
 }
 
 export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
-  const context = useContext(BudgetContext);
+  // const context = useContext(BudgetContext);
 
-  if (!context) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!context) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
   const { range, startBal, addVerification, deleteVerification } = props;
 

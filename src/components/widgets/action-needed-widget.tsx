@@ -1,28 +1,30 @@
 import React, { FC, useContext, useEffect, useState } from "react"
 import { Link } from "gatsby"
 
-import { BudgetContext } from "../../contexts/budgetContext";
+import { BudgetContext } from "../../deprecated/budgetContext";
 import dayjs, { Dayjs } from "dayjs";
 import { x25log } from "../../utils/log";
 import { Occurrence } from "../../hooks/useOccurrences";
 import { getFriday } from "../../utils/util";
+import { Schema } from "../../utils/types";
 
 
 type ActionNeededWidgetProps = {
-  date: Dayjs,
-  occurrences: Occurrence[]
+  // date: Dayjs,
+  occurrences: Occurrence[],
+  budget: Schema<"budget">
 }
 
 export const ActionNeededWidget: FC<ActionNeededWidgetProps> = (props) => {
-  const budgetContext = useContext(BudgetContext);
+  // const budgetContext = useContext(BudgetContext);
 
-  if (!budgetContext) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  // if (!budgetContext) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
-  const { data } = budgetContext;
-  const { date, occurrences } = props;
-  const friday = getFriday(date);
+  // const { data } = budgetContext;
+  const { occurrences, budget } = props;
+  const friday = getFriday( dayjs() );
   const dueOccs = occurrences.filter(occ => !occ.date.isBefore(friday), 'date');
   const pastOccs = occurrences.filter(occ => occ.date.isBefore(friday), 'date');
 
@@ -44,7 +46,7 @@ export const ActionNeededWidget: FC<ActionNeededWidgetProps> = (props) => {
 
       <div className="d-flex flex-row py-2 px-6">
         <Link
-          to={`/budget/${data.documentId}/action`}
+          to={`/budget/${budget.documentId}/action`}
         >
           <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
             <div className="fw-bold fs-6 text-warning text-center">This Week</div>
@@ -52,7 +54,7 @@ export const ActionNeededWidget: FC<ActionNeededWidgetProps> = (props) => {
           </div>
         </Link>
         <Link
-          to={`/budget/${data.documentId}/action`}
+          to={`/budget/${budget.documentId}/action`}
         >
           <div className="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
             <div className="fw-bold fs-6 text-danger text-center">Past 3 Months</div>

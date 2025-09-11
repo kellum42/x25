@@ -3,8 +3,8 @@ import dayjs, { Dayjs } from 'dayjs';
 
 // import { saveBudget, getBudget } from '../utils/localStorage';
 import { get, create, CreateableSchema, delete_ } from '../utils/strapi';
-import { Schema, x25Result, Response } from '../utils/types';
-import { x25Error, Budget, BudgetItem, BudgetNote } from '../utils/schemas';
+import { Schema, x25Result, Response, Budget, Item } from '../utils/types';
+// import { Budget, BudgetItem, BudgetNote } from '../utils/schemas';
 // import { getUniqueID } from '../utils/util';
 // import { calculateOccurrences, daysTillNextOccurrence, itemIsActive } from '../utils/occurrence';
 import { x25log } from '../utils/log';
@@ -16,21 +16,22 @@ import { isMonthlyItem, isOneTimeItem, isWeeklyItem } from '../utils/util';
 // export type VerificationMap = Record<string, Record<string, Schema<"verification">>>;
 
 export type UseBudget = {
-  // budget?: Schema<"budget">,
-  data: x25Budget|null,
+  budget?: Schema<"budget">,
+  load: () => void,
+  // data: x25Budget|null,
   loading: boolean,
   getItems: () => Schema<"item">[],
-  findItem: (id: string) => Schema<"item">|null,
+  // findItem: (id: string) => Schema<"item">|null,
   // error?: x25Error,
   error?: string,
-  verify: (item: string, date: Dayjs, amount: number) => Promise<x25Result<Response<"verification", "one">>>
-  unverify: (id: string) => Promise<x25Result<boolean>>,
+  // verify: (item: string, date: Dayjs, amount: number) => Promise<x25Result<Response<"verification", "one">>>
+  // unverify: (id: string) => Promise<x25Result<boolean>>,
   // duplicateBudgetItem: (item: BudgetItem) => void,
   // deleteBudgetItem: (item: BudgetItem) => void,
   // updateBudgetItem: (item: BudgetItem) => void,
   // updateBudget: (updates: Record<string, string>) => void,
   // convertToBudget: () => void,
-  refresh: () => void,
+  // refresh: () => void,
   // addNote: (note: BudgetNote) => void,
   // deleteNote: (note: BudgetNote) => void,
 
@@ -43,12 +44,59 @@ export type UseBudget = {
 }
 
 
-export const useBudget = (documentId: string): UseBudget => {
+export const useBudget = (jwt: string, documentId: string): UseBudget => {
 
   const [_budget, _setBudget] = useState<Schema<"budget">>();
   const [_items, _setItems] = useState<Record<string, Schema<"item">>>();
   const [_loading, _setLoading] = useState<boolean>(false);
   // const [error, setError] = useState<string>();
+
+  const [budget, setBudget] = useState<Schema<"budget">>();
+  const [loading, setIsLoading] = useState<boolean>(false);
+  const [attempts, setAttempts] = useState<number>(0);
+  const [error, setError] = useState<string>("");
+
+  const load = async () => {
+    if ( budget !== undefined ){
+      return;
+    }
+
+    setIsLoading(true);
+    setAttempts(attempts + 1);
+    setError("");
+
+    const endpoint = `budgets/${documentId}?status=published&populate=items`;
+    const result: x25Result<Response<"budget", "one">> = await get<"budget", "one">(jwt, endpoint);
+    if (result.status === "success") {
+      const data = result.data;
+      if (data) {
+        x25log.i("[refresh][useBudget.ts]: Successfully fetched budget %s from %s.", data.title ?? "--", endpoint);
+        setBudget(data);
+
+        // if ( budget.items !== undefined ){
+        //   const map: Record<string, Schema<"item">> = {};
+        //   budget.items.forEach( item => {
+        //     map[item.documentId] = item;
+        //   })
+        //   _setItems(map)
+        //   x25log.i("[refresh][useBudget.ts]: Stored %d budget items.", budget.items.length);
+        // }
+
+        // delete budget.items; // no need to store items twice.
+        // _setBudget(budget);
+
+      } else {
+        x25log.d("[refresh][useBudget.ts]: Successful API call for budget, but budget data is bad.");
+        setError("Error getting budget. [Unable to fetch budget from api]");
+      }
+
+    } else {
+      x25log.d("[refresh][useBudget.ts]: Unsuccessful API call for budget to endpoint %s.", endpoint);
+      console.log(result.error);
+    }
+
+    setIsLoading(false);
+  }
 
   const _getBudget = (): x25Budget|null => {
     if ( _budget){
@@ -68,7 +116,7 @@ export const useBudget = (documentId: string): UseBudget => {
     return null
   }
 
-  const _updateBudget = (key: keyof Budget, value: string | number | Dayjs | BudgetItem[] | BudgetNote[]) => {
+  const _updateBudget = (key: keyof Budget, value: string | number | Dayjs | Item[] ) => {
     // setData(prev => (
     //   prev === undefined ?
     //     undefined :
@@ -111,25 +159,25 @@ export const useBudget = (documentId: string): UseBudget => {
   // }
 
 
-  const verify = async (item: string, date: Dayjs, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
-    const endpoint: string = "verifications";
-    const body = {
-      date: date.format("YYYY-MM-DD"),
-      amount,
-      item
-    }
-    const result = await create<"verification">(endpoint, { data: body })
-    return result;
-  }
+  // const verify = async (item: string, date: Dayjs, amount: number): Promise<x25Result<Response<"verification", "one">>> => {
+  //   const endpoint: string = "verifications";
+  //   const body = {
+  //     date: date.format("YYYY-MM-DD"),
+  //     amount,
+  //     item
+  //   }
+  //   const result = await create<"verification">(jwt, endpoint, { data: body })
+  //   return result;
+  // }
 
-  const unverify = async (id: string): Promise<x25Result<boolean>> => {
-    const endpoint: string = `verifications/${id}`;
-    const result = await delete_(endpoint)
-    return result;
-  }
+  // const unverify = async (id: string): Promise<x25Result<boolean>> => {
+  //   const endpoint: string = `verifications/${id}`;
+  //   const result = await delete_(jwt, endpoint)
+  //   return result;
+  // }
 
-  const duplicateBudgetItem = (item: BudgetItem) => {
-    const duplicate: BudgetItem = {
+  const duplicateBudgetItem = (item: Item) => {
+    const duplicate: Item = {
       ...item,
       name: "Copy of " + item.name,
       // id: getUniqueID()
@@ -137,7 +185,7 @@ export const useBudget = (documentId: string): UseBudget => {
     // _updateBudgetItem(duplicate);
   }
 
-  const updateBudgetItem = (item: BudgetItem) => {
+  const updateBudgetItem = (item: Item) => {
     // _updateBudgetItem(item);
   }
 
@@ -173,7 +221,7 @@ export const useBudget = (documentId: string): UseBudget => {
     // }
   }
 
-  const deleteBudgetItem = (item: BudgetItem) => {
+  const deleteBudgetItem = (item: Item) => {
     // if (data) {
     //   const items = data.items.filter((_item) => _item.id !== item.id);
     //   _updateBudget("items", items);
@@ -192,12 +240,12 @@ export const useBudget = (documentId: string): UseBudget => {
     // }
   }
 
-  const findItem = (id: string): Schema<"item">|null => {
-    if ( _items && id in _items){
-      return _items[id];
-    }
-    return null;
-  }
+  // const findItem = (id: string): Schema<"item">|null => {
+  //   if ( _items && id in _items){
+  //     return _items[id];
+  //   }
+  //   return null;
+  // }
 
   const getItems = (active: boolean = false): Schema<"item">[] => {
     const items: Schema<"item">[] = Object.values(_items || {});
@@ -268,38 +316,8 @@ export const useBudget = (documentId: string): UseBudget => {
     return output.filter( item => item !== false );
   }
 
-  const refresh = async () => {
-    const endpoint = `budgets/${documentId}?status=published&populate=items`;
-    const result: x25Result<Response<"budget", "one">> = await get<"budget", "one">(endpoint);
-    if (result.status === "success") {
-      const budget = result.data;
-      if (budget) {
-        x25log.i("[refresh][useBudget.ts]: Successfully fetched budget %s from %s.", budget.title ?? "--", endpoint);
 
-        if ( budget.items !== undefined ){
-          const map: Record<string, Schema<"item">> = {};
-          budget.items.forEach( item => {
-            map[item.documentId] = item;
-          })
-          _setItems(map)
-          x25log.i("[refresh][useBudget.ts]: Stored %d budget items.", budget.items.length);
-        }
-
-        delete budget.items; // no need to store items twice.
-        _setBudget(budget);
-
-      } else {
-        x25log.d("[refresh][useBudget.ts]: Successful API call for budget, but budget data is bad.");
-        // setError("Error getting budget. [Unable to fetch budget from api]");
-      }
-
-    } else {
-      x25log.d("[refresh][useBudget.ts]: Unsuccessful API call for budget to endpoint %s.", endpoint);
-      // console.log(result.error);
-    }
-  }
-
-  const addNote = (note: BudgetNote) => {
+  // const addNote = (note: BudgetNote) => {
     // if (data) {
     //   const notes = data.notes ?? [];
     //   const exists = notes.filter((n) => n.id === note.id);
@@ -309,23 +327,26 @@ export const useBudget = (documentId: string): UseBudget => {
     //     _updateBudget("notes", notes);
     //   }
     // }
-  }
+  // }
 
-  const deleteNote = (note: BudgetNote) => {
+  // const deleteNote = (note: BudgetNote) => {
     // if (data) {
     //   const notes = (data.notes ?? []).filter((n) => n.id !== note.id);
     //   _updateBudget("notes", notes);
     // }
-  }
+  // }
 
   const getVerifications = async (from: Dayjs, to: Dayjs): Promise<x25Result<Schema<"verification">[]>> => {
-    const budget = _getBudget();
-    if (budget === null){ return {status: "fail", error: "Budget does not exist."}}
+    // const budget = _getBudget();
 
-    const endpoint = `verifications?filters[item][budget][documentId][$eq]=${budget.documentId}&filters[date][$between][0]=${from.format('YYYY-MM-DD')}&filters[date][$between][1]=${to.format('YYYY-MM-DD')}&populate[item][fields][0]=name`
+    // if (budget === undefined){ 
+    //   return {status: "fail", error: "Budget does not exist."}
+    // }
+
+    const endpoint = `verifications?filters[item][budget][documentId][$eq]=${documentId}&filters[date][$between][0]=${from.format('YYYY-MM-DD')}&filters[date][$between][1]=${to.format('YYYY-MM-DD')}&populate[item][fields][0]=name&&populate[item][fields][1]=frequency`
     x25log.d("[getVerifications][useBudget.ts]: Fetching verifications from endpoint %s", endpoint);
 
-    const result = await get<"verification", "many">(endpoint);
+    const result = await get<"verification", "many">(jwt, endpoint);
 
     if (result.status === "success") {
       x25log.d("[getVerifications][useBudget.ts]: Successfully fetched %d verifications.", result.data.length);
@@ -445,9 +466,9 @@ export const useBudget = (documentId: string): UseBudget => {
   // }
 
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  // useEffect(() => {
+  //   refresh();
+  // }, []);
 
   // useEffect(() => {
   //   // save data.
@@ -468,19 +489,21 @@ export const useBudget = (documentId: string): UseBudget => {
   // }, [data]);
 
   return {
-    data: _getBudget(),
+    // data: _getBudget(),
+    budget,
+    load,
     loading: _loading,
     getItems,
-    findItem,
+    // findItem,
     // error,
-    verify,
-    unverify,
+    // verify,
+    // unverify,
     // updateBudget,
     // duplicateBudgetItem,
     // deleteBudgetItem,
     // updateBudgetItem,
     // convertToBudget,
-    refresh,
+    // refresh,
     // addNote,
     // deleteNote,
     getVerifications

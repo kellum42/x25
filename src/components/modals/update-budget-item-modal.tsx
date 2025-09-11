@@ -4,7 +4,7 @@ import Select from "react-select";
 import { Modal } from "./modal";
 import dayjs from "dayjs";
 import { useUpdateBudgetItem } from "../../hooks/useUpdateBudgetItem";
-import { BudgetContext } from "../../contexts/budgetContext";
+import { BudgetContext } from "../../deprecated/budgetContext";
 import { BudgetItem, BudgetItemFrequency, WeekDays } from "../../utils/schemas";
 import { FormDatePicker } from "../form-datepicker";
 import { budgetItemToRecord } from "../../utils/occurrence";

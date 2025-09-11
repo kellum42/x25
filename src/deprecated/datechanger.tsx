@@ -1,6 +1,6 @@
 import React, { forwardRef, useContext } from "react";
 import dayjs from "dayjs";
-import { BudgetContext } from "../contexts/budgetContext";
+import { BudgetContext } from "./budgetContext";
 import DatePicker from "react-datepicker";
 
 import "../styles/budget-details-datepicker.css"

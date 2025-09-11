@@ -7,7 +7,7 @@ import "../styles/budget-details-datepicker.css"
 import "react-datepicker/dist/react-datepicker.css"
 
 import { getFriday } from "../utils/occurrence"
-import { BudgetContext } from "../contexts/budgetContext";
+import { BudgetContext } from "./budgetContext";
 
 // type BudgetDetailsDatePickerProps = {
 //   date: Dayjs,

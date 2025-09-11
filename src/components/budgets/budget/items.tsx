@@ -3,7 +3,7 @@ import type { HeadFC, PageProps } from "gatsby"
 import { Link } from "gatsby"
 
 import { Layout } from "../../layout"
-import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
+import { BudgetContext, BudgetContextProvider } from "../../../deprecated/budgetContext"
 import { ManageItems } from "../../manage-items/manage-items"
 import { truncate } from "../../../utils/util"
 

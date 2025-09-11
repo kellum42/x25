@@ -3,7 +3,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { getUniqueID } from "../utils/util";
 import { BudgetItem } from "../utils/schemas";
 import { zBudgetItem } from "../utils/schemas";
-import { BudgetContext } from "../contexts/budgetContext";
+import { BudgetContext } from "./budgetContext";
 
 // TODO:
 //  - Find a way to incorporate the useBudgetDetails error into the error here.

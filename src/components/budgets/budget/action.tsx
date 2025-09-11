@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react"
 import { Link,HeadFC, type PageProps } from "gatsby"
 import { Layout } from "../../layout"
-import { BudgetContext, BudgetContextProvider } from "../../../contexts/budgetContext"
+import { BudgetContext, BudgetContextProvider } from "../../../deprecated/budgetContext"
 
 import dayjs, { Dayjs } from "dayjs"
 import { getFriday, truncate } from "../../../utils/util"
