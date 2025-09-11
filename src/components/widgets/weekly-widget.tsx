@@ -15,41 +15,28 @@ import { getFriday } from "../../utils/util";
 dayjs.extend(isSameOrAfter);
 
 type WeeklyWidgetProps = {
-  // occurrences: Occurrence[],
-  // weekDescription?: string,
-  // startBal?: number,
-  // addVerification: (verifications: Schema<"verification">[]) => void,
-  // deleteVerification: (verifications: Schema<"verification">) => void,
-  // items: Record<string, { name?: string, frequency?:  ItemFrequency }>
   occurrenceMap: OccurrenceMap,
+  startAmount?: number,
   itemMap: Record<string, { name?: string, frequency?:  ItemFrequency }>
 }
 
 export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
-  // const context = useContext(BudgetContext);
-
-  // if (!context) {
-  //   throw new Error("Calling Budget Context from outside of provider.");
-  // }
-
-  // const { weekDescription, startBal, addVerification, deleteVerification, items } = props;
   const weekStart = getFriday(dayjs())
   const weekEnd = weekStart.add(6, 'days')
 
-  const { occurrenceMap, itemMap } = props;
+  const { occurrenceMap, itemMap, startAmount } = props;
   
   const { 
     getOccurrences, 
     getBalance, 
     addVerifications: addVerificationToMap, 
-    deleteVerification: removeVerificationFromMap 
-  } = useOccurrences( occurrenceMap );
+    deleteVerification: removeVerificationFromMap,
+    setStartAmount
+  } = useOccurrences( occurrenceMap, startAmount );
 
   const occurrences = getOccurrences( weekStart, weekEnd );
   const weekStartingBalance = getBalance(weekStart, "start") ?? undefined
   const weekDescription = `${weekStart.format("MMM DD, YYYY")} - ${weekEnd.format("MMM DD, YYYY")}`
-
-  // const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
 
   const getWeekEndingBalance = (): number | undefined => {
     let bal = weekStartingBalance;
@@ -62,13 +49,9 @@ export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
 
   const weekEndingBalance: number|undefined = getWeekEndingBalance();
 
-  // useEffect(() => {
-  //   setOccurrences(props.occurrences);
-  // }, [props.occurrences])
-
-  // useEffect(() => {
-  //   setOccurrences( )
-  // }, [])
+  useEffect(() => {
+    setStartAmount(startAmount)
+  }, [startAmount])
 
 
   return (
@@ -105,9 +88,6 @@ export const WeeklyWidget: FC<WeeklyWidgetProps> = (props) => {
         <div>
           <SeeMore
             items={occurrences.map((occ, i) => {
-
-              // handle verifications for map and server.
-
               const newDayLabel: React.ReactNode|undefined = i === 0 || !occ.date.isSame(occurrences[i-1].date) ?
                 <div className="text-muted text-center fw-bold fs-5 mt-4 mb-2">{occ.date.format("dddd, M/D")}</div> :
                 undefined;

@@ -41,7 +41,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
         }
       </>
     } else {
-      const inner = occ.verification ? Math.abs(occ.verification.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) : amount;
+      const inner = occ.verification ? "$" + Math.abs(occ.verification.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) : amount;
       return type === "income" ? <span className="text-success">+{inner}</span> : inner;
     }
   }

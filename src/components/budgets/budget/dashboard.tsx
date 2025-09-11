@@ -182,6 +182,7 @@ const Dashboard: React.FC<{ budgetId: string }> = ({ budgetId }) => {
                       // addVerification={addVerifications}
                       // deleteVerification={deleteVerification}
                       occurrenceMap={map}
+                      startAmount={startAmount}
                       itemMap={
                         (budget.items ?? []).reduce(
                           (acc, item) => { acc[item.documentId] = { name: item.name, frequency: item.frequency }; return acc },

@@ -45,7 +45,7 @@ export type UseOccurrences = {
   map: OccurrenceMap
 }
 
-export const useOccurrences = ( fromMap?: OccurrenceMap ): UseOccurrences => {
+export const useOccurrences = ( fromMap?: OccurrenceMap, fromStartAmount?: number ): UseOccurrences => {
   // const context = useContext(BudgetContext);
 
   // if (!context) {
@@ -63,15 +63,15 @@ export const useOccurrences = ( fromMap?: OccurrenceMap ): UseOccurrences => {
   const [startAmount, setStartAmount] = useState<number>()
   const [error, setError] = useState<string>();
 
+  useEffect(() => {
+    if ( fromStartAmount !== undefined ){
+      setStartAmount(fromStartAmount)
+    }
+  }, [])
 
   useEffect(() => {
     x25log.d("[useEffect][useOccurrences.ts]: Map was set. Bounds are %s - %s.", map.bounds?.[0] ?? "null", map.bounds?.[1] ?? "null");
   }, [map])
-
-  // useEffect(() => {
-  //   console.log("START AMOUNT WAS UPDATED", startAmount)
-  // }, [startAmount])
-
 
   const getBalance = (on: Dayjs, day: "start" | "end"): number | null => {
     const datestring = on.format("YYYY-MM-DD");
