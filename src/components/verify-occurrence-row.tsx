@@ -1,11 +1,9 @@
-import React, { FC, useContext, useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { OccurrenceRow } from "./occurence-row";
 import { Occurrence } from "../hooks/useOccurrences";
 import { x25log } from "../utils/log";
-import { BudgetContext } from "../deprecated/budgetContext";
-import { Dayjs } from "dayjs";
-import { Schema } from "../utils/types";
-import { verify as _verify, unverify as _unverify } from "../utils/verify";
+import { ItemFrequency, Schema } from "../utils/types";
+import { verify as verifyInStrapi, unverify as unverifyInStrapi } from "../utils/verify";
 import useAuth from "../hooks/useAuth";
 
 type VerifyOccurrenceRowProps = {
@@ -15,18 +13,10 @@ type VerifyOccurrenceRowProps = {
   subLabel?: string,
   beforeRow?: React.ReactNode
   subtitle?: string
-  // onVerify: (item: string, date: Dayjs, amount: number) => Promise<boolean>
-  // onUnverify: (verification: Schema<"verification">) => Promise<boolean>
+  item?: { name?: string, frequency?: ItemFrequency }
 }
 
 export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
-  // const useBudget = useContext(BudgetContext);
-
-  // if (!useBudget) {
-  //   throw new Error("Calling Budget Context from outside of provider.");
-  // }
-
-  // const { verify, unverify } = context;
   const { jwt } = useAuth();
   const { occ } = props;
 
@@ -37,7 +27,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
 
   const amount = `$${Math.abs(props.occ.item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
-  const amountNode = (): React.ReactNode|string => {
+  const amountLabel = (): React.ReactNode|string => {
     const type: "income"|"expense" = occ.item.amount > 0 ? "income" : "expense";
 
     if (occ.verification && Math.abs(occ.verification.amount) !== Math.abs(occ.item.amount)){
@@ -56,7 +46,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
     }
   }
 
-  const cleanVerifiedAmount = (): number | null => {
+  const sanitizeNewAmount = (): number | null => {
     // Check for empty strings
     if (textInput.trim() === "") {
       setTextInput("");
@@ -76,15 +66,15 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
     return amount;
   }
 
-  const verify = async (forceStandardAmount: boolean = false) => {
-    const amount: number | null = forceStandardAmount ? occ.item.amount : cleanVerifiedAmount();
+  const verify = async (enforceItemAmount: boolean = false) => {
+    const amount: number | null = enforceItemAmount ? occ.item.amount : sanitizeNewAmount();
 
     const item = occ.item.documentId;
     const date = occ.date;
 
     if (amount !== null) {
       setIsLoading(true);
-      const result = await _verify(jwt ?? "", item, date, Math.abs(amount));
+      const result = await verifyInStrapi(jwt ?? "", item, date, Math.abs(amount));
       if (result.status === "success") {
         if (result.data !== null) {
           // Add to map.
@@ -112,8 +102,7 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
   const unverify = async () => {
     const verification = occ.verification;
     if (verification) {
-      // if (verification.date && verification.item) {
-      const result = await _unverify(jwt ?? "", verification.documentId);
+      const result = await unverifyInStrapi(jwt ?? "", verification.documentId);
 
       if (result.status === "success") {
         x25log.d("[unverify][VerifyOccurrenceRow.tsx]: Unverified %s.", verification.documentId);
@@ -126,16 +115,9 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
         })
         setIsVerified(false);
 
-        // deleteVerification(verification);
-        // return true;
-
       } else {
         x25log.d("[unverify][VerifyOccurrenceRow.tsx]: Can't unverify %s. Error: %s.", verification.documentId, result.error);
       }
-
-      // } else {
-      //   x25log.w("[onUnverify][weekly-widget.ts]: Can't unverify %s. Missing verification date or item. This should not happen.", verification.documentId);
-      // }
       return false;
 
     } else {
@@ -219,13 +201,13 @@ export const VerifyOccurrenceRow: FC<VerifyOccurrenceRowProps> = (props) => {
       <></>
 
   return <OccurrenceRow
-    occ={occ}
-    label={amountNode()}
+    label={amountLabel()}
+    title={props.item?.name}
     subLabel={ props.subLabel ?? occ.date.format("M/D/YY")}
-    showTags={true}
     beforeTitle={checkboxAndDropdown}
     afterRow={verifyDropdown}
     beforeRow={props.beforeRow}
     subtitle={props.subtitle}
+    tags={ props.item?.frequency === "Weekly" ? [<span className="badge badge-light-info fw-bold mx-2">weekly</span>] : []}
   />;
 }

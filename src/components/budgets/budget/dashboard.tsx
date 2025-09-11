@@ -11,6 +11,7 @@ import dayjs, { Dayjs } from "dayjs"
 import { useOccurrences } from "../../../hooks/useOccurrences"
 import { useBudget } from "../../../hooks/useBudget"
 import useAuth from "../../../hooks/useAuth"
+import { ItemFrequency } from "../../../utils/types"
 
 // TODO: Model dashboards -> logistics -> top selling categories for top expenses widget
 //  - Title doesn't refresh when arriving here from clicking on simulation url.
@@ -23,11 +24,10 @@ const Dashboard: React.FC<{ budgetId: string }> = ({ budgetId }) => {
   const { 
     getBalance, 
     getOccurrences, 
-    addVerifications, 
-    deleteVerification, 
     buildMap,
     startAmount,
-    setStartAmount
+    setStartAmount,
+    map
   } = useOccurrences();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -176,11 +176,17 @@ const Dashboard: React.FC<{ budgetId: string }> = ({ budgetId }) => {
                   </div>
                   <div className="col-lg-6">
                     <WeeklyWidget
-                      occurrences={getOccurrences(friday, friday.add(6, 'day'))}
-                      startBal={getBalance(friday, "start") ?? undefined}
-                      range={`${friday.format("MMM DD, YYYY")} - ${friday.add(6, 'day').format("MMM DD, YYYY")}`}
-                      addVerification={addVerifications}
-                      deleteVerification={deleteVerification}
+                      // occurrences={getOccurrences(friday, friday.add(6, 'day'))}
+                      // startBal={getBalance(friday, "start") ?? undefined}
+                      // range={`${friday.format("MMM DD, YYYY")} - ${friday.add(6, 'day').format("MMM DD, YYYY")}`}
+                      // addVerification={addVerifications}
+                      // deleteVerification={deleteVerification}
+                      occurrenceMap={map}
+                      itemMap={
+                        (budget.items ?? []).reduce(
+                          (acc, item) => { acc[item.documentId] = { name: item.name, frequency: item.frequency }; return acc },
+                          {} as Record<string, {name?: string, frequency?: ItemFrequency }>
+                        )}
                     />
                     <div className="d-lg-none">
                       {/* <SimulationsWidget /> */}

@@ -1,9 +1,8 @@
 import dayjs, { Dayjs } from "dayjs"
-import { useContext, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Schema } from "../utils/types"
 import { x25log } from "../utils/log"
 import { calculate, populateDates, populateOccurrences } from "../utils/occurrence";
-import { BudgetContext } from "../deprecated/budgetContext";
 
 // export type OccurrenceMap = Record<string, Record<string, { amount: number, vId?: string, vAmount?: number, balance?: number }>>
 export type OccurrenceMap = {
@@ -42,10 +41,11 @@ export type UseOccurrences = {
   // populateMapThrough: (date: Dayjs, items: Schema<"item">[]) => void,
   buildMap: (items: Schema<"item">[], bounds?: [Dayjs | null, Dayjs | null], verifications?: Schema<"verification">[]) => void,
   startAmount: number | undefined,
-  setStartAmount: React.Dispatch<React.SetStateAction<number | undefined>>
+  setStartAmount: React.Dispatch<React.SetStateAction<number | undefined>>,
+  map: OccurrenceMap
 }
 
-export const useOccurrences = (): UseOccurrences => {
+export const useOccurrences = ( fromMap?: OccurrenceMap ): UseOccurrences => {
   // const context = useContext(BudgetContext);
 
   // if (!context) {
@@ -55,7 +55,7 @@ export const useOccurrences = (): UseOccurrences => {
   // const { data, getItems } = context;
   // const items = getItems();
   const format = "YYYY-MM-DD";
-  const [map, setMap] = useState<OccurrenceMap>({
+  const [map, setMap] = useState<OccurrenceMap>( fromMap ?? {
     // bounds: [startDate.format(format), startDate.format(format)], 
     bounds: [dayjs().format(format), dayjs().format(format)],
     dates: {}
@@ -273,6 +273,7 @@ export const useOccurrences = (): UseOccurrences => {
     // populateMapThrough,
     buildMap,
     startAmount,
-    setStartAmount
+    setStartAmount,
+    map
   }
 }

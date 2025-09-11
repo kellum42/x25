@@ -4,15 +4,16 @@ import { Occurrence } from "../hooks/useOccurrences";
 import { BudgetContext } from "../deprecated/budgetContext";
 
 type OccurrenceRowProps = {
-  occ: Occurrence
+  // occ: Occurrence
   label?: string|React.ReactNode
   subLabel?: string,
   title?: string,
   subtitle?: string,
-  showTags?: boolean,
+  // showTags?: boolean,
   beforeTitle?: React.ReactNode,
   afterRow?: React.ReactNode,
-  beforeRow?: React.ReactNode
+  beforeRow?: React.ReactNode,
+  tags: React.ReactNode[]
 }
 
 // Model after:
@@ -26,7 +27,7 @@ export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
   //   throw new Error("Calling Budget Context from outside of provider.");
   // }
 
-  const { occ, title, subtitle, label, subLabel, showTags, beforeTitle, afterRow, beforeRow } = props;
+  const { title, subtitle, label, subLabel, beforeTitle, afterRow, beforeRow, tags } = props;
   // const { findItem } = context;
 
   // const item = findItem(occ.item.documentId);
@@ -39,11 +40,12 @@ export const OccurrenceRow: FC<OccurrenceRowProps> = (props) => {
           <div className="align-items-center fw-semibold d-flex flex-row">
             { beforeTitle }
             <div className="line-item-title ms-2 d-flex flex-column flex-wrap">
-              <div className="fs-6 text-gray-900 mb-1">{title ?? occ.item.name ?? "--"}</div>
+              <div className="fs-6 text-gray-900 mb-1">{title ?? "--"}</div>
               { subtitle && <div className="text-muted fs-7 mb-1">{subtitle}</div>}
-              { showTags && occ.item.frequency === "Weekly" &&
+              <div>{ tags.map( tag => tag )}</div>
+              {/* { showTags && occ.item.frequency === "Weekly" &&
                 <div><span className="badge badge-light-info fw-bold mx-2">weekly</span></div>
-              }
+              } */}
             </div>
           </div>
           <div className="line-item-numbers d-flex flex-row align-items-center">

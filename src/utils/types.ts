@@ -3,6 +3,8 @@ import { Dayjs } from "dayjs";
 type Requires<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
 // type RequireExcept<T, K extends keyof T> = Required<Omit<T, K>> & Pick<T, K>;
 
+export type ItemFrequency = "Once" | "Weekly" | "Bi-weekly" | "Monthly";
+
 export type Pagination = {
   page?: number,
   pageSize?: number,
@@ -28,7 +30,8 @@ export type PersistentSchema = {
   },
   "item": {
     amount?: number;
-    frequency?: "Once" | "Weekly" | "Bi-weekly" | "Monthly";
+    // frequency?: "Once" | "Weekly" | "Bi-weekly" | "Monthly";
+    frequency?: ItemFrequency;
     name?: string;
     type?: 'income' | 'expense';
     date?: string;
