@@ -60,13 +60,13 @@ export const SummaryWidget: FC<SummaryWidgetProps> = ({ budget, balance }) => {
 
       <div className="px-10 fw-semibold">
         <div className="d-flex justify-content-between my-4">
-          <Link to={`/budget/${budget.documentId}/items`} className="hover text-primary">Budget Items</Link>
+          <Link to={`/budgets/${budget.documentId}/items`} className="hover text-primary">Budget Items</Link>
           <div className="d-flex">{budget?.items?.length}</div>
         </div>
         <div className="separator separator-dashed"></div>
 
         <div className="fs-6 d-flex justify-content-between my-4">
-          <Link to={`/budget/${budget.documentId}#sims`} className="hover text-primary">Simulations</Link>
+          <Link to={`/budgets/${budget.documentId}#sims`} className="hover text-primary">Simulations</Link>
           <div className="d-flex">0</div>
         </div>
         <div className="separator separator-dashed"></div>

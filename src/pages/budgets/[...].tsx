@@ -12,6 +12,7 @@ import Login from "./login"
 import useAuth from "../../hooks/useAuth"
 import { Layout } from "../../components/layout"
 import Dashboard from "../../components/budgets/budget/dashboard"
+import Items from "../../components/budgets/budget/items"
 
 
 // const BudgetIndexPage: React.FC<PageProps & { slug: string }> = ({ slug }) => {
@@ -28,6 +29,7 @@ const App = () => {
       {/* </AuthProvider> */}
       {/* <BudgetContextProvider> */}
       <PrivateRoute path="/:budgetId" component={Dashboard} />
+      <PrivateRoute path="/:budgetId/items" component={Items} />
       {/* <PrivateRoute path="/:slug/action" component={<Actions />} /> */}
       {/* <PrivateRoute path="/details" component={Details} /> */}
       <PrivateRoute path="/" component={BudgetList} />

@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import type { HeadFC, PageProps } from "gatsby"
 import { Link } from "gatsby"
 
@@ -6,23 +6,39 @@ import { Layout } from "../../layout"
 import { BudgetContext, BudgetContextProvider } from "../../../deprecated/budgetContext"
 import { ManageItems } from "../../manage-items/manage-items"
 import { truncate } from "../../../utils/util"
+import { Schema } from "../../../utils/types"
+import dayjs from "dayjs"
+import useAuth from "../../../hooks/useAuth"
+import { useBudget } from "../../../hooks/useBudget"
+import { x25log } from "../../../utils/log"
 
 // TODO:
 //  - Fix ytd's. Some of them are wrong.
 //  - z-index of start date datepicker is too low. its getting cut off.
 //  - Got past due verifications (13) when starting a new budget with just one weekly expense.
 
-const Items: React.FC = () => {
-  const context = useContext(BudgetContext);
+// const Items: React.FC = () => {
+const Items: React.FC<{ budgetId: string }> = ({ budgetId }) => {
+  const date = dayjs();
 
-  if (!context) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
+  const { jwt } = useAuth();
+  const { budget, load: loadBudget } = useBudget(jwt ?? "", budgetId );
+  
+  const [items, setItems] = useState<Schema<"item">[]>([]);
 
-  const { data, getItems, date } = context;
+  useEffect(() => {
+    if ( budget === undefined ){
+      loadBudget();
+    }
 
-  const items = getItems();
-
+    if ( budget ){
+      if ( budget.items === undefined ){
+        x25log.w("[useEffect][items.tsx]: Budget loaded fine, but errors occurred loading items.");
+      } 
+      setItems(budget.items ?? [])
+    }
+  }, [budget])
+  
   return (
     <>
       <div>
@@ -33,10 +49,12 @@ const Items: React.FC = () => {
             </div>
             <ul className="breadcrumb fw-semibold fs-base my-1 mt-2">
               <li className="breadcrumb-item text-muted">
-                <Link to="/" className="text-muted text-hover-primary">Home</Link>
+                <Link to="/budgets" className="text-muted text-hover-primary">Home</Link>
               </li>
               <li className="breadcrumb-item text-muted">
-                <Link to={`/budget/${data.documentId}`} className="text-muted text-hover-primary">{truncate(data.title, 20)}</Link>
+                <Link to={`/budgets/${budgetId}`} className="text-muted text-hover-primary">
+                  {truncate(budget?.title ?? "", 20)}
+                </Link>
               </li>
               <li className="breadcrumb-item text-dark">Items</li>
             </ul>
@@ -107,22 +125,22 @@ const Items: React.FC = () => {
 };
 
 
-const ItemsPage: React.FC<PageProps & { slug: string }> = ( props ) => {
-  return (
-    <Layout budget={props.slug} uri={props.uri}>
-      <BudgetContextProvider slug={props.slug}>
-        <Items />
-      </BudgetContextProvider>
-    </Layout>
-  )
-}
+// const ItemsPage: React.FC<PageProps & { slug: string }> = ( props ) => {
+//   return (
+//     <Layout budget={props.slug} uri={props.uri}>
+//       <BudgetContextProvider slug={props.slug}>
+//         <Items />
+//       </BudgetContextProvider>
+//     </Layout>
+//   )
+// }
 
-export default ItemsPage;
+export default Items;
 
-export const Head: HeadFC = () => (
-  <>
-    <title>Your Budget</title>
-    {/* data-kt-aside-minimize="on" */}
-    <body className="aside-fixed aside-default-enabled" />
-  </>
-)
+// export const Head: HeadFC = () => (
+//   <>
+//     <title>Your Budget</title>
+//     {/* data-kt-aside-minimize="on" */}
+//     <body className="aside-fixed aside-default-enabled" />
+//   </>
+// )
