@@ -173,7 +173,8 @@ const Login: React.FC<RouteComponentProps> = (props) => {
                   </button>
 
                   <div className="mt-12">
-                    <UsernameLogin redirect={ typeof window !== 'undefined' ? previous.from ?? "/budgets" : "/budgets" } />
+                    <UsernameLogin redirect="/budgets" />
+                    {/* <UsernameLogin redirect={ typeof window !== 'undefined' ? previous.from ?? "/budgets" : "/budgets" } /> */}
                   </div>
 
                   {/* <div className="text-center text-muted text-uppercase fw-bold mb-5">or</div> */}

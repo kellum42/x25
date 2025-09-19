@@ -191,13 +191,13 @@ export const useOccurrences = ( fromMap?: OccurrenceMap, fromStartAmount?: numbe
 
     x25log.d("[addVerification][useOccurrences.ts]: Added %d/%d verifications to map.", added, verifications.length);
 
-    if (added > 0) {
+    // if (added > 0) {
       _map = calculate(_map, startAmount);
       setMap((prevState) => ({
         ...prevState,
         dates: _map.dates
       }))
-    }
+    // }
   }
 
   // const populateMapThrough = (date: Dayjs, items: Schema<"item">[]) => {
@@ -230,7 +230,7 @@ export const useOccurrences = ( fromMap?: OccurrenceMap, fromStartAmount?: numbe
 
   const buildMap = (items: Schema<"item">[], bounds?: [Dayjs | null, Dayjs | null], verifications?: Schema<"verification">[]) => {
 
-    const _map = map;
+    let _map = map;
     const lowerBound = bounds?.[0] ?? dayjs(_map.bounds[0]);
     const upperBound = bounds?.[1] ?? dayjs(_map.bounds[1]);
     const hasDatesToProcess = populateDates(lowerBound, upperBound, _map)
@@ -250,7 +250,7 @@ export const useOccurrences = ( fromMap?: OccurrenceMap, fromStartAmount?: numbe
 
       } else {
         // calculate balance
-        calculate(_map, startAmount);
+        _map = calculate(_map, startAmount);
 
         setMap({
           ..._map,

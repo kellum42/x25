@@ -79,7 +79,7 @@ const Dashboard: React.FC<{ budgetId: string }> = ({ budgetId }) => {
       loadBudget();
     }
 
-    if ( budget && budget.startAmount && startAmount === undefined ){
+    if ( budget && budget.startAmount !== undefined && startAmount === undefined ){
       setStartAmount(budget.startAmount)
     }
 
