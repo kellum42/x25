@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, MouseEvent } from "react";
 import { Schema } from "../../utils/types";
 import { Dayjs } from "dayjs";
 import { ManageItemsFilter, ManageItemsFilterType } from "./manage-items-filter";
@@ -7,6 +7,8 @@ import { x25log } from "../../utils/log";
 import { ManageItemsSearch } from "./manage-items-search";
 import { ManageItemsSort } from "./manage-items-sort";
 import { ManageItemRow } from "./manage-item-row";
+import { UpdateBudgetItem } from "../modals/update-budget-item-modal";
+import { NewBudgetItemModal } from "../modals/new-budget-item-modal";
 
 type ManageItemsProps = {
   items: Schema<"item">[],
@@ -21,8 +23,9 @@ export const ManageItems: React.FC<ManageItemsProps> = (props) => {
   const [searchFn, setSearchFn] = useState<((items: Schema<"item">[]) => Schema<"item">[])>(initialFn);
   const [filtersFn, setFiltersFn] = useState<((items: Schema<"item">[]) => Schema<"item">[])>(initialFn);;
   const [sortFn, setSortFn] = useState<((items: Schema<"item">[]) => Schema<"item">[])>(initialFn);;
-  const [openItem, setOpenItem] = useState<number>();
+  // const [openItem, setOpenItem] = useState<number>();
   const [results, setResults] = useState<Schema<"item">[]>(props.items);
+  const [isCreatingItem, setIsCreatingItem] = useState<boolean>(false);
 
   const count = results.length;
 
@@ -73,6 +76,12 @@ export const ManageItems: React.FC<ManageItemsProps> = (props) => {
 
   }
 
+  const onNewItemClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // console.log("new item button click")
+    setIsCreatingItem( true );
+  }
+
   const query = () => {
     let items = props.items;
     items = filtersFn(items);
@@ -97,7 +106,7 @@ export const ManageItems: React.FC<ManageItemsProps> = (props) => {
         <ManageItemsSearch onChange={onSearch} />
         <div>
           <ManageItemsFilter onChange={onFilter} />
-          <button type="button" className="btn btn-primary w-125px">New Item</button>
+          <button onClick={ onNewItemClick } type="button" className="btn btn-primary w-125px">New Item</button>
         </div>
       </div>
 
@@ -137,6 +146,9 @@ export const ManageItems: React.FC<ManageItemsProps> = (props) => {
           </tbody>
         </table>
       </div>
+
+      {/* { isCreatingItem && <UpdateBudgetItem mode="create" onCancel={() => { setIsCreatingItem(false) }}/> } */}
+      { isCreatingItem && <NewBudgetItemModal onCancel={() => { setIsCreatingItem( false ) }} />}
     </div >
   );
 }

@@ -3,11 +3,12 @@ import Select from "react-select";
 
 import { Modal } from "./modal";
 import dayjs from "dayjs";
-import { useUpdateBudgetItem } from "../../hooks/useUpdateBudgetItem";
-import { BudgetContext } from "../../deprecated/budgetContext";
-import { BudgetItem, BudgetItemFrequency, WeekDays } from "../../utils/schemas";
+// import { useUpdateBudgetItem } from "../../hooks/useUpdateBudgetItem";
+// import { BudgetContext } from "../../deprecated/budgetContext";
+// import { BudgetItem, BudgetItemFrequency, WeekDays } from "../../utils/schemas";
 import { FormDatePicker } from "../form-datepicker";
-import { budgetItemToRecord } from "../../utils/occurrence";
+import { ItemFrequency, Schema, Weekday } from "../../utils/types";
+// import { budgetItemToRecord } from "../../utils/occurrence";
 
 
 // TODO: 
@@ -18,17 +19,15 @@ import { budgetItemToRecord } from "../../utils/occurrence";
 type UpdateBudgetItemProps = {
   onCancel: () => void,
   mode: "create" | "edit",
-  currentItem?: BudgetItem
+  currentItem?: Schema<"item">
 }
 
 export const UpdateBudgetItem: React.FC<UpdateBudgetItemProps> = (props) => {
-  const context = useContext(BudgetContext);
+  // const context = useContext(BudgetContext);
 
-  if (!context) {
-    throw new Error("Calling Budget Context from outside of provider.");
-  }
-
-
+  // if (!context) {
+  //   throw new Error("Calling Budget Context from outside of provider.");
+  // }
 
   const { mode, onCancel, currentItem } = props;
   const { fields, screen, next, back, update, error, save } = useUpdateBudgetItem(
@@ -143,9 +142,12 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
   const day = fields.day ?? "Friday";
 
   const dateFormat = "YYYY-MM-DD";
-  const isWeekly = frequency === BudgetItemFrequency.weekly || frequency === BudgetItemFrequency.biweekly;
+  const isWeekly = frequency === "Weekly" || frequency === "Bi-weekly";
 
-  const prettyDate = (_date: string|number): string => {
+  const itemFrequencies: ItemFrequency[] = ["Once", "Weekly", "Bi-weekly", "Monthly"]
+  const weekdays: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+  const prettyDate = (_date: string | number): string => {
     const date = typeof _date === "number" ? _date.toString() : _date;
     const suffix = ["1", "21", "31"].includes(date) ?
       "st" :
@@ -170,10 +172,12 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
               { label: "Once", value: "Once" }
           }
           options={
-            Object.keys(BudgetItemFrequency).map(
-              key => ({
-                value: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency],
-                label: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency]
+            itemFrequencies.map( key =>
+              ({
+                value: key,
+                label: key
+                // value: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency],
+                // label: BudgetItemFrequency[key as keyof typeof BudgetItemFrequency]
               })
             )
           }
@@ -203,17 +207,17 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
                 <Select
                   defaultValue={
                     "dates" in fields ?
-                    fields.dates?.split(",").map( date => ({ label: prettyDate(date), value: date })) :
-                    { label: "1st", value: "1" }
+                      fields.dates?.split(",").map(date => ({ label: prettyDate(date), value: date })) :
+                      { label: "1st", value: "1" }
                   }
-                isMulti
-                options={
-                  Array(31).fill(0).map((_, _i) => {
-                    const i = _i + 1;
-                    return { label: prettyDate(i), value: i.toString() }
-                  })
-                }
-                onChange={(newValue) => update("dates", newValue.map(v => v.value).join(","))}
+                  isMulti
+                  options={
+                    Array(31).fill(0).map((_, _i) => {
+                      const i = _i + 1;
+                      return { label: prettyDate(i), value: i.toString() }
+                    })
+                  }
+                  onChange={(newValue) => update("dates", newValue.map(v => v.value).join(","))}
                 />
               </div>
             }
@@ -223,7 +227,7 @@ const FrequencyScreen: React.FC<FrequencyScreenProps> = (props) => {
                 <div className="fs-7 fw-semibold text-muted">What day will this occur?</div>
                 <Select
                   defaultValue={{ label: day, value: day }}
-                  options={Object.values(WeekDays).map(v => ({ label: v, value: v }))}
+                  options={weekdays.map(v => ({ label: v, value: v }))}
                   onChange={(newValue) => update("day", newValue?.value)}
                 />
               </div>

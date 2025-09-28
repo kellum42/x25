@@ -4,16 +4,47 @@ import { MonthlySchemaItem, OnceSchemaItem, Schema, WeeklySchemaItem } from "./t
 import { x25log } from "./log";
 
 
-export const numberOrNull = ( a: number | string ): number | null => {
+export const numberOrNull = (a: number | string): number | null => {
   return typeof a === 'string' ? null : a;
 }
 
-export const asCurrency = (a?: number|null ) => {
+export const asCurrency = (a?: number | null) => {
   return a === undefined || a === null ? "--" : "$" + a.toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
 export const truncate = (text: string, to: number) => {
   return text.length > to ? text.slice(0, to - 3) + "..." : text;
+}
+
+export const uppercaseWords = (input: string): string => {
+  // if (typeof input!== 'string') {
+  //   throw new Error('Invalid input: input must be a string.');
+  // }
+
+  return input
+    .trim() // Remove leading/trailing whitespace
+    .toLowerCase() // Convert the entire string to lowercase for consistency
+    .split(' ') // Split the string into an array of words
+    .map(word => {
+      if (word.length === 0) {
+        return ''; // Handle empty words (e.g., from multiple spaces)
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1); // Capitalize first letter and append the rest
+    })
+    .join(' '); // Join the capitalized words back into a single string
+}
+
+export const prettyDate = (_date: string | number): string => {
+  const date = typeof _date === "number" ? _date.toString() : _date;
+  const suffix = ["1", "21", "31"].includes(date) ?
+    "st" :
+    ["2", "22"].includes(date) ?
+      "nd" :
+      ["3", "23"].includes(date) ?
+        "rd" :
+        "th"
+    ;
+  return date + suffix;
 }
 
 
@@ -32,13 +63,13 @@ export const generateAvatar = (): { color: string, bg: string, svg: number } => 
 
 export const addDateSuffix = (date: string): string => {
   const suffix = ["1", "21", "31"].includes(date) ?
-  "st" :
-  ["2", "22"].includes(date) ?
-    "nd" :
-    ["3", "23"].includes(date) ?
-      "rd" :
-      "th"
-  ;
+    "st" :
+    ["2", "22"].includes(date) ?
+      "nd" :
+      ["3", "23"].includes(date) ?
+        "rd" :
+        "th"
+    ;
   return date + suffix;
 }
 
@@ -48,71 +79,71 @@ export const getFriday = (from: Dayjs): Dayjs => {
 }
 
 export const isActive = (on: Dayjs, item: Schema<"item">): boolean => {
-  if (item.frequency === "Once"){
-    if ( item.date !== undefined) {
+  if (item.frequency === "Once") {
+    if (item.date !== undefined) {
       const date = dayjs(item.date);
       const active = !date.isBefore(on, 'date');
-      
+
       x25log.d("[isActive][util.ts]: Item %s (%s) is %s.", item.documentId, item.name ?? "--", active ? "active" : "inactive");
       return active
     } else {
-      x25log.w("[isActive][utils.ts]: Item %s is not valid. Date is undefined.", item.documentId);  
+      x25log.w("[isActive][utils.ts]: Item %s is not valid. Date is undefined.", item.documentId);
     }
 
   } else {
-    if ( item.starts !== undefined && item.ends !== undefined ){
+    if (item.starts !== undefined && item.ends !== undefined) {
       const starts = dayjs(item.starts);
-      const ends: Dayjs|"-1" = item.ends === "-1" ? "-1" : dayjs(item.ends);
+      const ends: Dayjs | "-1" = item.ends === "-1" ? "-1" : dayjs(item.ends);
       const active: boolean = !starts.isAfter(on, 'date') && (ends === "-1" || ends.isSameOrAfter(on, 'date'))
-      
+
       x25log.d("[isActive][util.ts]: Item %s (%s) is %s.", item.documentId, item.name ?? "--", active ? "active" : "inactive");
       return active;
 
     } else {
-      x25log.w("[isActive][utils.ts]: Item %s is not valid. Start date and/or end date is undefined.", item.documentId); 
+      x25log.w("[isActive][utils.ts]: Item %s is not valid. Start date and/or end date is undefined.", item.documentId);
     }
   }
   return false
 }
 
 export const isMonthlyItem = (item: Schema<"item">): item is MonthlySchemaItem => {
-  if ( 
-    typeof item.amount === "number" && 
-    item.name && 
-    item.type && 
+  if (
+    typeof item.amount === "number" &&
+    item.name &&
+    item.type &&
     item.frequency === "Monthly" &&
-    item.dates && 
-    item.starts && 
+    item.dates &&
+    item.starts &&
     item.ends
-  ){
+  ) {
     return true
   }
   return false
 }
 
 export const isWeeklyItem = (item: Schema<"item">): item is WeeklySchemaItem => {
-  if ( 
-    typeof item.amount === "number" && 
-    item.name && 
-    item.type && 
+  if (
+    typeof item.amount === "number" &&
+    item.name &&
+    item.type &&
     (item.frequency === "Bi-weekly" || item.frequency === "Weekly") &&
-    item.day && 
-    item.starts && 
+    item.day &&
+    item.starts &&
     item.ends
-  ){
+  ) {
     return true
   }
   return false
 }
 
 export const isOneTimeItem = (item: Schema<"item">): item is OnceSchemaItem => {
-  if ( 
-    typeof item.amount === "number" && 
-    item.name && 
-    item.type && 
+  if (
+    typeof item.amount === "number" &&
+    item.name &&
+    item.type &&
     item.frequency === "Once" &&
     item.date
-  ){
+  ) {
     return true
   }
   return false

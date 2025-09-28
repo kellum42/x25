@@ -4,6 +4,7 @@ type Requires<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
 // type RequireExcept<T, K extends keyof T> = Required<Omit<T, K>> & Pick<T, K>;
 
 export type ItemFrequency = "Once" | "Weekly" | "Bi-weekly" | "Monthly";
+export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 
 export type Pagination = {
   page?: number,
@@ -36,7 +37,7 @@ export type PersistentSchema = {
     type?: 'income' | 'expense';
     date?: string;
     dates?: string;
-    day?: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
+    day?: Weekday,
     starts?: string;
     ends?: string;
     budget?: Schemas["budget"];
